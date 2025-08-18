@@ -316,7 +316,7 @@ function generateOutput() {
 
   // --- Attendance counters ---
   const counter = (state, check = attendanceStatus) => {
-    return Object.keys(check).filter((n) => attendanceStatus[n] === state)
+    return Object.keys(check).filter((n) => attendanceStatus[n] === state || (attendanceStatus[n] === "C" && state === CoordinatorsA[n]))
       .length;
   };
 console.log(CoordinatorsA)
