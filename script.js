@@ -118,7 +118,7 @@ checkboxes.forEach((cb) => {
         })
         .map((n) => {
           if (n.includes("(C)")) {
-            return n.replace("(C)", ""); // remove (C) in display
+            return n.replace(" (C)", ""); // remove (C) in display
           }
           attendanceStatus[n] = "present"; // default status
           return n;
@@ -314,7 +314,7 @@ function generateOutput() {
     return Object.keys(check).filter((n) => attendanceStatus[n] === state)
       .length;
   };
-
+console.log(CoordinatorsA)
   // --- Build sections ---
   let count = counter("present");
   let presentees = textMaker("Presentees", "🟩", "present", "✅");
