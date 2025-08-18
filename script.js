@@ -217,6 +217,11 @@ function generateOutput() {
   const GroupName = Group;
   const Time = getSelectedTime(); // Get selected time from custom dropdown
 
+  if(GroupName === '' ) return Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Please Select The Group first!",
+    });
   // --- Get Coordinators per group ---
   let Coordinators =
     Group === "Group 1"
@@ -410,7 +415,7 @@ function toggleEdit() {
     });
 
   // Place toolbar below header
-  toolbar.style.top = `${header.offsetHeight}px`;
+  toolbar.style.top = '40px';
 
   // Remove leftover animations
   outputView.classList.remove("slide-in", "slide-out");
