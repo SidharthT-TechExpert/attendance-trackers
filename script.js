@@ -173,6 +173,7 @@ function mark(name, state, checkbox) {
 
   // --- Update attendance state ---
   attendanceStatus[name] = checkbox.checked ? state : "present";
+  Coordinators[name]= checkbox.checked ? state : "present";
 
   // --- Update color coding ---
   updateNameColors();
@@ -275,7 +276,7 @@ function generateOutput() {
       Text =
         `\n\n${icon} ${text} (${counter(status, check)}) :\n\n` +
         Object.keys(check)
-          .filter((n) => (attendanceStatus[n] === status || attendanceStatus[n] === 'C'))
+          .filter((n) => (attendanceStatus[n] === status || (attendanceStatus[n] === 'C' && status === Coordinators[n])))
           .sort((a, b) => a.localeCompare(b))
           .map((n) => `${textIcon} ${n} `)
           .join("\n");
