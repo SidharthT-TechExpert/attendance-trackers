@@ -1,4 +1,3 @@
-
 /* ====================== GROUP DATA ====================== */
 const Group_1 = [
   "Achyuth J",
@@ -50,7 +49,7 @@ const Group_2 = [
   "Fairose (RP)",
   "Minto (RP)",
   "Mubasir (RP)",
-  'Muhammed Shamshad',
+  "Muhammed Shamshad",
   "Najila (RP)",
   "Nazneen (RP)",
   "Sahla (RP)",
@@ -108,6 +107,8 @@ checkboxes.forEach((cb) => {
             return false;
           } else if (n.includes("(C)")) {
             // If Coordinator → mark as C and show
+             Coordinators[n.replace(" (C)",'')] = "present"; // Store coordinator status
+    
             const cleanName = n.replace(" (C)", "");
             attendanceStatus[cleanName] = "C";
             return true;
@@ -161,6 +162,9 @@ function renderList() {
     `;
       listDiv.appendChild(div);
     });
+
+    
+    console.log("Coordinators:", Coordinators);
 }
 
 // ====================== MARK ATTENDANCE ======================
@@ -173,7 +177,7 @@ function mark(name, state, checkbox) {
 
   // --- Update attendance state ---
   attendanceStatus[name] = checkbox.checked ? state : "present";
-  Coordinators[name]= checkbox.checked ? state : "present";
+  Coordinators[name] = checkbox.checked ? state : "present";
 
   // --- Update color coding ---
   updateNameColors();
@@ -254,11 +258,13 @@ function generateOutput() {
   const meetListLink = meetList
     ? `Meet list: ${meetList}`
     : "Meet list: Not provided";
-  const reportBy = document.getElementById("reportBy").value.trim()
-              .trimStart()
-              .split(" ")
-              .map((word) => `${word.charAt(0).toUpperCase() + word.slice(1)}`)
-              .join(" ")
+  const reportBy = document
+    .getElementById("reportBy")
+    .value.trim()
+    .trimStart()
+    .split(" ")
+    .map((word) => `${word.charAt(0).toUpperCase() + word.slice(1)}`)
+    .join(" ");
   const reportByText = document.getElementById("over").value.trim();
   let OtherBatch = document.getElementById("Batch").value.trim().split(",");
 
@@ -271,12 +277,17 @@ function generateOutput() {
   // --- Attendance builder helper ---
   let textMaker = (text, icon, status, textIcon, check = attendanceStatus) => {
     let Text;
-    console.log(attendanceStatus)
+    // If check is an array (OtherBatch), handle differently
+   
     if (check === attendanceStatus) {
       Text =
         `\n\n${icon} ${text} (${counter(status, check)}) :\n\n` +
         Object.keys(check)
-          .filter((n) => (attendanceStatus[n] === status || (attendanceStatus[n] === 'C' && status === Coordinators[n])))
+          .filter(
+            (n) =>
+              attendanceStatus[n] === status ||
+              (attendanceStatus[n] === "C" && status === Coordinators[n])
+          )
           .sort((a, b) => a.localeCompare(b))
           .map((n) => `${textIcon} ${n} `)
           .join("\n");
@@ -479,22 +490,25 @@ document.querySelectorAll(".custom-dropdown").forEach((drop) => {
       drop.classList.remove("active");
     });
   });
-}); 
+});
 
 // Close if clicked outside
 window.addEventListener("click", (e) => {
   document.querySelectorAll(".custom-dropdown").forEach((drop) => {
     if (!drop.contains(e.target)) drop.classList.remove("active");
   });
-}); 
+});
 
-// Function to get the selected time from the custom dropdown function 
-function getSelectedTime() { 
+// Function to get the selected time from the custom dropdown function
+function getSelectedTime() {
   const btn = document.querySelector(".custom-dropdown .dropdown-btn");
-   return btn.textContent.replace('⌄','').replace('⏰','').replace('⏰ 🕒',''); // returns the selected label (like "⏰ 11:30 AM - 12:30 PM")
- }
- 
- // When page loads, set default value 
+  return btn.textContent
+    .replace("⌄", "")
+    .replace("⏰", "")
+    .replace("⏰ 🕒", ""); // returns the selected label (like "⏰ 11:30 AM - 12:30 PM")
+}
+
+// When page loads, set default value
 window.addEventListener("DOMContentLoaded", () => {
   const defaultTime = "11:30 AM - 12:30 PM"; // <-- your default value
 
@@ -511,4 +525,3 @@ window.addEventListener("DOMContentLoaded", () => {
     hiddenInput.value = defaultTime;
   }
 });
-
