@@ -95,6 +95,7 @@ checkboxes.forEach((cb) => {
       displayNames = [];
       attendanceStatus = {};
       isRP = {};
+      CoordinatorsA = {};
 
       // --- Clean and categorize names ---
       displayNames = rawNames
@@ -107,8 +108,8 @@ checkboxes.forEach((cb) => {
             return false;
           } else if (n.includes("(C)")) {
             // If Coordinator → mark as C and show
-             Coordinators[n.replace(" (C)",'')] = "present"; // Store coordinator status
-    
+            CoordinatorsA[n.replace(" (C)", "")] = "present"; // Store coordinator status
+
             const cleanName = n.replace(" (C)", "");
             attendanceStatus[cleanName] = "C";
             return true;
@@ -163,8 +164,7 @@ function renderList() {
       listDiv.appendChild(div);
     });
 
-    
-    console.log("Coordinators:", Coordinators);
+  console.log("Coordinators:", CoordinatorsA);
 }
 
 // ====================== MARK ATTENDANCE ======================
@@ -177,7 +177,7 @@ function mark(name, state, checkbox) {
 
   // --- Update attendance state ---
   attendanceStatus[name] = checkbox.checked ? state : "present";
-  Coordinators[name] = checkbox.checked ? state : "present";
+  CoordinatorsA[name] = checkbox.checked ? state : "present";
 
   // --- Update color coding ---
   updateNameColors();
@@ -278,7 +278,7 @@ function generateOutput() {
   let textMaker = (text, icon, status, textIcon, check = attendanceStatus) => {
     let Text;
     // If check is an array (OtherBatch), handle differently
-   
+
     if (check === attendanceStatus) {
       Text =
         `\n\n${icon} ${text} (${counter(status, check)}) :\n\n` +
@@ -286,7 +286,7 @@ function generateOutput() {
           .filter(
             (n) =>
               attendanceStatus[n] === status ||
-              (attendanceStatus[n] === "C" && status === Coordinators[n])
+              (attendanceStatus[n] === "C" && status === CoordinatorsA[n])
           )
           .sort((a, b) => a.localeCompare(b))
           .map((n) => `${textIcon} ${n} `)
