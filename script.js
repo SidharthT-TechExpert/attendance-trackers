@@ -270,11 +270,12 @@ function generateOutput() {
   // --- Attendance builder helper ---
   let textMaker = (text, icon, status, textIcon, check = attendanceStatus) => {
     let Text;
+    console.log(attendanceStatus)
     if (check === attendanceStatus) {
       Text =
         `\n\n${icon} ${text} (${counter(status, check)}) :\n\n` +
         Object.keys(check)
-          .filter((n) => attendanceStatus[n] === status)
+          .filter((n) => (attendanceStatus[n] === status || attendanceStatus[n] === 'C'))
           .sort((a, b) => a.localeCompare(b))
           .map((n) => `${textIcon} ${n} `)
           .join("\n");
