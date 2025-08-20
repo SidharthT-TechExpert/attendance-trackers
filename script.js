@@ -217,35 +217,29 @@ function generateOutput() {
   const GroupName = Group;
   const Time = getSelectedTime(); // Get selected time from custom dropdown
 
-  if(GroupName === '' ) return Swal.fire({
+  if (GroupName === "")
+    return Swal.fire({
       icon: "warning",
       title: "Oops...",
       text: "Please Select The Group first!",
     });
   // --- Get Coordinators per group ---
-  let Coordinators =
-    Group === "Group 1"
-      ? Group_1.filter((n) => n.includes("(C)"))
-          .map((n) => n.replace(" (C)", ""))
-          .join(" & ")
-      : Group === "Group 2"
-      ? Group_2.filter((n) => n.includes("(C)"))
-          .map((n) => n.replace(" (C)", ""))
-          .join(" & ")
-      : null;
-
-  // --- If Combined group → format coordinators from both ---
-  if (Coordinators === null) {
-    let combined = Combined.filter((n) => n.includes("(C)")).map((n) =>
-      n.replace(" (C)", "")
-    );
-    Coordinators = "";
-    combined.forEach((n, i) => {
-      if (i === combined.length - 2) {
+  let Coordinators = Object.keys(CoordinatorsA);
+  if (Coordinators.length === 0) {
+    Coordinators = null; // If no coordinators found, set to null
+  } else if (Coordinators.length === 1) {
+    Coordinators = Coordinators[0];
+  } else if (Coordinators.length === 2) {
+    Coordinators = Coordinators[0] + ` & ` + Coordinators[1];
+  } else if (Coordinators.length === 4) {
+     Names = Coordinators; 
+     Coordinators = ''
+      Names.forEach((n, i) => {
+      if (i === Names.length - 2) {
         Coordinators += " - Grp_1 \n👫 Coordinators : " + n + " & ";
       } else if (i === 0) {
         Coordinators += n + " & ";
-      } else if (i === combined.length - 1) {
+      } else if (i === Names.length - 1) {
         Coordinators += n + " - Grp_2 ";
       } else {
         Coordinators += n;
@@ -316,10 +310,13 @@ function generateOutput() {
 
   // --- Attendance counters ---
   const counter = (state, check = attendanceStatus) => {
-    return Object.keys(check).filter((n) => attendanceStatus[n] === state)
-      .length;
+    return Object.keys(check).filter(
+      (n) =>
+        attendanceStatus[n] === state ||
+        (attendanceStatus[n] === "C" && state === CoordinatorsA[n])
+    ).length;
   };
-console.log(CoordinatorsA)
+  console.log(CoordinatorsA);
   // --- Build sections ---
   let count = counter("present");
   let presentees = textMaker("Presentees", "🟩", "present", "✅");
@@ -415,7 +412,7 @@ function toggleEdit() {
     });
 
   // Place toolbar below header
-  toolbar.style.top = '40px';
+  toolbar.style.top = "40px";
 
   // Remove leftover animations
   outputView.classList.remove("slide-in", "slide-out");
