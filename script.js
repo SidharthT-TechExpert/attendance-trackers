@@ -4,7 +4,7 @@ const Group_1 = [
   "Adarsh Babu",
   "Aifa Sana Uk",
   "Akhil Joy (Aj)",
-  "Aswathy K (RP)",
+  "Aswathy K (RP)", 
   "Arun Narayan Nair (C)",
   "Chitra Arun (RP)",
   "Christin Johny",
