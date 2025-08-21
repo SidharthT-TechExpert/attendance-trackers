@@ -4,7 +4,7 @@ const Group_1 = [
   "Adarsh Babu",
   "Aifa Sana Uk",
   "Akhil Joy (Aj)",
-  "Aswathy K (RP)", 
+  "Aswathy K (RP)",
   "Arun Narayan Nair (C)",
   "Chitra Arun (RP)",
   "Christin Johny",
@@ -52,7 +52,7 @@ const Group_2 = [
   "Muhammed Shamshad",
   "Najila (RP)",
   "Nazneen (RP)",
-  "Sahla (RP)",
+  "Sahla",
   "Shahitha (RP)",
   "Shahna (RP)",
 ];
@@ -232,9 +232,9 @@ function generateOutput() {
   } else if (Coordinators.length === 2) {
     Coordinators = Coordinators[0] + ` & ` + Coordinators[1];
   } else if (Coordinators.length === 4) {
-     Names = Coordinators; 
-     Coordinators = ''
-      Names.forEach((n, i) => {
+    Names = Coordinators;
+    Coordinators = "";
+    Names.forEach((n, i) => {
       if (i === Names.length - 2) {
         Coordinators += " - Grp_1 \n👫 Coordinators : " + n + " & ";
       } else if (i === 0) {
@@ -247,7 +247,7 @@ function generateOutput() {
     });
   }
 
-  const Trainer = " Afzal Nazar";
+  const Trainer = " Sarang TP";
   const Duck = "🔷🔷🔷🔷🔷🔷🔷🔷🔷🔷🔷";
 
   // --- Collect extra details ---
