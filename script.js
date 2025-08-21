@@ -68,7 +68,7 @@ let rawNames; // raw list selected from Group_1 / Group_2 / Combined
 let displayNames = []; // cleaned names without RP / C tags
 let attendanceStatus = {}; // stores status of each name (present, RP, absent, etc.)
 let isRP = {}; // RP-specific flag for highlighting rows
-let Coordinators = {}; // stores coordinators per group
+let CoordinatorsA = {}; // stores coordinators per group
 let Group = ""; // holds selected group label
 
 // ====================== GROUP SELECTION ======================
@@ -106,11 +106,12 @@ checkboxes.forEach((cb) => {
             attendanceStatus[cleanName] = "RP";
             isRP[cleanName] = true; // ✅ use RP flag for row highlight
             return false;
-          } else if (n.includes("(C)")) {
+          }
+          if (n.includes("(C)")) {
             // If Coordinator → mark as C and show
-            CoordinatorsA[n.replace(" (C)", "")] = "present"; // Store coordinator status
+            CoordinatorsA[n.replace("(C)", "")] = "present"; // Store coordinator status
 
-            const cleanName = n.replace(" (C)", "");
+            const cleanName = n.replace("(C)", "");
             attendanceStatus[cleanName] = "C";
             return true;
           }
@@ -134,7 +135,7 @@ checkboxes.forEach((cb) => {
     } else {
       // --- If unchecked → reset everything ---
       displayNames = [];
-      status = {};
+      attendanceStatus = {};
       isRP = {};
       rawNames = [];
       renderList();
@@ -210,6 +211,7 @@ function updateNameColors() {
 
 // ====================== REPORT GENERATION ======================
 function generateOutput() {
+  console.log(attendanceStatus);
   // --- Static report headers ---
   const Mean = "📒 COMMUNICATION SESSION REPORT";
   const Batch = " BCR71";
@@ -224,7 +226,9 @@ function generateOutput() {
       text: "Please Select The Group first!",
     });
   // --- Get Coordinators per group ---
-  let Coordinators = Object.keys(CoordinatorsA);
+  let Coordinators = Object.keys(attendanceStatus).filter(
+    (n) => attendanceStatus[n] === "C"
+  );
   if (Coordinators.length === 0) {
     Coordinators = null; // If no coordinators found, set to null
   } else if (Coordinators.length === 1) {
