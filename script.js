@@ -165,7 +165,6 @@ function renderList() {
       listDiv.appendChild(div);
     });
 
-  console.log("Coordinators:", CoordinatorsA);
 }
 
 // ====================== MARK ATTENDANCE ======================
@@ -211,7 +210,7 @@ function updateNameColors() {
 
 // ====================== REPORT GENERATION ======================
 function generateOutput() {
-  console.log(attendanceStatus);
+ 
   // --- Static report headers ---
   const Mean = "📘 COMMUNICATION SESSION REPORT";
   const Batch = " BCR71";
@@ -252,7 +251,8 @@ function generateOutput() {
   }
 
   const Trainer = " Sarang TP";
-  const Duck = "⭐";
+  const Duck = "⭐".repeat(Coordinators.length /2 + 6);
+
 
   // --- Collect extra details ---
   const tldv = document.getElementById("tldv").value.trim();
@@ -272,7 +272,7 @@ function generateOutput() {
   let OtherBatch = document.getElementById("Batch").value.trim().split(",");
 
   // --- Details block ---
-  const Detalis = `${Duck}\n${Mean} \n🎓 Batch :${Batch} ${GroupName} \n📅 Date :${date}\n⏰ Time :${Time} \n👨‍🏫 Trainer :${Trainer}\n👫 Coordinators : ${Coordinators}\n${Duck}\n\n`;
+  const Detalis = `${Duck}\n${Mean} \n🎓 Batch :${Batch} ${GroupName} \n📅 Date :${date}\n⏰ Time :${Time} \n👨🏻‍🏫 Trainer :${Trainer}\n👫 Coordinators : ${Coordinators}\n${Duck}\n\n`;
 
   // --- Session overview ---
   const Report = `♻ Session Overview:\n           ${reportByText}`;
@@ -320,7 +320,6 @@ function generateOutput() {
         (attendanceStatus[n] === "C" && state === CoordinatorsA[n])
     ).length;
   };
-  console.log(CoordinatorsA);
   // --- Build sections ---
   let count = counter("present");
   let presentees = textMaker("Presentees", "🟩", "present", "✅");
