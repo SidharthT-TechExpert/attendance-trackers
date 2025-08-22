@@ -239,7 +239,7 @@ function generateOutput() {
     Coordinators = "";
     Names.forEach((n, i) => {
       if (i === Names.length - 2) {
-        Coordinators += " - Grp_1 \n👫 Coordinators : " + n + " & ";
+        Coordinators += " - Grp_1 \n👫 Coordinators : " + n + "& ";
       } else if (i === 0) {
         Coordinators += n + " & ";
       } else if (i === Names.length - 1) {
@@ -251,7 +251,15 @@ function generateOutput() {
   }
 
   const Trainer = " Sarang TP";
-  const Duck = "⭐".repeat(Coordinators.length /2 + 6);
+
+  let Duck = "";
+
+  if(Group === 'Combined'){
+      Duck = "⭐".repeat(27)
+  }else{
+    Duck = "⭐".repeat(Coordinators.length /2 + 6)
+  }
+
 
 
   // --- Collect extra details ---
