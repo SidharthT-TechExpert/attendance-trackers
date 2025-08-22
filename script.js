@@ -213,7 +213,7 @@ function updateNameColors() {
 function generateOutput() {
   console.log(attendanceStatus);
   // --- Static report headers ---
-  const Mean = "📒 COMMUNICATION SESSION REPORT";
+  const Mean = "📘 COMMUNICATION SESSION REPORT";
   const Batch = " BCR71";
   const date = formatDate(new Date());
   const GroupName = Group;
@@ -252,7 +252,7 @@ function generateOutput() {
   }
 
   const Trainer = " Sarang TP";
-  const Duck = "🔷🔷🔷🔷🔷🔷🔷🔷🔷🔷🔷";
+  const Duck = "⭐";
 
   // --- Collect extra details ---
   const tldv = document.getElementById("tldv").value.trim();
@@ -272,7 +272,7 @@ function generateOutput() {
   let OtherBatch = document.getElementById("Batch").value.trim().split(",");
 
   // --- Details block ---
-  const Detalis = `${Duck}\n${Mean} \n🎓 Batch :${Batch} ${GroupName} \n📅 Date :${date}\n⏰ Time :${Time} \n👨🏻‍🏫 Trainer :${Trainer}\n👫 Coordinators : ${Coordinators}\n${Duck}\n\n`;
+  const Detalis = `${Duck}\n${Mean} \n🎓 Batch :${Batch} ${GroupName} \n📅 Date :${date}\n⏰ Time :${Time} \n👨‍🏫 Trainer :${Trainer}\n👫 Coordinators : ${Coordinators}\n${Duck}\n\n`;
 
   // --- Session overview ---
   const Report = `♻ Session Overview:\n           ${reportByText}`;
