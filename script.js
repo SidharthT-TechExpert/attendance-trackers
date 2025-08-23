@@ -1,3 +1,4 @@
+
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 
 // Load batch data from localStorage
@@ -80,6 +81,7 @@ function populateBatchDropdown() {
   }
 }
 
+
 // Checkbox selector for group selection
 const checkboxes = document.querySelectorAll('input[name="group"]');
 
@@ -148,11 +150,12 @@ checkboxes.forEach((cb) => {
             attendanceStatus[cleanName] = "RP";
             isRP[cleanName] = true; // ✅ use RP flag for row highlight
             return false;
-          } else if (n.includes("(C)")) {
+          }
+          if (n.includes("(C)")) {
             // If Coordinator → mark as C and show
-            CoordinatorsA[n.replace(" (C)", "")] = "present"; // Store coordinator status
+            CoordinatorsA[n.replace("(C)", "")] = "present"; // Store coordinator status
 
-            const cleanName = n.replace(" (C)", "");
+            const cleanName = n.replace("(C)", "");
             attendanceStatus[cleanName] = "C";
             return true;
           }
@@ -206,7 +209,6 @@ function renderList() {
       listDiv.appendChild(div);
     });
 
-  console.log("Coordinators:", CoordinatorsA);
 }
 
 // ====================== MARK ATTENDANCE ======================
@@ -252,9 +254,12 @@ function updateNameColors() {
 
 // ====================== REPORT GENERATION ======================
 function generateOutput() {
+ 
   // --- Static report headers ---
+
   const Mean = "📒 COMMUNICATION SESSION REPORT";
   const Batch = selectedBatchName || "BCR71"; // Use selected batch or default
+
   const date = formatDate(new Date());
   const GroupName = Group;
   const Time = getSelectedTime(); // Get selected time from custom dropdown
@@ -266,7 +271,9 @@ function generateOutput() {
       text: "Please Select The Group first!",
     });
   // --- Get Coordinators per group ---
-  let Coordinators = Object.keys(CoordinatorsA);
+  let Coordinators = Object.keys(attendanceStatus).filter(
+    (n) => attendanceStatus[n] === "C"
+  );
   if (Coordinators.length === 0) {
     Coordinators = null; // If no coordinators found, set to null
   } else if (Coordinators.length === 1) {
@@ -274,11 +281,11 @@ function generateOutput() {
   } else if (Coordinators.length === 2) {
     Coordinators = Coordinators[0] + ` & ` + Coordinators[1];
   } else if (Coordinators.length === 4) {
-     Names = Coordinators; 
-     Coordinators = ''
-      Names.forEach((n, i) => {
+    Names = Coordinators;
+    Coordinators = "";
+    Names.forEach((n, i) => {
       if (i === Names.length - 2) {
-        Coordinators += " - Grp_1 \n👫 Coordinators : " + n + " & ";
+        Coordinators += " - Grp_1 \n👫 Coordinators : " + n + "& ";
       } else if (i === 0) {
         Coordinators += n + " & ";
       } else if (i === Names.length - 1) {
@@ -289,8 +296,17 @@ function generateOutput() {
     });
   }
 
-  const Trainer = " Afzal Nazar";
-  const Duck = "🔷🔷🔷🔷🔷🔷🔷🔷🔷🔷🔷";
+  const Trainer = " Sarang TP";
+
+  let Duck = "";
+
+  if(Group === 'Combined'){
+      Duck = "⭐".repeat(27)
+  }else{
+    Duck = "⭐".repeat(Coordinators.length /2 + 6)
+  }
+
+
 
   // --- Collect extra details ---
   const tldv = document.getElementById("tldv").value.trim();
@@ -358,7 +374,6 @@ function generateOutput() {
         (attendanceStatus[n] === "C" && state === CoordinatorsA[n])
     ).length;
   };
-  console.log(CoordinatorsA);
   // --- Build sections ---
   let count = counter("present");
   let presentees = textMaker("Presentees", "🟩", "present", "✅");
