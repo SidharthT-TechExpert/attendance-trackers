@@ -1,64 +1,86 @@
-/* ====================== GROUP DATA ====================== */
-const Group_1 = [
-  "Achyuth J",
-  "Adarsh Babu",
-  "Aifa Sana Uk (RP)",
-  "Akhil Joy (Aj)",
-  "Aswathy K (RP)",
-  "Arun Narayan Nair (C)",
-  "Chitra Arun (RP)",
-  "Christin Johny",
-  "Fasalu Rahman",
-  "Govind S Kumar",
-  "Jagan (C)",
-  "Jasima (RP)",
-  "Kadeejatu Zaiba",
-  "Karthik B",
-  "Krishna (RP)",
-  "Midhun Manoj (RP)",
-  "Neethu George",
-  "Praveena E S",
-  "Riyas Kv (RP)",
-  "Sidharth T",
-  "Thaskeem J",
-  "Visal Vijayan (RP)",
-];
 
-const Group_2 = [
-  "Ahammed Junaid",
-  "Ajnas Muhammed (C)",
-  "Akhil",
-  "Arshad Chappangan",
-  "Arun M",
-  "Bijo P A",
-  "Gowry N",
-  "Mohamed Nabeel",
-  "Muhammed Shibili K (C)",
-  "Reuben Varghese",
-  "Sarath A",
-  "Juvek Swamiji (RP)",
-  "Solaman KJ",
-  "Swagath TV",
-  "Tijo Thomas (RP)",
-  "Eid Bilal",
-  "Minto Thomas",
-  "Muzammil Muhammed",
-  "Anuja Joy (RP)",
-  "Anusha (RP)",
-  "Aswathi KV (RP)",
-  "Fairose (RP)",
-  "Minto (RP)",
-  "Mubasir (RP)",
-  "Muhammed Shamshad",
-  "Najila (RP)",
-  "Nazneen (RP)",
-  "Sahla",
-  "Shahitha (RP)",
-  "Shahna (RP)",
-];
+/* ====================== BATCH DATA MANAGEMENT ====================== */
 
-// Combine both groups
-const Combined = [...Group_1, ...Group_2];
+// Load batch data from localStorage
+function loadBatchDataFromStorage() {
+  const saved = localStorage.getItem('attendanceBatches');
+  if (saved) {
+    return JSON.parse(saved);
+  }
+  return null;
+}
+
+// Get current batch data
+let currentBatchData = null;
+let selectedBatchName = '';
+
+// ====================== BATCH SELECTION ======================
+function loadBatchData() {
+  const batchSelect = document.getElementById('batchSelect');
+  const selectedBatch = batchSelect.value;
+  
+  if (!selectedBatch) {
+    currentBatchData = null;
+    selectedBatchName = '';
+    resetGroupData();
+    return;
+  }
+  
+  const batches = loadBatchDataFromStorage();
+  if (batches && batches[selectedBatch]) {
+    currentBatchData = batches[selectedBatch];
+    selectedBatchName = selectedBatch;
+    updateGroupSwitches();
+  }
+}
+
+function updateGroupSwitches() {
+  const group2Switch = document.getElementById('group2');
+  const group2Label = group2Switch.nextElementSibling;
+  
+  if (currentBatchData && currentBatchData.hasGroup2) {
+    group2Switch.disabled = false;
+    group2Label.style.opacity = '1';
+  } else {
+    group2Switch.disabled = true;
+    group2Switch.checked = false;
+    group2Label.style.opacity = '0.5';
+  }
+}
+
+function resetGroupData() {
+  // Reset all group checkboxes
+  document.querySelectorAll('input[name="group"]').forEach(cb => {
+    cb.checked = false;
+  });
+  
+  // Clear the participant list
+  document.getElementById('list').innerHTML = '';
+  
+  // Reset state variables
+  rawNames = [];
+  displayNames = [];
+  attendanceStatus = {};
+  isRP = {};
+  CoordinatorsA = {};
+  Group = "";
+}
+
+// Populate batch dropdown
+function populateBatchDropdown() {
+  const batchSelect = document.getElementById('batchSelect');
+  const batches = loadBatchDataFromStorage();
+  
+  if (batches) {
+    Object.keys(batches).forEach(batchName => {
+      const option = document.createElement('option');
+      option.value = batchName;
+      option.textContent = batchName;
+      batchSelect.appendChild(option);
+    });
+  }
+}
+
 
 // Checkbox selector for group selection
 const checkboxes = document.querySelectorAll('input[name="group"]');
@@ -75,21 +97,43 @@ let Group = ""; // holds selected group label
 checkboxes.forEach((cb) => {
   cb.addEventListener("change", function () {
     if (this.checked) {
-      // --- Pick rawNames based on selected checkbox ---
-      rawNames =
-        this.value === "group1"
-          ? Group_1
-          : this.value === "group2"
-          ? Group_2
-          : Combined;
+      // Check if batch is selected
+      if (!currentBatchData) {
+        Swal.fire({
+          icon: "warning",
+          title: "No Batch Selected",
+          text: "Please select a batch first!",
+        });
+        this.checked = false;
+        return;
+      }
 
-      // --- Store Group label (Group 1 / Group 2 / Combined) ---
-      Group =
-        this.value === "group1"
-          ? "Group 1"
-          : this.value === "group2"
-          ? "Group 2"
-          : "Combined";
+      // --- Pick rawNames based on selected checkbox and current batch ---
+      let groupData;
+      if (this.value === "group1") {
+        groupData = currentBatchData.groups.Group_1;
+        Group = "Group 1";
+      } else if (this.value === "group2") {
+        if (!currentBatchData.hasGroup2) {
+          Swal.fire({
+            icon: "warning",
+            title: "Group 2 Not Available",
+            text: "This batch doesn't have Group 2 enabled!",
+          });
+          this.checked = false;
+          return;
+        }
+        groupData = currentBatchData.groups.Group_2;
+        Group = "Group 2";
+      } else if (this.value === "combined") {
+        groupData = [...currentBatchData.groups.Group_1];
+        if (currentBatchData.hasGroup2) {
+          groupData = [...groupData, ...currentBatchData.groups.Group_2];
+        }
+        Group = "Combined";
+      }
+
+      rawNames = groupData;
 
       // Reset state
       displayNames = [];
@@ -101,7 +145,7 @@ checkboxes.forEach((cb) => {
       displayNames = rawNames
         .filter((n) => {
           if (n.includes("(RP)")) {
-            // If RP → mark as RP (but don’t show in list)
+            // If RP → mark as RP (but don't show in list)
             const cleanName = n.replace(" (RP)", "");
             attendanceStatus[cleanName] = "RP";
             isRP[cleanName] = true; // ✅ use RP flag for row highlight
@@ -212,8 +256,10 @@ function updateNameColors() {
 function generateOutput() {
  
   // --- Static report headers ---
-  const Mean = "📘 COMMUNICATION SESSION REPORT";
-  const Batch = " BCR71";
+
+  const Mean = "📒 COMMUNICATION SESSION REPORT";
+  const Batch = selectedBatchName || "BCR71"; // Use selected batch or default
+
   const date = formatDate(new Date());
   const GroupName = Group;
   const Time = getSelectedTime(); // Get selected time from custom dropdown
@@ -405,6 +451,41 @@ function copyOutput() {
     });
 }
 
+// ====================== DOWNLOAD REPORT ======================
+function downloadReport() {
+  const viewMode = document.getElementById("outputView");
+  const editMode = document.getElementById("outputEdit");
+
+  if (viewMode.textContent === "")
+    return Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Please generate the report first!",
+    });
+
+  // Pick content from active mode
+  const textToDownload =
+    editMode.style.display === "block" ? editMode.value : viewMode.textContent;
+
+  // Create download
+  const dataBlob = new Blob([textToDownload], {type: 'text/plain'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(dataBlob);
+  
+  // Generate filename with current date and batch info
+  const date = new Date().toISOString().split('T')[0];
+  const batchInfo = selectedBatchName || 'BCR71';
+  link.download = `attendance_report_${batchInfo}_${date}.txt`;
+  
+  link.click();
+  
+  Swal.fire({
+    icon: 'success',
+    title: 'Download Complete',
+    text: 'Report has been downloaded as .txt file!'
+  });
+}
+
 // ====================== TOGGLE EDIT MODE ======================
 let editingMode = false;
 
@@ -488,6 +569,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // Display current date
   const currentDate = document.getElementById("currentDate");
   currentDate.textContent = formatDate(new Date());
+
+  // Populate batch dropdown
+  populateBatchDropdown();
 });
 
 // ====================== CUSTOM DROPDOWN ======================

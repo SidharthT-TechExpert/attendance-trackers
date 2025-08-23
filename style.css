@@ -126,10 +126,103 @@ input[type="checkbox"] {
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
 }
 
+.download-btn {
+  background: linear-gradient(90deg, #4CAF50, #45a049);
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0 5px;
+}
+
+.download-btn:hover {
+  background: linear-gradient(90deg, #45a049, #4CAF50);
+  transform: scale(1.05);
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
 /* Keep checkbox normal size */
 .custom-tooltip {
   position: relative;
   cursor: pointer;
+}
+
+/* ====================== BATCH MANAGER STYLES ====================== */
+
+.batch-item {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.batch-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(5px);
+}
+
+.batch-item.active {
+  background-color: var(--secondary-color) !important;
+  color: white;
+  border-color: var(--secondary-color);
+}
+
+.participant-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  background-color: #f8f9fa;
+}
+
+.participant-item {
+  margin-bottom: 5px;
+}
+
+.participant-item:last-child {
+  margin-bottom: 0;
+}
+
+.participant-item .btn-group {
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.participant-item:hover .btn-group {
+  opacity: 1;
+}
+
+/* Batch manager specific button styles */
+.btn-outline-light {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: white;
+}
+
+.btn-outline-light:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: white;
+  color: white;
+}
+
+/* List group customization */
+.list-group-item {
+  border-left: none;
+  border-right: none;
+  border-radius: 8px !important;
+  margin-bottom: 5px;
+}
+
+.list-group-item:first-child {
+  border-top-left-radius: 8px !important;
+  border-top-right-radius: 8px !important;
+}
+
+.list-group-item:last-child {
+  border-bottom-left-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
 }
 
 /* Tooltip base - 3x smaller text and padding */

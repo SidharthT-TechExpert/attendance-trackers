@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Batch Manager - Attendance App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://raw.githubusercontent.com/SidharthT-TechExpert/attendance-tracker/refs/heads/main/Img/logo.webp" rel="icon">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- Header section -->
+  <header class="text-center text-white">
+    <h4 class="m-0">Batch Manager</h4>
+    <small id="currentDate"></small>
+    <p>Manage batches and participants for attendance tracking</p>
+    <div class="mt-2">
+      <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='index.html'">← Back to Attendance</button>
+      <button class="btn btn-outline-light btn-sm" onclick="window.location.href='settings.html'">⚙️ Settings</button>
+    </div>
+  </header>
+
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-12 col-md-10">
+        <div class="container-box">
+          
+                     <!-- Batch Management Section -->
+           <div class="row mb-4">
+             <div class="col-md-6">
+               <h5>📚 Batch Management</h5>
+               <div class="input-group mb-3">
+                 <span class="input-group-text">BC</span>
+                 <input type="text" id="newBatchName" class="form-control" placeholder="Enter batch suffix (e.g., R71, A1, 2024)">
+                 <button class="btn btn-success" onclick="addNewBatch()">Add Batch</button>
+               </div>
+             </div>
+             <div class="col-md-6">
+               <h5>📊 Data Management</h5>
+               <div class="d-flex gap-2">
+                 <button class="btn btn-primary btn-sm" onclick="exportAllData()">📤 Export All</button>
+                 <button class="btn btn-info btn-sm" onclick="importData()">📥 Import</button>
+                 <button class="btn btn-warning btn-sm" onclick="backupData()">💾 Backup</button>
+                 <button class="btn btn-secondary btn-sm" onclick="restoreData()">📂 Restore</button>
+               </div>
+             </div>
+           </div>
+
+           <!-- Participant Type Legend -->
+           <div class="row mb-4">
+             <div class="col-12">
+               <div class="card">
+                 <div class="card-body">
+                   <h6 class="card-title">📋 Participant Type Legend</h6>
+                   <div class="row">
+                     <div class="col-md-4">
+                       <div class="d-flex align-items-center mb-2">
+                         <span class="badge bg-info me-2">RP</span>
+                         <span><strong>Refreshment Period</strong> - Participants on break/refreshment period</span>
+                       </div>
+                     </div>
+                     <div class="col-md-4">
+                       <div class="d-flex align-items-center mb-2">
+                         <span class="badge bg-warning me-2">C</span>
+                         <span><strong>Coordinator</strong> - Group coordinators (max 2 per group)</span>
+                       </div>
+                       <small class="text-muted ms-4">⚠️ Maximum 2 coordinators allowed per group</small>
+                     </div>
+                     <div class="col-md-4">
+                       <div class="d-flex align-items-center mb-2">
+                         <span class="badge bg-secondary me-2">Regular</span>
+                         <span><strong>Regular</strong> - Standard participants</span>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+
+          <!-- Batch List -->
+          <div class="row">
+            <div class="col-md-4">
+              <h6>📋 Available Batches</h6>
+              <div id="batchList" class="list-group">
+                <!-- Batches will be loaded here -->
+              </div>
+            </div>
+            
+            <div class="col-md-8">
+              <div id="batchDetails" style="display: none;">
+                <h6 id="selectedBatchTitle">Batch Details</h6>
+                
+                <!-- Group Toggle -->
+                <div class="mb-3">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="hasGroup2" onchange="toggleGroup2()">
+                    <label class="form-check-label" for="hasGroup2">Enable Group 2</label>
+                  </div>
+                </div>
+
+                <!-- Group 1 Participants -->
+                <div class="mb-4">
+                  <h6>👥 Group 1 Participants <span id="group1CoordinatorCount" class="badge bg-warning ms-2">0/2 Coordinators</span></h6>
+                  <div class="input-group mb-2">
+                    <input type="text" id="newParticipant1" class="form-control" placeholder="Enter participant name">
+                    <button class="btn btn-success btn-sm" onclick="addParticipant('Group_1')">Add</button>
+                  </div>
+                  <div id="group1List" class="participant-list">
+                    <!-- Group 1 participants will be listed here -->
+                  </div>
+                </div>
+
+                <!-- Group 2 Participants (conditional) -->
+                <div id="group2Section" class="mb-4" style="display: none;">
+                  <h6>👥 Group 2 Participants <span id="group2CoordinatorCount" class="badge bg-warning ms-2">0/2 Coordinators</span></h6>
+                  <div class="input-group mb-2">
+                    <input type="text" id="newParticipant2" class="form-control" placeholder="Enter participant name">
+                    <button class="btn btn-success btn-sm" onclick="addParticipant('Group_2')">Add</button>
+                  </div>
+                  <div id="group2List" class="participant-list">
+                    <!-- Group 2 participants will be listed here -->
+                  </div>
+                </div>
+
+                <!-- Batch Actions -->
+                <div class="d-flex gap-2">
+                  <button class="btn btn-primary btn-sm" onclick="saveBatchChanges()">💾 Save Changes</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteBatch()">🗑️ Delete Batch</button>
+                  <button class="btn btn-info btn-sm" onclick="exportBatch()">📤 Export Batch</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="importFile" accept=".json,.csv" style="display: none;" onchange="handleFileImport(event)">
+
+  <!-- Main JavaScript file -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="batch-manager.js"></script>
+</body>
+
+</html>
