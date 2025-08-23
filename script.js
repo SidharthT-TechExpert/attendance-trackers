@@ -1,9 +1,8 @@
-
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 
 // Load batch data from localStorage
 function loadBatchDataFromStorage() {
-  const saved = localStorage.getItem('attendanceBatches');
+  const saved = localStorage.getItem("attendanceBatches");
   if (saved) {
     return JSON.parse(saved);
   }
@@ -12,20 +11,20 @@ function loadBatchDataFromStorage() {
 
 // Get current batch data
 let currentBatchData = null;
-let selectedBatchName = '';
+let selectedBatchName = "";
 
 // ====================== BATCH SELECTION ======================
 function loadBatchData() {
-  const batchSelect = document.getElementById('batchSelect');
+  const batchSelect = document.getElementById("batchSelect");
   const selectedBatch = batchSelect.value;
-  
+
   if (!selectedBatch) {
     currentBatchData = null;
-    selectedBatchName = '';
+    selectedBatchName = "";
     resetGroupData();
     return;
   }
-  
+
   const batches = loadBatchDataFromStorage();
   if (batches && batches[selectedBatch]) {
     currentBatchData = batches[selectedBatch];
@@ -35,28 +34,28 @@ function loadBatchData() {
 }
 
 function updateGroupSwitches() {
-  const group2Switch = document.getElementById('group2');
+  const group2Switch = document.getElementById("group2");
   const group2Label = group2Switch.nextElementSibling;
-  
+
   if (currentBatchData && currentBatchData.hasGroup2) {
     group2Switch.disabled = false;
-    group2Label.style.opacity = '1';
+    group2Label.style.opacity = "1";
   } else {
     group2Switch.disabled = true;
     group2Switch.checked = false;
-    group2Label.style.opacity = '0.5';
+    group2Label.style.opacity = "0.5";
   }
 }
 
 function resetGroupData() {
   // Reset all group checkboxes
-  document.querySelectorAll('input[name="group"]').forEach(cb => {
+  document.querySelectorAll('input[name="group"]').forEach((cb) => {
     cb.checked = false;
   });
-  
+
   // Clear the participant list
-  document.getElementById('list').innerHTML = '';
-  
+  document.getElementById("list").innerHTML = "";
+
   // Reset state variables
   rawNames = [];
   displayNames = [];
@@ -68,19 +67,18 @@ function resetGroupData() {
 
 // Populate batch dropdown
 function populateBatchDropdown() {
-  const batchSelect = document.getElementById('batchSelect');
+  const batchSelect = document.getElementById("batchSelect");
   const batches = loadBatchDataFromStorage();
-  
+
   if (batches) {
-    Object.keys(batches).forEach(batchName => {
-      const option = document.createElement('option');
+    Object.keys(batches).forEach((batchName) => {
+      const option = document.createElement("option");
       option.value = batchName;
       option.textContent = batchName;
       batchSelect.appendChild(option);
     });
   }
 }
-
 
 // Checkbox selector for group selection
 const checkboxes = document.querySelectorAll('input[name="group"]');
@@ -208,7 +206,6 @@ function renderList() {
     `;
       listDiv.appendChild(div);
     });
-
 }
 
 // ====================== MARK ATTENDANCE ======================
@@ -254,7 +251,6 @@ function updateNameColors() {
 
 // ====================== REPORT GENERATION ======================
 function generateOutput() {
- 
   // --- Static report headers ---
 
   const Mean = "📒 COMMUNICATION SESSION REPORT";
@@ -300,13 +296,11 @@ function generateOutput() {
 
   let Duck = "";
 
-  if(Group === 'Combined'){
-      Duck = "⭐".repeat(27)
-  }else{
-    Duck = "⭐".repeat(Coordinators.length /2 + 6)
+  if (Group === "Combined") {
+    Duck = "⭐".repeat(27);
+  } else {
+    Duck = "⭐".repeat(Coordinators.length / 2 + 6);
   }
-
-
 
   // --- Collect extra details ---
   const tldv = document.getElementById("tldv").value.trim();
@@ -468,21 +462,21 @@ function downloadReport() {
     editMode.style.display === "block" ? editMode.value : viewMode.textContent;
 
   // Create download
-  const dataBlob = new Blob([textToDownload], {type: 'text/plain'});
-  const link = document.createElement('a');
+  const dataBlob = new Blob([textToDownload], { type: "text/plain" });
+  const link = document.createElement("a");
   link.href = URL.createObjectURL(dataBlob);
-  
+
   // Generate filename with current date and batch info
-  const date = new Date().toISOString().split('T')[0];
-  const batchInfo = selectedBatchName || 'BCR71';
+  const date = new Date().toISOString().split("T")[0];
+  const batchInfo = selectedBatchName || "BCR71";
   link.download = `attendance_report_${batchInfo}_${date}.txt`;
-  
+
   link.click();
-  
+
   Swal.fire({
-    icon: 'success',
-    title: 'Download Complete',
-    text: 'Report has been downloaded as .txt file!'
+    icon: "success",
+    title: "Download Complete",
+    text: "Report has been downloaded as .txt file!",
   });
 }
 
