@@ -18,7 +18,8 @@
     <p>Manage batches and participants for attendance tracking</p>
     <div class="mt-2">
       <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='index.html'">← Back to Attendance</button>
-      <button class="btn btn-outline-light btn-sm" onclick="window.location.href='settings.html'">⚙️ Settings</button>
+      <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='settings.html'">⚙️ Settings</button>
+      <button class="btn btn-outline-danger btn-sm" onclick="logout()">🚪 Logout</button>
     </div>
   </header>
 
@@ -27,58 +28,63 @@
       <div class="col-lg-12 col-md-10">
         <div class="container-box">
           
-                     <!-- Batch Management Section -->
-           <div class="row mb-4">
-             <div class="col-md-6">
-               <h5>📚 Batch Management</h5>
-               <div class="input-group mb-3">
-                 <span class="input-group-text">BC</span>
-                 <input type="text" id="newBatchName" class="form-control" placeholder="Enter batch suffix (e.g., R71, A1, 2024)">
-                 <button class="btn btn-success" onclick="addNewBatch()">Add Batch</button>
-               </div>
-             </div>
-             <div class="col-md-6">
-               <h5>📊 Data Management</h5>
-               <div class="d-flex gap-2">
-                 <button class="btn btn-primary btn-sm" onclick="exportAllData()">📤 Export All</button>
-                 <button class="btn btn-info btn-sm" onclick="importData()">📥 Import</button>
-                 <button class="btn btn-warning btn-sm" onclick="backupData()">💾 Backup</button>
-                 <button class="btn btn-secondary btn-sm" onclick="restoreData()">📂 Restore</button>
-               </div>
-             </div>
-           </div>
+          <!-- Authentication Status Display -->
+          <div class="alert alert-success mb-4" id="authStatus">
+            <strong>🔐 Authenticated:</strong> <span id="currentUser">Loading...</span>
+          </div>
+          
+          <!-- Batch Management Section -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h5>📚 Batch Management</h5>
+              <div class="input-group mb-3">
+                <span class="input-group-text">BC</span>
+                <input type="text" id="newBatchName" class="form-control" placeholder="Enter batch suffix (e.g., R71, A1, 2024)">
+                <button class="btn btn-success" onclick="addNewBatch()">Add Batch</button>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <h5>📊 Data Management</h5>
+              <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm" onclick="exportAllData()">📤 Export All</button>
+                <button class="btn btn-info btn-sm" onclick="importData()">📥 Import</button>
+                <button class="btn btn-warning btn-sm" onclick="backupData()">💾 Backup</button>
+                <button class="btn btn-secondary btn-sm" onclick="restoreData()">📂 Restore</button>
+              </div>
+            </div>
+          </div>
 
-           <!-- Participant Type Legend -->
-           <div class="row mb-4">
-             <div class="col-12">
-               <div class="card">
-                 <div class="card-body">
-                   <h6 class="card-title">📋 Participant Type Legend</h6>
-                   <div class="row">
-                     <div class="col-md-4">
-                       <div class="d-flex align-items-center mb-2">
-                         <span class="badge bg-info me-2">RP</span>
-                         <span><strong>Refreshment Period</strong> - Participants on break/refreshment period</span>
-                       </div>
-                     </div>
-                     <div class="col-md-4">
-                       <div class="d-flex align-items-center mb-2">
-                         <span class="badge bg-warning me-2">C</span>
-                         <span><strong>Coordinator</strong> - Group coordinators (max 2 per group)</span>
-                       </div>
-                       <small class="text-muted ms-4">⚠️ Maximum 2 coordinators allowed per group</small>
-                     </div>
-                     <div class="col-md-4">
-                       <div class="d-flex align-items-center mb-2">
-                         <span class="badge bg-secondary me-2">Regular</span>
-                         <span><strong>Regular</strong> - Standard participants</span>
-                       </div>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-             </div>
-           </div>
+          <!-- Participant Type Legend -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">📋 Participant Type Legend</h6>
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-info me-2">RP</span>
+                        <span><strong>Refreshment Period</strong> - Participants on break/refreshment period</span>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-warning me-2">C</span>
+                        <span><strong>Coordinator</strong> - Group coordinators (max 2 per group)</span>
+                      </div>
+                      <small class="text-muted ms-4">⚠️ Maximum 2 coordinators allowed per group</small>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-secondary me-2">Regular</span>
+                        <span><strong>Regular</strong> - Standard participants</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- Batch List -->
           <div class="row">
@@ -143,9 +149,74 @@
   <!-- Hidden file input for import -->
   <input type="file" id="importFile" accept=".json,.csv" style="display: none;" onchange="handleFileImport(event)">
 
-  <!-- Main JavaScript file -->
+  <!-- JavaScript files -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="batch-manager.js"></script>
+  
+  <script>
+  // ====================== AUTHENTICATION CHECK ======================
+  
+  // Check if user is authenticated when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    // For now, we'll assume the user came from the authenticated login
+    // In a real app, you would check session/token here
+    
+    // Display current user (this would come from session in real app)
+    const urlParams = new URLSearchParams(window.location.search);
+    const referrer = document.referrer;
+    
+    // Simple check - if user didn't come from index.html, redirect back
+    if (!referrer.includes('index.html') && !sessionStorage.getItem('batchManagerAccess')) {
+      Swal.fire({
+        icon: 'warning',
+        title: '🔒 Access Denied',
+        text: 'Please authenticate through the main page to access Batch Manager.',
+        confirmButtonText: 'Go to Login',
+        confirmButtonColor: '#004d61',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      }).then(() => {
+        window.location.href = 'index.html';
+      });
+      return;
+    }
+    
+    // Set session flag to allow direct refresh
+    sessionStorage.setItem('batchManagerAccess', 'true');
+    
+    // Update current user display
+    document.getElementById('currentUser').textContent = 'Authorized User';
+  });
+  
+  // Logout function
+  function logout() {
+    Swal.fire({
+      title: '🚪 Logout',
+      text: 'Are you sure you want to logout?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, logout',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#004d61'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Clear session
+        sessionStorage.removeItem('batchManagerAccess');
+        
+        Swal.fire({
+          icon: 'success',
+          title: '👋 Logged Out',
+          text: 'You have been logged out successfully',
+          showConfirmButton: false,
+          timer: 1500
+        }).then(() => {
+          window.location.href = 'index.html';
+        });
+      }
+    });
+  }
+  </script>
+
 </body>
 
 </html>
