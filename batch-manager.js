@@ -9,7 +9,7 @@ const defaultBatches = {
       "Group_1": [
         "Achyuth J",
         "Adarsh Babu",
-        "Aifa Sana Uk",
+        "Aifa Sana Uk (RP)",
         "Akhil Joy (Aj)",
         "Aswathy K (RP)", 
         "Arun Narayan Nair (C)",
