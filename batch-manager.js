@@ -51,7 +51,7 @@ const defaultBatches = {
         "Muzammil Muhammed",
         "Anuja Joy (RP)",
         "Anusha (RP)",
-        "Aswathi KV (RP)",
+        "Aswathi KV (RP)", 
         "Fairose (RP)",
         "Minto (RP)",
         "Mubasir (RP)",
