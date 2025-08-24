@@ -22,7 +22,7 @@ async function authenticateAndRedirect() {
     const result = await Swal.fire({
       title: "🔒 Authentication Required",
       html: `
-<div style="text-align: left; padding: 10px 20px;">
+<div style="text-align: left; padding: 10px 20px; overflow: hidden">
   <!-- Email -->
   <div style="margin-bottom: 18px;">
     <label for="auth-email" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;">
