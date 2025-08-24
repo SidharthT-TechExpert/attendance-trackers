@@ -5,8 +5,11 @@ function loadBatchDataFromStorage() {
   const saved = localStorage.getItem("attendanceBatches");
   if (saved) {
     return JSON.parse(saved);
+  } else {
+    // If no saved data, initialize with default batches
+    localStorage.setItem("attendanceBatches", JSON.stringify(defaultBatches));
+    return defaultBatches;
   }
-  return null;
 }
 
 // Get current batch data
@@ -14,11 +17,11 @@ let currentBatchData = null;
 let selectedBatchName = "";
 
 // ====================== BATCH SELECTION ======================
-function loadBatchData() {
+function loadBatch() {
   const batchSelect = document.getElementById("batchSelect");
   const selectedBatch = batchSelect.value;
   // Update view modes
-  document.getElementById("outputView").textContent ='' ;
+  document.getElementById("outputView").textContent = '';
 
   if (!selectedBatch) {
     currentBatchData = null;
@@ -70,6 +73,12 @@ function resetGroupData() {
 // Populate batch dropdown
 function populateBatchDropdown() {
   const batchSelect = document.getElementById("batchSelect");
+  
+  // Clear existing options except the first one
+  while (batchSelect.children.length > 1) {
+    batchSelect.removeChild(batchSelect.lastChild);
+  }
+  
   const batches = loadBatchDataFromStorage();
 
   if (batches) {
@@ -79,6 +88,10 @@ function populateBatchDropdown() {
       option.textContent = batchName;
       batchSelect.appendChild(option);
     });
+    
+    console.log(`Populated dropdown with ${Object.keys(batches).length} batches`);
+  } else {
+    console.log("No batches found in storage");
   }
 }
 
@@ -255,7 +268,7 @@ function updateNameColors() {
 function generateOutput() {
   // --- Static report headers ---
 
-  const Mean = "📒 COMMUNICATION SESSION REPORT";
+  const Mean = "🔒 COMMUNICATION SESSION REPORT";
   const Batch = selectedBatchName || "BCR71"; // Use selected batch or default
 
   const date = formatDate(new Date());
@@ -412,15 +425,13 @@ function generateOutput() {
 
 // ====================== UTILITIES ======================
 function formatDate(date) {
-  const currentDate = document.getElementById("currentDate");
-  const date = new Date();
   const options = {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   };
-  currentDate.textContent = date.toLocaleDateString("en-US", options);
+  return date.toLocaleDateString("en-US", options);
 }
 
 // ====================== COPY TO CLIPBOARD ======================
@@ -559,6 +570,8 @@ function toggleEdit() {
 
 // ====================== INIT BOOTSTRAP TOOLTIP & DATE ======================
 document.addEventListener("DOMContentLoaded", function () {
+  console.log("DOM Content Loaded - initializing...");
+  
   // Enable Bootstrap tooltips
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
@@ -569,57 +582,72 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Display current date
   const currentDate = document.getElementById("currentDate");
-  currentDate.textContent = formatDate(new Date());
+  if (currentDate) {
+    currentDate.textContent = formatDate(new Date());
+  }
 
-  // Populate batch dropdown
+  // Populate batch dropdown - This is the key fix
   populateBatchDropdown();
+  
+  // Set up group checkboxes event listeners (they're defined globally above)
+  // Make sure checkboxes are available
+  setTimeout(() => {
+    const groupCheckboxes = document.querySelectorAll('input[name="group"]');
+    console.log(`Found ${groupCheckboxes.length} group checkboxes`);
+  }, 100);
 });
 
 // ====================== CUSTOM DROPDOWN ======================
-document.querySelectorAll(".custom-dropdown").forEach((drop) => {
-  const btn = drop.querySelector(".dropdown-btn");
-  btn.addEventListener("click", () => {
-    drop.classList.toggle("active");
-  });
-  drop.querySelectorAll(".dropdown-menu li").forEach((item) => {
-    item.addEventListener("click", () => {
-      btn.innerHTML =
-        "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
-      drop.classList.remove("active");
+document.addEventListener("DOMContentLoaded", function() {
+  // Custom dropdown functionality
+  document.querySelectorAll(".custom-dropdown").forEach((drop) => {
+    const btn = drop.querySelector(".dropdown-btn");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        drop.classList.toggle("active");
+      });
+    }
+    
+    drop.querySelectorAll(".dropdown-menu li").forEach((item) => {
+      item.addEventListener("click", () => {
+        if (btn) {
+          btn.innerHTML =
+            "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
+        }
+        drop.classList.remove("active");
+      });
     });
   });
-});
 
-// Close if clicked outside
-window.addEventListener("click", (e) => {
-  document.querySelectorAll(".custom-dropdown").forEach((drop) => {
-    if (!drop.contains(e.target)) drop.classList.remove("active");
+  // Close if clicked outside
+  window.addEventListener("click", (e) => {
+    document.querySelectorAll(".custom-dropdown").forEach((drop) => {
+      if (!drop.contains(e.target)) drop.classList.remove("active");
+    });
   });
-});
 
-// Function to get the selected time from the custom dropdown function
-function getSelectedTime() {
+  // Set default time
+  const defaultTime = "11:30 AM - 12:30 PM";
   const btn = document.querySelector(".custom-dropdown .dropdown-btn");
-  return btn.textContent
-    .replace("⌄", "")
-    .replace("⏰", "")
-    .replace("⏰ 🕒", ""); // returns the selected label (like "⏰ 11:30 AM - 12:30 PM")
-}
-
-// When page loads, set default value
-window.addEventListener("DOMContentLoaded", () => {
-  const defaultTime = "11:30 AM - 12:30 PM"; // <-- your default value
-
-  const btn = document.querySelector(".custom-dropdown .dropdown-btn");
-  const hiddenInput = document.getElementById("time"); // hidden input for form submission
+  const hiddenInput = document.getElementById("time");
 
   if (btn) {
-    // Set button text with arrow
     btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
   }
 
   if (hiddenInput) {
-    // Set hidden input value
     hiddenInput.value = defaultTime;
   }
 });
+
+// Function to get the selected time from the custom dropdown
+function getSelectedTime() {
+  const btn = document.querySelector(".custom-dropdown .dropdown-btn");
+  if (btn) {
+    return btn.textContent
+      .replace("⌄", "")
+      .replace("⏰", "")
+      .trim();
+  }
+  return "11:30 AM - 12:30 PM"; // fallback
+}

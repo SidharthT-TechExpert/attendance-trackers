@@ -9,6 +9,9 @@
   <link href="https://raw.githubusercontent.com/SidharthT-TechExpert/attendance-tracker/refs/heads/main/Img/logo.webp"
     rel="icon">
   <link rel="stylesheet" href="style.css">
+  <script defer src="batch-manager.js"></script>
+  <script defer src="script.js"></script>
+  <script defer src="auth.js"></script>
 </head>
 
 <body>
@@ -31,7 +34,7 @@
             <div class="row">
                 <div class="col-md-6">
                 <label for="batchSelect" class="form-label">🎓 Select Batch</label>
-                <select id="batchSelect" class="form-select mb-2" onclick="loadBatches()" onchange="loadBatchData()">
+                <select id="batchSelect" class="form-select mb-2" onclick="loadBatchData()" onchange="loadBatch()">
                   <option value="">Select a batch...</option>
                 </select>
                 </div>
@@ -140,10 +143,8 @@
   </div>
 
   <!-- Main JavaScript files -->
-   <script src="batch-manager.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="script.js"></script>
-  <script src="auth.js"></script>
+  
 
 </body>
 

@@ -1,5 +1,5 @@
 // ====================== DEFAULT BATCHES ======================
-let defaultBatches = {
+const defaultBatches = {
     BCR71: {
       name: "BCR71",
       hasGroup2: true,
@@ -89,6 +89,7 @@ function loadBatches() {
     saveBatches();
   }
 }
+
 
 // ====================== BATCH MANAGEMENT ======================
 function addNewBatch() {
