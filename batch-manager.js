@@ -1,6 +1,5 @@
 // ====================== DEFAULT BATCHES ======================
-let defaultBatches = [
-  {
+let defaultBatches = {
     BCR71: {
       name: "BCR71",
       hasGroup2: true,
@@ -63,18 +62,7 @@ let defaultBatches = [
         ],
       },
     },
-  },
-  {
-    BCR72: {
-      name: "BCR72",
-      hasGroup2: false,
-      groups: {
-        Group_1: ["Student A", "Student B", "Student C"],
-      },
-    },
-  },
-];
-
+  };
 // ====================== STATE VARIABLES ======================
 let batches = {};
 let selectedBatch = null;
@@ -164,6 +152,7 @@ function updateBatchListSelection() {
 
 function renderBatchList() {
   const batchList = document.getElementById("batchList");
+  if (!batchList) return;
   batchList.innerHTML = "";
 
   Object.keys(batches).forEach((batchName) => {
