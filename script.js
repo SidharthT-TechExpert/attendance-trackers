@@ -271,7 +271,7 @@ function generateOutput() {
   const Mean = "🔒 COMMUNICATION SESSION REPORT";
   const Batch = selectedBatchName || "BCR71"; // Use selected batch or default
 
-  const date = formatDate(new Date());
+  const date = FormateDate(new Date());
   const GroupName = Group;
   const Time = getSelectedTime(); // Get selected time from custom dropdown
 
@@ -335,7 +335,7 @@ function generateOutput() {
   let OtherBatch = document.getElementById("Batch").value.trim().split(",");
 
   // --- Details block ---
-  const Detalis = `${Duck}\n${Mean} \n🎓 Batch :${Batch} ${GroupName} \n📅 Date :${date}\n⏰ Time :${Time} \n👨🏻‍🏫 Trainer :${Trainer}\n👫 Coordinators : ${Coordinators}\n${Duck}\n\n`;
+  const Detalis = `${Duck}\n${Mean} \n🎓 Batch : ${Batch} ${GroupName} \n📅 Date : ${date}\n⏰ Time : ${Time} \n👨🏻‍🏫 Trainer :${Trainer}\n👫 Coordinators : ${Coordinators}\n${Duck}\n\n`;
 
   // --- Session overview ---
   const Report = `♻ Session Overview:\n           ${reportByText}`;
@@ -433,6 +433,15 @@ function formatDate(date) {
   };
   return date.toLocaleDateString("en-US", options);
 }
+
+function FormateDate(date) {
+    const d = new Date(date);
+    const day = d.getDate();
+    const month = d.toLocaleString('en-US', { month: 'short' }); // "Aug"
+    const year = d.getFullYear();
+    return `${day} ${month} ${year}`;
+}
+
 
 // ====================== COPY TO CLIPBOARD ======================
 function copyOutput() {
