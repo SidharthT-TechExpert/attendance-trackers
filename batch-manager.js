@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ====================== DATA PERSISTENCE ======================
-function saveBatches(batches) {
+function saveBatches() {
   localStorage.setItem("attendanceBatches", JSON.stringify(batches));
 }
 
@@ -89,7 +89,7 @@ function loadBatches() {
   } else {
     // Initialize with default data
     batches = defaultBatches;
-    saveBatches(batches);
+    saveBatches();
   }
 }
 
