@@ -17,6 +17,8 @@ let selectedBatchName = "";
 function loadBatchData() {
   const batchSelect = document.getElementById("batchSelect");
   const selectedBatch = batchSelect.value;
+  // Update view modes
+  document.getElementById("outputView").textContent ='' ;
 
   if (!selectedBatch) {
     currentBatchData = null;
