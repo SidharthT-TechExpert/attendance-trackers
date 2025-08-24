@@ -14,26 +14,53 @@ async function authenticateAndRedirect() {
     const result = await Swal.fire({
       title: "🔒 Authentication Required",
       html: `
-                <div style="text-align: left; padding: 0 20px;">
-                    <div style="margin-bottom: 15px;">
-                        <label for="auth-email" style="display: block; margin-bottom: 5px; font-weight: 600;">📧 Email Address:</label>
-                        <input type="email" id="auth-email" class="swal2-input" placeholder="Enter your email" 
-                               style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <label for="auth-password" style="display: block; margin-bottom: 5px; font-weight: 600;">🔑 Password:</label>
-                        <div style="position: relative;">
-                            <input type="password" id="auth-password" class="swal2-input" placeholder="Enter your password"
-                                   style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; padding-right: 45px;">
-                            <button type="button" id="toggle-password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer;">👁️</button>
-                        </div>
-                    </div>
-                    <div style="margin-top: 15px; text-align: center;">
-                        <small style="color: #666;">
-                            💡 <a href="#" onclick="showCredentials()" style="color: #007bff; text-decoration: none;">Click here to see valid credentials</a>
-                        </small>
-                    </div>
-                </div>
+<div style="text-align: left; padding: 10px 20px;">
+  <!-- Email -->
+  <div style="margin-bottom: 18px;">
+    <label for="auth-email" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;">
+      📧 Email Address:
+    </label>
+    <input 
+      type="email" 
+      id="auth-email" 
+      class="swal2-input" 
+      placeholder="Enter your email" 
+      style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; font-size: 15px; outline: none; transition: border 0.3s, box-shadow 0.3s;"
+      onfocus="this.style.border='2px solid #007bff'; this.style.boxShadow='0 0 6px rgba(0,123,255,0.3)'" 
+      onblur="this.style.border='2px solid #ccc'; this.style.boxShadow='none'">
+  </div>
+
+  <!-- Password -->
+  <div style="margin-bottom: 18px;">
+    <label for="auth-password" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;">
+      🔑 Password:
+    </label>
+    <div style="position: relative;">
+      <input 
+        type="password" 
+        id="auth-password" 
+        class="swal2-input" 
+        placeholder="Enter your password"
+        style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; font-size: 15px; padding-right: 45px; outline: none; transition: border 0.3s, box-shadow 0.3s;"
+        onfocus="this.style.border='2px solid #007bff'; this.style.boxShadow='0 0 6px rgba(0,123,255,0.3)'" 
+        onblur="this.style.border='2px solid #ccc'; this.style.boxShadow='none'">
+      <button 
+        type="button" 
+        id="toggle-password" 
+        onclick="togglePassword()" 
+        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; color: #555;">
+        👁️
+      </button>
+    </div>
+  </div>
+
+  <!-- Forgot / Help -->
+  <div style="margin-top: 15px; text-align: center;">
+    <small style="color: #555; font-size: 14px;">
+      💡 <a href="#" onclick="showCredentials()" style="color: #007bff; text-decoration: none;">Click here for help</a>
+    </small>
+  </div>
+</div>
             `,
       icon: "question",
       showCancelButton: true,
@@ -41,7 +68,7 @@ async function authenticateAndRedirect() {
       cancelButtonText: "❌ Cancel",
       confirmButtonColor: "#004d61",
       cancelButtonColor: "#6c757d",
-      width: "450px",
+      width: "50%",
       focusConfirm: false,
       allowOutsideClick: false,
       didOpen: () => {

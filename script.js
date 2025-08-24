@@ -13,25 +13,7 @@ function loadBatchDataFromStorage() {
 let currentBatchData = null;
 let selectedBatchName = "";
 
-// ====================== BATCH SELECTION ======================
-function loadBatchData() {
-  const batchSelect = document.getElementById("batchSelect");
-  const selectedBatch = batchSelect.value;
 
-  if (!selectedBatch) {
-    currentBatchData = null;
-    selectedBatchName = "";
-    resetGroupData();
-    return;
-  }
-
-  const batches = loadBatchDataFromStorage();
-  if (batches && batches[selectedBatch]) {
-    currentBatchData = batches[selectedBatch];
-    selectedBatchName = selectedBatch;
-    updateGroupSwitches();
-  }
-}
 
 function updateGroupSwitches() {
   const group2Switch = document.getElementById("group2");

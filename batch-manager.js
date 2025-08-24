@@ -1,6 +1,6 @@
 // ====================== BATCH DATA MANAGEMENT ======================
 
-// Initialize default data structure
+// ====================== DEFAULT BATCHES ======================
 const defaultBatches = {
   BCR71: {
     name: "BCR71",
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ====================== DATA PERSISTENCE ======================
-function saveBatches() {
+function saveBatches(batches) {
   localStorage.setItem("attendanceBatches", JSON.stringify(batches));
 }
 
@@ -89,7 +89,7 @@ function loadBatches() {
   } else {
     // Initialize with default data
     batches = defaultBatches;
-    saveBatches();
+    saveBatches(batches);
   }
 }
 
