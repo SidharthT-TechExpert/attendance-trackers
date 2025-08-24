@@ -1,68 +1,68 @@
 // ====================== DEFAULT BATCHES ======================
-const defaultBatches = {
-    BCR71: {
-      name: "BCR71",
-      hasGroup2: true,
-      groups: {
-        Group_1: [
-          "Achyuth J",
-          "Adarsh Babu",
-          "Aifa Sana Uk (RP)",
-          "Akhil Joy (Aj)",
-          "Aswathy K (RP)",
-          "Arun Narayan Nair (C)",
-          "Chitra Arun (RP)",
-          "Christin Johny",
-          "Fasalu Rahman",
-          "Govind S Kumar",
-          "Jagan (C)",
-          "Jasima (RP)",
-          "Kadeejatu Zaiba",
-          "Karthik B",
-          "Krishna (RP)",
-          "Midhun Manoj (RP)",
-          "Neethu George",
-          "Praveena E S",
-          "Riyas Kv (RP)",
-          "Sidharth T",
-          "Thaskeem J",
-          "Visal Vijayan (RP)",
-        ],
-        Group_2: [
-          "Ahammed Junaid",
-          "Ajnas Muhammed (C)",
-          "Akhil",
-          "Arshad Chappangan",
-          "Arun M",
-          "Bijo P A",
-          "Gowry N",
-          "Mohamed Nabeel",
-          "Muhammed Shibili K (C)",
-          "Reuben Varghese",
-          "Sarath A",
-          "Juvek Swamiji (RP)",
-          "Solaman KJ",
-          "Swagath TV",
-          "Tijo Thomas (RP)",
-          "Eid Bilal",
-          "Minto Thomas",
-          "Muzammil Muhammed",
-          "Anuja Joy (RP)",
-          "Anusha (RP)",
-          "Aswathi KV (RP)",
-          "Fairose (RP)",
-          "Minto (RP)",
-          "Mubasir (RP)",
-          "Muhammed Shamshad",
-          "Najila (RP)",
-          "Nazneen (RP)",
-          "Sahla (RP)",
-          "Shahitha (RP)",
-          "Shahna (RP)",
-        ],
-      },
+let defaultBatches = {
+  BCR71: {
+    name: "BCR71",
+    hasGroup2: true,
+    groups: {
+      Group_1: [
+        "Achyuth J",
+        "Adarsh Babu",
+        "Aifa Sana Uk (RP)",
+        "Akhil Joy (Aj)",
+        "Aswathy K (RP)",
+        "Arun Narayan Nair (C)",
+        "Chitra Arun (RP)",
+        "Christin Johny",
+        "Fasalu Rahman",
+        "Govind S Kumar",
+        "Jagan (C)",
+        "Jasima (RP)",
+        "Kadeejatu Zaiba",
+        "Karthik B",
+        "Krishna (RP)",
+        "Midhun Manoj (RP)",
+        "Neethu George",
+        "Praveena E S",
+        "Riyas Kv (RP)",
+        "Sidharth T",
+        "Thaskeem J",
+        "Visal Vijayan (RP)",
+      ],
+      Group_2: [
+        "Ahammed Junaid",
+        "Ajnas Muhammed (C)",
+        "Akhil",
+        "Arshad Chappangan",
+        "Arun M",
+        "Bijo P A",
+        "Gowry N",
+        "Mohamed Nabeel",
+        "Muhammed Shibili K (C)",
+        "Reuben Varghese",
+        "Sarath A",
+        "Juvek Swamiji (RP)",
+        "Solaman KJ",
+        "Swagath TV",
+        "Tijo Thomas (RP)",
+        "Eid Bilal",
+        "Minto Thomas",
+        "Muzammil Muhammed",
+        "Anuja Joy (RP)",
+        "Anusha (RP)",
+        "Aswathi KV (RP)",
+        "Fairose (RP)",
+        "Minto (RP)",
+        "Mubasir (RP)",
+        "Muhammed Shamshad",
+        "Najila (RP)",
+        "Nazneen (RP)",
+        "Sahla (RP)",
+        "Shahitha (RP)",
+        "Shahna (RP)",
+      ],
     },
-  };
+  },
+};
 // ====================== STATE VARIABLES ======================
 let batches = {};
 let selectedBatch = null;
@@ -89,7 +89,6 @@ function loadBatches() {
     saveBatches();
   }
 }
-
 
 // ====================== BATCH MANAGEMENT ======================
 function addNewBatch() {
@@ -259,16 +258,18 @@ function renderParticipantList(groupName, participants) {
           ${isRP ? '<span class="badge bg-info ms-2">RP</span>' : ""}
           ${isC ? '<span class="badge bg-warning ms-2">C</span>' : ""}
         </div>
-        <div class="btn-group btn-group-sm">
-          <button class="btn ${buttonClass} btn-sm" onclick="toggleParticipantType('${groupName}', ${index})" ${
-      buttonDisabled ? "disabled" : ""
-    }>
-            ${buttonText}
-          </button>
-          <button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', ${index})">
-            🗑️
-          </button>
-        </div>
+       <div class="btn-group btn-group-sm">
+  <button class="btn ${buttonClass} btn-sm" 
+          onclick="toggleParticipantType('${groupName}', ${index})" 
+          ${buttonDisabled ? "disabled" : ""}>
+    ${buttonText}
+  </button>
+  ${
+    isAdmin() || isManager() || isCoordinator()
+      ? `<button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', ${index})">🗑️</button>`
+      : ""
+  }
+</div>
       </div>
     `;
 
@@ -459,6 +460,15 @@ function saveBatchChanges() {
 
 function deleteBatch() {
   if (!selectedBatch) return;
+
+  if (!(isAdmin() || isManager())) {
+    Swal.fire({
+      icon: "error",
+      title: "Access Denied",
+      text: "❌ Only Admin and Manager can delete batches.",
+    });
+    return;
+  }
 
   Swal.fire({
     title: "Delete Batch",
