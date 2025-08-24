@@ -21,7 +21,7 @@ function loadBatch() {
   const batchSelect = document.getElementById("batchSelect");
   const selectedBatch = batchSelect.value;
   // Update view modes
-  document.getElementById("outputView").textContent = '';
+  document.getElementById("outputView").textContent = "";
 
   if (!selectedBatch) {
     currentBatchData = null;
@@ -73,12 +73,12 @@ function resetGroupData() {
 // Populate batch dropdown
 function populateBatchDropdown() {
   const batchSelect = document.getElementById("batchSelect");
-  
+
   // Clear existing options except the first one
   while (batchSelect.children.length > 1) {
     batchSelect.removeChild(batchSelect.lastChild);
   }
-  
+
   const batches = loadBatchDataFromStorage();
 
   if (batches) {
@@ -88,8 +88,10 @@ function populateBatchDropdown() {
       option.textContent = batchName;
       batchSelect.appendChild(option);
     });
-    
-    console.log(`Populated dropdown with ${Object.keys(batches).length} batches`);
+
+    console.log(
+      `Populated dropdown with ${Object.keys(batches).length} batches`
+    );
   } else {
     console.log("No batches found in storage");
   }
@@ -435,13 +437,12 @@ function formatDate(date) {
 }
 
 function FormateDate(date) {
-    const d = new Date(date);
-    const day = d.getDate();
-    const month = d.toLocaleString('en-US', { month: 'short' }); // "Aug"
-    const year = d.getFullYear();
-    return `${day} ${month} ${year}`;
+  const d = new Date(date);
+  const day = d.getDate();
+  const month = d.toLocaleString("en-US", { month: "short" }); // "Aug"
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
 }
-
 
 // ====================== COPY TO CLIPBOARD ======================
 function copyOutput() {
@@ -580,7 +581,7 @@ function toggleEdit() {
 // ====================== INIT BOOTSTRAP TOOLTIP & DATE ======================
 document.addEventListener("DOMContentLoaded", function () {
   console.log("DOM Content Loaded - initializing...");
-  
+
   // Enable Bootstrap tooltips
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
@@ -597,7 +598,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Populate batch dropdown - This is the key fix
   populateBatchDropdown();
-  
+
   // Set up group checkboxes event listeners (they're defined globally above)
   // Make sure checkboxes are available
   setTimeout(() => {
@@ -607,7 +608,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ====================== CUSTOM DROPDOWN ======================
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   // Custom dropdown functionality
   document.querySelectorAll(".custom-dropdown").forEach((drop) => {
     const btn = drop.querySelector(".dropdown-btn");
@@ -616,7 +617,7 @@ document.addEventListener("DOMContentLoaded", function() {
         drop.classList.toggle("active");
       });
     }
-    
+
     drop.querySelectorAll(".dropdown-menu li").forEach((item) => {
       item.addEventListener("click", () => {
         if (btn) {
@@ -653,10 +654,7 @@ document.addEventListener("DOMContentLoaded", function() {
 function getSelectedTime() {
   const btn = document.querySelector(".custom-dropdown .dropdown-btn");
   if (btn) {
-    return btn.textContent
-      .replace("⌄", "")
-      .replace("⏰", "")
-      .trim();
+    return btn.textContent.replace("⌄", "").replace("⏰", "").trim();
   }
   return "11:30 AM - 12:30 PM"; // fallback
 }

@@ -127,7 +127,7 @@ input[type="checkbox"] {
 }
 
 .download-btn {
-  background: linear-gradient(90deg, #4CAF50, #45a049);
+  background: linear-gradient(90deg, #4caf50, #45a049);
   color: white;
   font-weight: bold;
   border: none;
@@ -139,7 +139,7 @@ input[type="checkbox"] {
 }
 
 .download-btn:hover {
-  background: linear-gradient(90deg, #45a049, #4CAF50);
+  background: linear-gradient(90deg, #45a049, #4caf50);
   transform: scale(1.05);
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
 }
