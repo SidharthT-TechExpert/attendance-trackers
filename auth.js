@@ -2,9 +2,17 @@
 
 const AUTH_CONFIG = {
   validCredentials: [
-    { email: "admin@gmail.com", password: "admin123" },
-    { email: "manager@attendance.com", password: "manager123" },
-    { email: "coordinator@attendance.com", password: "coord123" },
+    { email: "admin@gmail.com", password: "admin123", role: "admin" },
+    {
+      email: "manager@attendance.com",
+      password: "manager123",
+      role: "manager",
+    },
+    {
+      email: "coordinator@attendance.com",
+      password: "coord123",
+      role: "coordinator",
+    },
   ],
 };
 
@@ -127,12 +135,25 @@ async function authenticateAndRedirect() {
           return false;
         }
 
-        return { email: validUser.email, password: validUser.password };
+        return {
+          email: validUser.email,
+          password: validUser.password,
+          role: validUser.role,
+        };
       },
     });
 
     // If user confirmed and validation passed
     if (result.isConfirmed && result.value) {
+      // Store user data in sessionStorage
+      sessionStorage.setItem(
+        "currentUser",
+        JSON.stringify({
+          email: result.value.email,
+          role: result.value.role,
+        })
+      );
+
       // Show success message
       await Swal.fire({
         icon: "success",
@@ -166,7 +187,7 @@ function showCredentials() {
             <div style="text-align: left; padding: 0 20px;">
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
                     <h6 style="color: #004d61; margin-bottom: 8px;">👑 Admin Access:</h6>
-                    <p style="margin: 5px 0;"><strong>Email:</strong> admin@attendance.com</p>
+                    <p style="margin: 5px 0;"><strong>Email:</strong> admin@gmail.com</p>
                     <p style="margin: 5px 0;"><strong>Password:</strong> admin123</p>
                 </div>
                 
@@ -194,4 +215,25 @@ function showCredentials() {
     confirmButtonColor: "#004d61",
     width: "500px",
   });
+}
+
+// Utility functions to check user role
+function getCurrentUser() {
+  const userData = sessionStorage.getItem("currentUser");
+  return userData ? JSON.parse(userData) : null;
+}
+
+function isAdmin() {
+  const user = getCurrentUser();
+  return user && user.role === "admin";
+}
+
+function isManager() {
+  const user = getCurrentUser();
+  return user && user.role === "manager";
+}
+
+function isCoordinator() {
+  const user = getCurrentUser();
+  return user && user.role === "coordinator";
 }

@@ -412,10 +412,15 @@ function generateOutput() {
 
 // ====================== UTILITIES ======================
 function formatDate(date) {
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = date.toLocaleString("en-US", { month: "short" });
-  const year = date.getFullYear();
-  return `${day} ${month} ${year}`;
+  const currentDate = document.getElementById("currentDate");
+  const date = new Date();
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+  currentDate.textContent = date.toLocaleDateString("en-US", options);
 }
 
 // ====================== COPY TO CLIPBOARD ======================
