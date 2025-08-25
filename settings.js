@@ -2,7 +2,7 @@
 
 // Settings object
 let settings = {
-  autoBackup: false,
+  autoBackup: true,
   backupFrequency: "weekly",
   confirmDeletions: true,
   autoSave: true,
