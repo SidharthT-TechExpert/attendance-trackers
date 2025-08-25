@@ -521,3 +521,65 @@ function displayCurrentDate() {
   };
   currentDate.textContent = date.toLocaleDateString("en-US", options);
 }
+
+function loadStatistics() {
+  const saved = localStorage.getItem("attendanceBatches");
+  if (!saved) return;
+
+  const batches = JSON.parse(saved);
+
+  let totalBatches = Object.keys(batches).length;
+  let totalParticipants = 0, totalCoordinators = 0, totalRP = 0;
+
+  const tbody = document.getElementById("batchStatsBody");
+  if (tbody) tbody.innerHTML = ""; // Clear old rows
+
+  // Find newest batch (last added key)
+  const batchKeys = Object.keys(batches);
+  const newestBatch = batchKeys[batchKeys.length - 1];
+
+  Object.values(batches).forEach(batch => {
+    const group1 = batch.groups.Group_1 || [];
+    const group2 = batch.hasGroup2 ? batch.groups.Group_2 || [] : [];
+    const all = [...group1, ...group2];
+
+    const batchParticipants = all.length;
+    const batchCoordinators = all.filter(n => n.includes("(C)")).length;
+    const batchRP = all.filter(n => n.includes("(RP)")).length;
+
+    totalParticipants += batchParticipants;
+    totalCoordinators += batchCoordinators;
+    totalRP += batchRP;
+
+    // Percentages
+    const rpPercent = batchParticipants ? ((batchRP / batchParticipants) * 100).toFixed(1) + "%" : "0%";
+
+    // Add row
+    if (tbody) {
+      const row = document.createElement("tr");
+
+      // Highlight newest batch row
+      if (batch.name === newestBatch) {
+        row.classList.add("table-success"); // Bootstrap highlight
+      }
+
+      row.innerHTML = `
+        <td><strong>${batch.name}</strong></td>
+        <td>${batchParticipants}</td>
+        <td>${batchCoordinators}</td>
+        <td>${batchRP}</td>
+        <td>${rpPercent}</td>
+      `;
+      tbody.appendChild(row);
+    }
+  });
+
+  // Update top cards
+  document.getElementById("totalBatches").textContent = totalBatches;
+  document.getElementById("totalParticipants").textContent = totalParticipants;
+  document.getElementById("totalCoordinators").textContent = totalCoordinators;
+  document.getElementById("totalRP").textContent = totalRP;
+}
+
+// Reload stats when page loads
+document.addEventListener("DOMContentLoaded", loadStatistics);

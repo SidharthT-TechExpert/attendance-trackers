@@ -14,7 +14,7 @@ let defaultBatches = {
         "Chitra Arun (RP)",
         "Christin Johny",
         "Fasalu Rahman",
-        "Govind S Kumar",
+        "Govind S Kumar (RP)",
         "Jagan (C)",
         "Jasima (RP)",
         "Kadeejatu Zaiba",
@@ -131,6 +131,11 @@ function addNewBatch() {
     title: "Batch Created",
     text: `Batch ${batchName} has been created successfully!`,
   });
+
+  // 🔥 Update settings stats if that page is open
+  if (typeof loadStatistics === "function") {
+    loadStatistics();
+  }
 }
 
 function selectBatch(batchName) {
@@ -467,6 +472,7 @@ function deleteBatch() {
       title: "Access Denied",
       text: "❌ Only Admin and Manager can delete batches.",
     });
+
     return;
   }
 
@@ -485,6 +491,13 @@ function deleteBatch() {
       selectedBatch = null;
       document.getElementById("batchDetails").style.display = "none";
       renderBatchList();
+
+      if (
+        window.location.pathname.includes("settings.html") &&
+        typeof loadStatistics === "function"
+      ) {
+        loadStatistics();
+      }
 
       Swal.fire({
         icon: "success",
