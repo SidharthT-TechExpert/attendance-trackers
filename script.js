@@ -414,8 +414,8 @@ function generateOutput() {
     Detalis +
     Report +
     presentees +
-    alternative +
     OtherBatches +
+    alternative +
     absentees +
     RP +
     link;
