@@ -314,9 +314,9 @@ function generateOutput() {
   let Duck = "";
 
   if (Group === "Combined") {
-    Duck = "⭐".repeat(27);
+    Duck = "🔷".repeat(27);
   } else {
-    Duck = "⭐".repeat(Coordinators.length / 2 + 6);
+    Duck = "🔷".repeat(Coordinators.length / 2 + 6);
   }
 
   // --- Collect extra details ---
