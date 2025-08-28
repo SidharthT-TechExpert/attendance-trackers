@@ -1,5 +1,11 @@
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 
+// ✅ Clear attendance-related data on every page load
+window.addEventListener("DOMContentLoaded", () => {
+  localStorage.removeItem("attendanceBatches");
+  console.log("✅ Cleared attendanceBatches from localStorage on page load");
+});
+
 // Load batch data from localStorage
 function loadBatchDataFromStorage() {
   const saved = localStorage.getItem("attendanceBatches");
