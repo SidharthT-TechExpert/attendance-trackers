@@ -1,0 +1,142 @@
+:root {
+  --primary-color: #004d61;   /* Dark teal */
+  --secondary-color: #00b7c2; /* Aqua */
+  --accent-color: #f4f7f9;    /* Light gray */
+  --danger-color: #ea5455;
+  --success-color: #28c76f;
+  --warning-color: #ff9f43;
+  --info-color: #00cfe8;
+
+  --header-height: 100px;
+}
+
+body {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: #fff;
+  min-height: 100vh;
+  font-family: "Segoe UI", Roboto, sans-serif;
+}
+
+/* ===== Header ===== */
+header {
+  padding: 1rem;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+header h4 {
+  margin: 0;
+  font-weight: 700;
+}
+header small {
+  opacity: 0.8;
+}
+
+/* ===== Container Box ===== */
+.container-box {
+  background: #fff;
+  color: #333;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  padding: 24px;
+  margin-top: 1rem;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Section Headings ===== */
+h5 {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ===== Cards ===== */
+.card {
+  border: none;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: all 0.25s ease-in-out;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+.card-body {
+  padding: 1.5rem;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  border-radius: 10px;
+  font-weight: 500;
+  transition: all 0.25s ease;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.btn-primary { background: var(--primary-color); border: none; }
+.btn-success { background: var(--success-color); border: none; }
+.btn-warning { background: var(--warning-color); border: none; color: #fff; }
+.btn-info    { background: var(--info-color); border: none; color: #fff; }
+.btn-outline-danger { border-color: var(--danger-color); color: var(--danger-color); }
+.btn-outline-danger:hover { background: var(--danger-color); color: #fff; }
+
+/* ===== Stats Cards ===== */
+.card.text-center h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--secondary-color);
+}
+.card.text-center p {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* ===== Tables ===== */
+.table {
+  font-size: 0.9rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.table th {
+  background: var(--accent-color);
+  color: #333;
+  font-weight: 600;
+}
+.table td, .table th { padding: 0.75rem; }
+.table-hover tbody tr:hover { background: #f8fbff; }
+
+/* ===== Switches ===== */
+.form-check-input:checked {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 0.2rem rgba(0,183,194,0.25);
+}
+.form-check-label { font-size: 0.9rem; }
+
+/* ===== Backup History Table ===== */
+#backupHistory .table th {
+  background: #e9f2ff;
+  color: var(--primary-color);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  header h4 { font-size: 1.2rem; }
+  .container-box { padding: 1rem; }
+  .card-body { padding: 1rem; }
+}

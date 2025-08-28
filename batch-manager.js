@@ -113,7 +113,12 @@ export async function toggleGroup2() {
 export async function deleteBatch() {
   if (!selectedBatch) return;
   const batchName = selectedBatch;
-
+  // Check if user is admin before allowing delete
+  const userIsAdmin = window.currentUser?.isAdmin;
+  if (!userIsAdmin) {
+    Swal.fire({ icon: "error", title: "Access Denied", text: "Only admins can delete batches." });
+    return;
+  }
   Swal.fire({
     title: "Delete Batch",
     text: `Are you sure you want to delete ${batchName}?`,
