@@ -174,9 +174,9 @@ checkboxes.forEach((cb) => {
           }
           if (n.includes("(C)")) {
             // If Coordinator → mark as C and show
-            CoordinatorsA[n.replace("(C)", "")] = "present"; // Store coordinator status
+            CoordinatorsA[n.replace(" (C)", "")] = "present"; // Store coordinator status
 
-            const cleanName = n.replace("(C)", "");
+            const cleanName = n.replace(" (C)", "");
             attendanceStatus[cleanName] = "C";
             return true;
           }
@@ -191,6 +191,7 @@ checkboxes.forEach((cb) => {
         });
 
       // Render updated list
+      console.log(attendanceStatus)
       renderList();
 
       // --- Ensure only one group checkbox stays checked ---
@@ -234,7 +235,7 @@ function renderList() {
 // ====================== MARK ATTENDANCE ======================
 function mark(name, state, checkbox) {
   // --- Ensure only one checkbox can be active at a time ---
-  const cbs = document.querySelectorAll(`.person input[onchange*="'${name}'"]`);
+  const cbs = document.querySelectorAll(`.person input[onchange*="${name}"]`);
   cbs.forEach((cb) => {
     if (cb !== checkbox) cb.checked = false;
   });
@@ -290,9 +291,7 @@ function generateOutput() {
       text: "Please Select The Group first!",
     });
   // --- Get Coordinators per group ---
-  let Coordinators = Object.keys(attendanceStatus).filter(
-    (n) => attendanceStatus[n] === "C"
-  );
+  let Coordinators = Object.keys(CoordinatorsA).filter((n) => CoordinatorsA[n]!=='')
   if (Coordinators.length === 0) {
     Coordinators = null; // If no coordinators found, set to null
   } else if (Coordinators.length === 1) {
@@ -304,7 +303,7 @@ function generateOutput() {
     Coordinators = "";
     Names.forEach((n, i) => {
       if (i === Names.length - 2) {
-        Coordinators += " - Grp_1 \n👫 Coordinators : " + n + "& ";
+        Coordinators += " - Grp_1 \n👫 Coordinators : " + n + " & ";
       } else if (i === 0) {
         Coordinators += n + " & ";
       } else if (i === Names.length - 1) {
@@ -349,6 +348,9 @@ function generateOutput() {
   const Report = `♻ Session Overview:\n           ${reportByText}`;
 
   // --- Attendance builder helper ---
+  //("Presentees", "🟩", "present", "✅");
+    console.log(attendanceStatus)
+
   let textMaker = (text, icon, status, textIcon, check = attendanceStatus) => {
     let Text;
     // If check is an array (OtherBatch), handle differently
