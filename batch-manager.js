@@ -54,7 +54,7 @@ export function listenToBatches() {
         if (typeof renderBatchList === "function") renderBatchList();
       }
     },
-    (err) => console.error("❌ Realtime error:", err)
+    (err) => console.log("❌ Realtime error:", err)
   );
 }
 
@@ -65,7 +65,7 @@ export async function saveBatches() {
     await setDoc(doc(db, "batches", "allBatches"), { ...batches });
     console.log("✅ Saved to Firestore");
   } catch (err) {
-    console.error("❌ Error saving:", err);
+    console.log("❌ Error saving:", err);
   }
 }
 
@@ -249,7 +249,7 @@ export async function exportAllData() {
 
     Swal.fire({ icon: "success", title: "Exported!", text: "Backup downloaded successfully." });
   } catch (err) {
-    console.error("❌ Export error:", err);
+    console.log("❌ Export error:", err);
     Swal.fire({ icon: "error", title: "Export Failed", text: err.message });
   }
 }
@@ -283,12 +283,22 @@ export async function importDataFile(event) {
         }
       });
     } catch (err) {
-      console.error("❌ Import error:", err);
+      console.log("❌ Import error:", err);
       Swal.fire({ icon: "error", title: "Import Failed", text: "File format is invalid." });
     }
   };
   reader.readAsText(file);
 }
+
+// Expose functions for inline HTML onclick attributes
+window.addNewBatch = addNewBatch;
+window.addParticipant = addParticipant;
+window.removeParticipant = removeParticipant;
+window.deleteBatch = deleteBatch;
+window.toggleGroup2 = toggleGroup2;
+window.exportAllData = exportAllData;
+window.importDataFile = importDataFile;
+
 
 // ====================== INIT ======================
 document.addEventListener("DOMContentLoaded", () => {
