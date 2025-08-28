@@ -191,7 +191,7 @@ checkboxes.forEach((cb) => {
         });
 
       // Render updated list
-      console.log(attendanceStatus)
+      console.log(attendanceStatus);
       renderList();
 
       // --- Ensure only one group checkbox stays checked ---
@@ -242,7 +242,9 @@ function mark(name, state, checkbox) {
 
   // --- Update attendance state ---
   attendanceStatus[name] = checkbox.checked ? state : "present";
-  CoordinatorsA[name] = checkbox.checked ? state : "present";
+  
+  if (CoordinatorsA[name])
+    CoordinatorsA[name] = checkbox.checked ? state : "present";
 
   // --- Update color coding ---
   updateNameColors();
@@ -291,7 +293,9 @@ function generateOutput() {
       text: "Please Select The Group first!",
     });
   // --- Get Coordinators per group ---
-  let Coordinators = Object.keys(CoordinatorsA).filter((n) => CoordinatorsA[n]!=='')
+  let Coordinators = Object.keys(CoordinatorsA).filter(
+    (n) => CoordinatorsA[n] !== ""
+  );
   if (Coordinators.length === 0) {
     Coordinators = null; // If no coordinators found, set to null
   } else if (Coordinators.length === 1) {
@@ -349,7 +353,7 @@ function generateOutput() {
 
   // --- Attendance builder helper ---
   //("Presentees", "🟩", "present", "✅");
-    console.log(attendanceStatus)
+  console.log(attendanceStatus);
 
   let textMaker = (text, icon, status, textIcon, check = attendanceStatus) => {
     let Text;
