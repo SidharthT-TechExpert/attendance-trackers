@@ -55,7 +55,7 @@ let defaultBatches = {
         "Muhammed Shamshad",
         "Najila (RP)",
         "Nazneen (RP)",
-        "Sahla ",
+        "Sahla",
         "Shahitha (RP)",
         "Shahna (RP)",
       ],
