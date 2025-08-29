@@ -1,3 +1,5 @@
 # Ignore real config so sensitive data isn’t in repo
 config.js
 .env
+# Node modules (always ignore)
+node_modules/
