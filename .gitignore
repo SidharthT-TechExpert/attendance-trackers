@@ -1,2 +1,3 @@
 # Ignore real config so sensitive data isn’t in repo
 config.js
+.env
