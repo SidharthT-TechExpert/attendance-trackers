@@ -3,3 +3,6 @@ config.js
 .env
 # Node modules (always ignore)
 node_modules/
+
+package.json
+package-lock.json
