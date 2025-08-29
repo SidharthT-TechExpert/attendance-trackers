@@ -4,6 +4,8 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 // 🔑 Your Firebase config (already valid for your project)
+// import { firebaseConfig } from "./config.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyAFe3jkeenflwT1boIfiYYJzseImeoB8gg",
   authDomain: "report-e8db1.firebaseapp.com",

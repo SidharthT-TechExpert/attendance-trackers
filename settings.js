@@ -1,15 +1,19 @@
 /* ====================== FIREBASE IMPORTS ====================== */
 import { db } from "./firebase.js";
 import {
-  doc,
-  getDoc,
-  setDoc,
   collection,
-  getDocs,
   addDoc,
+  getDocs,
   deleteDoc,
+  doc,
+  setDoc,
+  getDoc,
   serverTimestamp,
+  onSnapshot,
+  query,
+  orderBy,
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
 
 /* ====================== DEFAULT SETTINGS ====================== */
 let settings = {
@@ -68,18 +72,6 @@ window.updateBackupFrequency = async function () {
   if (settings.autoBackup) scheduleNextBackup();
 };
 
-window.resetToDefaults = async function () {
-  settings = {
-    autoBackup: false,
-    backupFrequency: "weekly",
-    confirmDeletions: true,
-    autoSave: true,
-    showNotifications: false,
-  };
-  await saveSettings();
-  renderSettings();
-  Swal.fire("✅ Reset", "Settings reset to defaults.", "success");
-};
 
 window.clearAllData = async function () {
   Swal.fire({
@@ -130,8 +122,11 @@ async function createBackup(type = "manual") {
 
     await addDoc(collection(db, "backups"), backupData);
     console.log(`💾 Backup (${type}) created successfully!`);
+
+
     await cleanupOldBackups(); // 🗑️ auto-delete old backups
     loadBackupHistory();
+
   } catch (err) {
     console.error("❌ Backup failed:", err);
   }
@@ -369,77 +364,90 @@ window.checkForUpdates = async function () {
 
 window.resetToDefaults = async function () {
   settings = {
-    autoBackup: false,
-    backupFrequency: "weekly",
+    autoBackup: true,
+    backupFrequency: "daily",
     confirmDeletions: true,
     autoSave: true,
-    showNotifications: false,
+    showNotifications: true,
   };
   await saveSettings();
   renderSettings();
   Swal.fire("✅ Reset", "Settings reset to defaults.", "success");
 };
 
-// Real-time notifications listener
-function initNotifications() {
+// Send notification (auto or manual)
+export async function sendNotification(message, role = "admin") {
+  try {
+    await addDoc(collection(db, "notifications"), {
+      message,
+      role, // "admin" or "manager"
+      createdAt: serverTimestamp(),
+    });
+    console.log("📢 Notification sent:", message);
+  } catch (err) {
+    console.error("❌ Error sending notification:", err);
+  }
+}
+
+async function loadNotifications() {
   const notifList = document.getElementById("notificationList");
   const notifCount = document.getElementById("notifCount");
+  const notifDropdown = document.getElementById("notifDropdown");
 
-  const q = query(
-    collection(db, "notifications"),
-    orderBy("createdAt", "desc")
-  );
-
+  const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     notifList.innerHTML = "";
-    let unreadCount = 0;
-
-    if (snapshot.empty) {
-      notifList.innerHTML = `<li class="list-group-item text-muted">No notifications</li>`;
-      notifCount.style.display = "none";
-      return;
-    }
+    let count = 0;
 
     snapshot.forEach((docSnap) => {
       const notif = docSnap.data();
       const id = docSnap.id;
+      const date = notif.createdAt?.toDate().toLocaleString() || "Just now";
 
-      // Count only unread ones
-      if (!notif.read) unreadCount++;
-
+      count++;
       const li = document.createElement("li");
       li.className =
         "list-group-item d-flex justify-content-between align-items-center";
       li.innerHTML = `
         <div>
-          <strong>${notif.title || "Notification"}</strong><br>
-          <small class="text-muted">${notif.message || ""}</small>
+          <div><strong>${notif.message}</strong></div>
+          <small class="text-muted">${date}</small>
         </div>
-        <button class="btn btn-sm btn-outline-success">✓</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteNotification('${id}')">×</button>
       `;
-
-      // Mark as read & delete when clicked
-      li.querySelector("button").addEventListener("click", async () => {
-        await deleteDoc(doc(db, "notifications", id));
-        console.log("🗑️ Notification cleared:", id);
-      });
-
       notifList.appendChild(li);
     });
 
     // Update badge
-    if (unreadCount > 0) {
-      notifCount.textContent = unreadCount;
+    if (count > 0) {
+      notifCount.textContent = count;
       notifCount.style.display = "inline-block";
     } else {
       notifCount.style.display = "none";
     }
   });
+
+  // Bell toggle
+  document.getElementById("notifBell").addEventListener("click", () => {
+    notifDropdown.style.display =
+      notifDropdown.style.display === "none" ? "block" : "none";
+  });
 }
 
-// Init listener when page loads
+
+// Delete notification after admin marks as read
+window.deleteNotification = async function (id) {
+  try {
+    await deleteDoc(doc(db, "notifications", id));
+    console.log("🗑️ Notification deleted:", id);
+  } catch (err) {
+    console.error("❌ Error deleting notification:", err);
+  }
+};
+
+// Init notifications on page load
 document.addEventListener("DOMContentLoaded", () => {
-  initNotifications();
+  loadNotifications();
 });
 
 /* ====================== INIT ====================== */
@@ -451,4 +459,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   await updateStatistics();
   await loadBackupHistory();
   await cleanupOldBackups();
+  await loadNotifications();
 });
