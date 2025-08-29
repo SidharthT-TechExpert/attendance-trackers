@@ -56,6 +56,38 @@
             </div>
           </div>
 
+          <!-- Participant Type Legend -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">📋 Participant Type Legend</h6>
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-info me-2">RP</span>
+                        <span><strong>Refreshment Period</strong> - Participants on break/refreshment period</span>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-warning me-2">C</span>
+                        <span><strong>Coordinator</strong> - Group coordinators (max 2 per group)</span>
+                      </div>
+                      <small class="text-muted ms-4">⚠️ Maximum 2 coordinators allowed per group</small>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-secondary me-2">Normal</span>
+                        <span><strong>Normal</strong> - Standard participants</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Batch List + Details -->
           <div class="row">
             <div class="col-md-4">
@@ -101,9 +133,9 @@
 
   <!-- 🔴 Error popup -->
   <div id="errorPopup" class="error-popup">
-  <span class="error-icon">⚠</span>
-  <span id="errorMessage"></span>
-</div>
+    <span class="error-icon">⚠</span>
+    <span id="errorMessage"></span>
+  </div>
 
 
   <!-- JavaScript files -->
@@ -118,7 +150,7 @@
     // Check if user is authenticated when page loads
     document.addEventListener('DOMContentLoaded', function () {
       // Check if user is authenticated
-      const currentUser = getCurrentUser();
+      window.currentUser = getCurrentUser();
 
       if (!currentUser) {
         // If not authenticated, redirect back
@@ -203,7 +235,7 @@
       popup.style.display = "block";
     }
 
-        function hideError() {
+    function hideError() {
       document.getElementById("errorPopup").style.display = "none";
     }
     window.showError = showError;

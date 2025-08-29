@@ -211,8 +211,8 @@ function renderList() {
       div.innerHTML = `
       <div class="name col-md-6" style='display:inline-block;'>${name}</div>
       <div class="col-md-5" style='display:inline-block;' >
-          <input style='display:inline-block;' name='alt' type="checkbox" class="custom-tooltip" data-tooltip="Attending alternative CS" onchange="mark('${name}','other',this)"> 🟨
-          <input style='display:inline-block;' name='Absent' type="checkbox" class="custom-tooltip" data-tooltip="Absent" onchange="mark('${name}','absent',this)"> ❌
+          <input style='display:inline-block;' name='alt' type="checkbox" class="custom-tooltip" data-tooltip="Attending alternative CS" onchange="mark('${name}','other',this);"> 🟨
+          <input style='display:inline-block;' name='Absent' type="checkbox" class="custom-tooltip" data-tooltip="Absent" onchange="mark('${name}','absent',this);"> ❌
      </div>
     `;
       listDiv.appendChild(div);
@@ -246,6 +246,170 @@ function updateNameColors() {
   });
 }
 
+// ====================== REPORT GENERATION ======================
+function generateOutput() {
+  // --- Static report headers ---
+console.log('gen S')
+  const Mean = "🔒 COMMUNICATION SESSION REPORT";
+  const Batch = selectedBatchName || "BCR71"; // Use selected batch or default
+
+  const date = FormateDate(new Date());
+  const GroupName = Group;
+  const Time = getSelectedTime(); // Get selected time from custom dropdown
+
+  if (GroupName === "")
+    return Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Please Select The Group first!",
+    });
+  // --- Get Coordinators per group ---
+  let Coordinators = Object.keys(CoordinatorsA).filter(
+    (n) => CoordinatorsA[n] !== ""
+  );
+
+  if (Coordinators.length === 0) {
+    Coordinators = null; // If no coordinators found, set to null
+  } else if (Coordinators.length === 1) {
+    Coordinators = Coordinators[0];
+  } else if (Coordinators.length === 2) {
+    Coordinators = Coordinators[0] + ` & ` + Coordinators[1];
+  } else if (Coordinators.length === 4) {
+   let Names = Coordinators;
+    Coordinators = "";
+    Names.forEach((n, i) => {
+      if (i === Names.length - 2) {
+        Coordinators += " - Grp_1 \n👫 Coordinators : " + n + " & ";
+      } else if (i === 0) {
+        Coordinators += n + " & ";
+      } else if (i === Names.length - 1) {
+        Coordinators += n + " - Grp_2 ";
+      } else {
+        Coordinators += n;
+      }
+    });
+  }
+
+  const Trainer = " Sarang TP";
+
+  let Duck = "";
+
+  if (Group === "Combined") {
+    Duck = "🔷".repeat(27);
+  } else {
+    Duck = "🔷".repeat(Coordinators.length / 2 + 6);
+  }
+
+  // --- Collect extra details ---
+  const tldv = document.getElementById("tldv").value.trim();
+  const meetList = document.getElementById("meetlist").value.trim();
+  const tldvLink = tldv ? `Tldv: ${tldv}` : "Tldv: Not provided";
+  const meetListLink = meetList
+    ? `Meet list: ${meetList}`
+    : "Meet list: Not provided";
+  const reportBy = document
+    .getElementById("reportBy")
+    .value.trim()
+    .trimStart()
+    .split(" ")
+    .map((word) => `${word.charAt(0).toUpperCase() + word.slice(1)}`)
+    .join(" ");
+  const reportByText = document.getElementById("over").value.trim();
+  let OtherBatch = document.getElementById("Batch").value.trim().split(",");
+
+  // --- Details block ---
+  const Detalis = `${Duck}\n${Mean} \n🎓 Batch : ${Batch} ${GroupName} \n📅 Date : ${date}\n⏰ Time : ${Time} \n👨🏻‍🏫 Trainer :${Trainer}\n👫 Coordinators : ${Coordinators}\n${Duck}\n\n`;
+
+  // --- Session overview ---
+  const Report = `♻ Session Overview:\n           ${reportByText}`;
+
+  // --- Attendance builder helper ---
+  //("Presentees", "🟩", "present", "✅");
+  console.log(attendanceStatus);
+
+  let textMaker = (text, icon, status, textIcon, check = attendanceStatus) => {
+    let Text;
+    // If check is an array (OtherBatch), handle differently
+
+    if (check === attendanceStatus) {
+      Text =
+        `\n\n${icon} ${text} (${counter(status, check)}) :\n\n` +
+        Object.keys(check)
+          .filter(
+            (n) =>
+              attendanceStatus[n] === status ||
+              (attendanceStatus[n] === "C" && status === CoordinatorsA[n])
+          )
+          .sort((a, b) => a.localeCompare(b))
+          .map((n) => `${textIcon} ${n} `)
+          .join("\n");
+    } else if (check === OtherBatch) {
+      Text =
+        `\n\n${icon} ${text} (${check.length}) :\n\n` +
+        check
+          .sort((a, b) => a.trim().localeCompare(b.trim()))
+          .map((name) =>
+            name
+              .trimStart()
+              .split(" ")
+              .map((word) => `${word.charAt(0).toUpperCase() + word.slice(1)}`)
+              .join(" ")
+          )
+          .map((name) => `${textIcon} ${name} `)
+          .join("\n");
+    }
+    return Text;
+  };
+
+  // --- Attendance counters ---
+  const counter = (state, check = attendanceStatus) => {
+    return Object.keys(check).filter(
+      (n) =>
+        attendanceStatus[n] === state ||
+        (attendanceStatus[n] === "C" && state === CoordinatorsA[n])
+    ).length;
+  };
+  // --- Build sections ---
+  let count = counter("present");
+  let presentees = textMaker("Presentees", "🟩", "present", "✅");
+  presentees = count === 0 ? "" : presentees;
+
+  count = counter("other");
+  let alternative = textMaker("Alternative Session", "🟨", "other", "☑️");
+  alternative = count === 0 ? "" : alternative;
+
+  count = OtherBatch.length;
+  let OtherBatches = textMaker("Other Batches", "🤩", "", "✨", OtherBatch);
+  OtherBatches = OtherBatch[0] === "" ? "" : OtherBatches;
+
+  count = counter("absent");
+  let absentees = textMaker("Absentees", "❌", "absent", "🚫");
+  absentees = count === 0 ? "" : absentees;
+
+  count = counter("RP");
+  let RP = textMaker("Refresh Period", "🔃", "RP", "🔄");
+  RP = count === 0 ? "" : RP;
+
+  // --- Links and footer ---
+  const link = `\n\n🔗 Link: \n\n      ${tldvLink}\n      ${meetListLink}\n\n ✍ Report By : ${reportBy}`;
+
+  // --- FINAL REPORT OUTPUT ---
+  const finalText =
+    Detalis +
+    Report +
+    presentees +
+    OtherBatches +
+    alternative +
+    absentees +
+    RP +
+    link;
+
+  // Update both view and edit modes
+  document.getElementById("outputView").textContent = finalText;
+  document.getElementById("outputEdit").value = finalText;
+}
+
+
 /* ====================== DATE HELPERS ====================== */
 function formatDate(date) {
   return date.toLocaleDateString("en-US", {
@@ -262,6 +426,26 @@ function formatShortDate(date) {
   })} ${d.getFullYear()}`;
 }
 
+function FormateDate(date) {
+  const d = new Date(date);
+  const day = d.getDate();
+  const month = d.toLocaleString("en-US", { month: "short" }); // "Aug"
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
+}
+
+// Function to get the selected time from the custom dropdown
+function getSelectedTime() {
+  const btn = document.querySelector(".custom-dropdown .dropdown-btn");
+  if (btn) {
+    return btn.textContent.replace("⌄", "").replace("⏰", "").trim();
+  }
+  return "11:30 AM - 12:30 PM"; // fallback
+}
+
+window.mark = mark ;
+window.generateOutput = generateOutput ;
+
 /* ====================== INIT ====================== */
 document.addEventListener("DOMContentLoaded", async function () {
   console.log("✅ DOM Ready");
@@ -276,3 +460,47 @@ document.addEventListener("DOMContentLoaded", async function () {
     batchSelect.addEventListener("click", loadBatchDataFromFirestore);
   }
 });
+
+// ====================== CUSTOM DROPDOWN ======================
+document.addEventListener("DOMContentLoaded", function () {
+  // Custom dropdown functionality
+  document.querySelectorAll(".custom-dropdown").forEach((drop) => {
+    const btn = drop.querySelector(".dropdown-btn");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        drop.classList.toggle("active");
+      });
+    }
+
+    drop.querySelectorAll(".dropdown-menu li").forEach((item) => {
+      item.addEventListener("click", () => {
+        if (btn) {
+          btn.innerHTML =
+            "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
+        }
+        drop.classList.remove("active");
+      });
+    });
+  });
+
+  // Close if clicked outside
+  window.addEventListener("click", (e) => {
+    document.querySelectorAll(".custom-dropdown").forEach((drop) => {
+      if (!drop.contains(e.target)) drop.classList.remove("active");
+    });
+  });
+
+  // Set default time
+  const defaultTime = "11:30 AM - 12:30 PM";
+  const btn = document.querySelector(".custom-dropdown .dropdown-btn");
+  const hiddenInput = document.getElementById("time");
+
+  if (btn) {
+    btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
+  }
+
+  if (hiddenInput) {
+    hiddenInput.value = defaultTime;
+  }
+});
+

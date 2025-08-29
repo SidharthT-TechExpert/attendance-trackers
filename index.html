@@ -141,11 +141,27 @@
 
   <!-- Main JavaScript files -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
+
   <script type="module" src="firebase.js"></script>
   <script type="module" src="batch-manager.js"></script>
   <script type="module" src="script.js"></script>
   <script src="auth.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async function () {
+      console.log("✅ DOM Ready");
+      await populateBatchDropdown();
+      const currentDate = document.getElementById("currentDate");
+      if (currentDate) currentDate.textContent = formatDate(new Date());
+
+      // Attach listeners here
+      const batchSelect = document.getElementById("batchSelect");
+      if (batchSelect) {
+        batchSelect.addEventListener("change", loadBatch);
+        batchSelect.addEventListener("click", loadBatchDataFromFirestore);
+      }
+    });
+  </script>
 
 </body>
 

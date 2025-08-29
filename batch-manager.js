@@ -73,7 +73,6 @@ export function listenToBatches() {
 // ====================== UPDATE (Save all) ======================
 export async function saveBatches() {
   try {
-    // Save entire dictionary; top-level doc holds all batches keyed by name
     await setDoc(doc(db, "batches", "allBatches"), { ...batches });
     console.log("✅ Saved to Firestore");
   } catch (err) {
@@ -96,7 +95,7 @@ export async function addParticipant(groupName) {
     return;
   }
 
-  // Prevent duplicates (ignore RP/C suffixes)
+  // Prevent duplicates
   const all = [
     ...batches[selectedBatch].groups.Group_1,
     ...(batches[selectedBatch].hasGroup2
@@ -144,9 +143,8 @@ export async function toggleGroup2() {
 export async function deleteBatch() {
   if (!selectedBatch) return;
   const batchName = selectedBatch;
-  // Check if user is admin before allowing delete
-  const userIsAdmin = window.currentUser?.isAdmin;
-  console.log(userIsAdmin);
+  const userIsAdmin = window.currentUser?.role === "admin" ? true : false;
+  console.log(window.currentUser.role);
   if (!userIsAdmin) {
     Swal.fire({
       icon: "error",
@@ -164,9 +162,7 @@ export async function deleteBatch() {
     cancelButtonColor: "#d33",
   }).then(async (result) => {
     if (result.isConfirmed) {
-      // Remove locally
       delete batches[batchName];
-      // Remove from Firestore (delete that field in the document)
       await updateDoc(doc(db, "batches", "allBatches"), {
         [batchName]: deleteField(),
       });
@@ -199,6 +195,73 @@ export async function removeParticipant(groupName, index) {
       renderBatchDetails();
     }
   });
+}
+
+// ====================== TOGGLE PARTICIPANT TYPE ======================
+export async function toggleParticipantType(groupName, index) {
+  if (!selectedBatch) return;
+
+  let participants = batches[selectedBatch].groups[groupName];
+  let participant = participants[index];
+  const isRP = participant.includes("(RP)");
+  const isC = participant.includes("(C)");
+
+  const currentCoordinators = participants.filter((p) =>
+    p.includes("(C)")
+  ).length;
+
+  if (isC) {
+    // C → Normal
+    participant = participant.replace("(C)", "").trim();
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "info",
+      title: "Coordinator → Normal",
+      showConfirmButton: false,
+      timer: 1500,
+    });
+  } else if (isRP) {
+    // RP → Normal
+    participant = participant.replace("(RP)", "").trim();
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "info",
+      title: "RP → Normal",
+      showConfirmButton: false,
+      timer: 1500,
+    });
+  } else {
+    // Normal → RP or Normal → C
+    if (currentCoordinators < 2) {
+      // First promotion → Coordinator
+      participant = participant + " (C)";
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Normal → Coordinator 👑",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } else {
+      // Otherwise just toggle RP
+      participant = participant + " (RP)";
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Normal → RP 🔄",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    }
+  }
+
+  participants[index] = participant;
+  await saveBatches();
+  renderBatchDetails();
 }
 
 // ====================== UI HELPERS ======================
@@ -259,14 +322,62 @@ function renderParticipantList(groupName, participants) {
   const list = document.getElementById(listId);
   list.innerHTML = "";
 
+  const currentCoordinators = participants.filter((p) =>
+    p.includes("(C)")
+  ).length;
+
+  // Header counter
+  const counter = document.createElement("div");
+  counter.className = "badge bg-warning mb-2";
+  counter.textContent = `${currentCoordinators}/2 Coordinators`;
+  list.appendChild(counter);
+
   participants.forEach((participant, index) => {
+    const item = document.createElement("div");
+    item.className = "participant-item";
+
+    const isRP = participant.includes("(RP)");
+    const isC = participant.includes("(C)");
     const cleanName = participant.replace(/\(RP\)|\(C\)/g, "").trim();
-    list.innerHTML += `
+
+    let buttonText, buttonClass;
+    if (isRP) {
+      buttonText = "RP";
+      buttonClass = "btn-outline-primary";
+    } else if (isC) {
+      buttonText = "C";
+      buttonClass = "btn-outline-warning";
+    } else {
+      buttonText = "Normal";
+      buttonClass = "btn-outline-secondary";
+    }
+
+    item.innerHTML = `
       <div class="d-flex justify-content-between align-items-center p-2 border rounded mb-1">
-        <div><span>👤 ${cleanName}</span></div>
-        <button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', ${index})">🗑️</button>
+        <div class="d-flex align-items-center">
+          <span class="me-2">${isRP ? "🔄" : isC ? "👑" : "👤"}</span>
+          <span class="${
+            isRP ? "text-info" : isC ? "text-warning" : ""
+          }">${cleanName}</span>
+          ${isRP ? '<span class="badge bg-info ms-2">RP</span>' : ""}
+          ${isC ? '<span class="badge bg-warning ms-2">C</span>' : ""}
+        </div>
+        <div class="btn-group btn-group-sm">
+          <button class="btn ${buttonClass} btn-sm"
+                  onclick="toggleParticipantType('${groupName}', ${index})">
+            ${buttonText}
+          </button>
+          ${
+            (typeof isAdmin === "function" && isAdmin()) ||
+            (typeof isManager === "function" && isManager()) ||
+            (typeof isCoordinator === "function" && isCoordinator())
+              ? `<button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', ${index})">🗑️</button>`
+              : ""
+          }
+        </div>
       </div>
     `;
+    list.appendChild(item);
   });
 }
 
@@ -275,163 +386,110 @@ function selectBatch(batchName) {
   renderBatchDetails();
 }
 
-// ====================== BACKUP / RESTORE ======================
-
-// Export (download) JSON from Firestore
-export async function exportAllData() {
-  try {
-    const snap = await getDoc(doc(db, "batches", "allBatches"));
-    if (!snap.exists()) {
-      Swal.fire({
-        icon: "warning",
-        title: "No Data",
-        text: "No batches found to export.",
-      });
-      return;
-    }
-
-    const data = snap.data();
-    const backup = {
-      batches: data,
-      timestamp: new Date().toISOString(),
-      version: "1.0",
-    };
-
-    const blob = new Blob([JSON.stringify(backup, null, 2)], {
-      type: "application/json",
-    });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `batches_backup_${
-      new Date().toISOString().split("T")[0]
-    }.json`;
-    link.click();
-
-    Swal.fire({
-      icon: "success",
-      title: "Exported!",
-      text: "Backup downloaded successfully.",
-    });
-  } catch (err) {
-    console.log("❌ Export error:", err);
-    Swal.fire({ icon: "error", title: "Export Failed", text: err.message });
-  }
-}
-
-// Import JSON into Firestore (replaces all batches)
-export async function importDataFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const imported = JSON.parse(e.target.result);
-
-      if (!imported.batches) {
-        Swal.fire({
-          icon: "error",
-          title: "Invalid File",
-          text: "JSON does not contain batches.",
-        });
-        return;
-      }
-
-      Swal.fire({
-        title: "Confirm Import",
-        text: "This will replace ALL existing batch data in Firestore. Continue?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, Import",
-        cancelButtonColor: "#d33",
-      }).then(async (res) => {
-        if (res.isConfirmed) {
-          await setDoc(doc(db, "batches", "allBatches"), imported.batches);
-          Swal.fire({
-            icon: "success",
-            title: "Imported!",
-            text: "Data restored successfully.",
-          });
-        }
-      });
-    } catch (err) {
-      console.log("❌ Import error:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Import Failed",
-        text: "File format is invalid.",
-      });
-    }
-  };
-  reader.readAsText(file);
-}
-
-
 // ====================== IMPORT VIA TEXTAREA ======================
-export function importData() {
+export async function importData() {
+  // Completely rewritten error detection function
+  function getJSONErrorDetails(input, err) {
+    let line = 1, col = 1;
+    let friendlyMessage = err.message;
+
+    const positionMatch = /position (\d+)/i.exec(err.message);
+    if (positionMatch) {
+      const pos = parseInt(positionMatch[1], 10);
+      const lines = input.substring(0, pos).split('\n');
+      line = lines.length;
+      col = lines[lines.length - 1].length + 1;
+    } else {
+      let errorPos = 0;
+      for (let i = 1; i <= input.length; i++) {
+        try {
+          JSON.parse(input.substring(0, i));
+        } catch (parseError) {
+          if (parseError.message === err.message) {
+            errorPos = i - 1;
+            break;
+          }
+        }
+      }
+      if (errorPos > 0) {
+        const lines = input.substring(0, errorPos).split('\n');
+        line = lines.length;
+        col = lines[lines.length - 1].length + 1;
+      }
+    }
+
+    if (err.message.includes("Unexpected token")) {
+      const tokenMatch = /Unexpected token (\S+)/.exec(err.message);
+      if (tokenMatch) {
+        const token = tokenMatch[1];
+        friendlyMessage = `Unexpected '${token}' - check for:`;
+        if (token === "'" || token === '"') friendlyMessage += " unclosed quotes or missing comma";
+        else if (token === ",") friendlyMessage += " extra comma or missing value";
+        else if (token === ":" || token === "}") friendlyMessage += " missing property name or value";
+        else if (token === "{") friendlyMessage += " missing property name after comma";
+        else friendlyMessage += " missing comma, colon, or quotes";
+      }
+    } else if (err.message.includes("Unexpected end of JSON")) {
+      friendlyMessage = "Incomplete JSON - missing closing brackets, braces, or quotes";
+    } else if (err.message.includes("Expected")) {
+      friendlyMessage = "Syntax error - expected a different character (check commas, colons, brackets)";
+    } else if (err.message.includes("property name must be a string")) {
+      friendlyMessage = "Property names must be in quotes (e.g., use \"name\" instead of name)";
+    } else if (input.trim() === "") {
+      friendlyMessage = "Empty JSON - please enter valid JSON data";
+      line = 1;
+      col = 1;
+    }
+
+    return { line, col, friendlyMessage };
+  }
+
+  function showError(message, line, col) {
+    const popup = document.getElementById("errorPopup");
+    const msg = document.getElementById("errorMessage");
+    msg.textContent = message;
+    popup.style.display = "flex";
+    popup.style.animation = "none";
+    popup.offsetHeight;
+    popup.style.animation = "slideIn 0.5s forwards";
+
+    const textarea = document.getElementById("settingsInput");
+    const lines = textarea.value.split('\n');
+
+    if (line > 0 && line <= lines.length) {
+      let charPos = 0;
+      for (let i = 0; i < line - 1; i++) charPos += lines[i].length + 1;
+      charPos += col - 1;
+
+      textarea.focus();
+      textarea.setSelectionRange(charPos, charPos + 1);
+      textarea.scrollTop = textarea.scrollHeight;
+    }
+
+    setTimeout(hideError, 8000);
+  }
+
+  function hideError() {
+    const popup = document.getElementById("errorPopup");
+    popup.style.display = "none";
+  }
+
   Swal.fire({
     title: "📥 Import Batches JSON",
     html: `
       <style>
-        /* ========== JSON EDITOR WITH LINE NUMBERS ========== */
-        .editor-container {
-          display: flex;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          overflow: hidden;
-          width: 100%;
-          height: 300px;
-          font-family: monospace;
-          background: #fff;
-        }
-        .line-numbers {
-          background: #f4f4f4;
-          color: #999;
-          text-align: right;
-          padding: 10px;
-          user-select: none;
-          font-size: 13px;
-          line-height: 1.5em;
-          overflow: hidden;
-        }
-        .editor {
-          flex: 1;
-          padding: 10px;
-          border: none;
-          outline: none;
-          resize: none;
-          font-size: 13px;
-          line-height: 1.5em;
-          overflow: auto;
-        }
-
-        /* ========== ERROR TOAST ========== */
-        .error-popup {
-          display: none;
-          position: fixed;
-          top: 20px;
-          right: -400px; /* hidden off screen */
-          max-width: 350px;
-          background: linear-gradient(135deg, #e53935, #ef5350);
-          color: #fff;
-          padding: 12px 18px;
-          border-radius: 10px;
-          font-weight: bold;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-          z-index: 5000;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          animation: slideIn 0.5s forwards;
-        }
-        .error-popup .icon {
-          font-size: 18px;
-        }
-        @keyframes slideIn {
-          from { right: -400px; opacity: 0; }
-          to { right: 20px; opacity: 1; }
-        }
+        .editor-container { display: flex; border:1px solid #ddd; border-radius:8px; overflow:hidden; width:100%; height:300px; position:relative; }
+        .line-numbers { background:#f4f4f4; color:#999; text-align:right; padding:10px; user-select:none; font-size:13px; line-height:1.5em; overflow:hidden; }
+        .editor { flex:1; padding:10px; border:none; outline:none; resize:none; font-size:13px; line-height:1.5em; overflow:auto; font-family: monospace; }
+        #shortcutHeroBtn { position:absolute; top:8px; right:8px; background:linear-gradient(135deg,#4facfe,#00f2fe); color:white; border:none; border-radius:8px; padding:6px 12px; font-weight:bold; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:10; transition:all 0.2s ease; }
+        #shortcutHeroBtn:hover { transform:scale(1.05); }
+        .error-popup { display:none; position:fixed; top:20px; right:-400px; max-width:400px; background:linear-gradient(135deg,#e53935,#ef5350); color:#fff; padding:12px 18px; border-radius:10px; font-weight:bold; box-shadow:0 6px 20px rgba(0,0,0,0.25); z-index:5000; display:flex; align-items:center; gap:10px; animation:slideIn 0.5s forwards; }
+        .error-popup .icon { font-size:18px; }
+        @keyframes slideIn { from { right:-400px; opacity:0; } to { right:20px; opacity:1; } }
+        .error-line { background: rgba(255, 0, 0, 0.1) !important; }
       </style>
+
+      <button id="shortcutHeroBtn">💡 Shortcut Hero</button>
 
       <div class="editor-container">
         <div class="line-numbers" id="lineNumbers">1</div>
@@ -454,10 +512,10 @@ export function importData() {
         </pre>
       </small>
 
-      <!-- 🔴 Error Toast -->
       <div id="errorPopup" class="error-popup">
         <span class="icon">⚠</span>
         <span id="errorMessage"></span>
+        <button onclick="hideError()" style="background:none; border:none; color:white; cursor:pointer; margin-left:10px;">✕</button>
       </div>
     `,
     width: "650px",
@@ -466,101 +524,177 @@ export function importData() {
     cancelButtonText: "❌ Cancel",
     focusConfirm: false,
     didOpen: () => {
-      // Setup line numbers
       const textarea = document.getElementById("settingsInput");
       const lineNumbers = document.getElementById("lineNumbers");
+      const shortcutBtn = document.getElementById("shortcutHeroBtn");
+      let fontSize = 13;
 
       function updateLineNumbers() {
         const lines = textarea.value.split("\n").length;
-        lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join("<br>");
+        lineNumbers.innerHTML = Array.from({ length: Math.max(lines, 1) }, (_, i) => i + 1).join("<br>");
+        lineNumbers.style.fontSize = fontSize + "px";
+        lineNumbers.style.lineHeight = "1.5em";
       }
 
-      textarea.addEventListener("input", updateLineNumbers);
+      textarea.addEventListener("input", () => {
+        updateLineNumbers();
+      });
+
       textarea.addEventListener("scroll", () => {
         lineNumbers.scrollTop = textarea.scrollTop;
       });
+
       updateLineNumbers();
+
+      shortcutBtn.addEventListener("click", () => {
+        Swal.fire({
+          title: "💡 Keyboard Shortcuts",
+          html: `
+            <ul style="text-align:left; line-height:1.6em; padding-left:20px;">
+              <li><strong>Shift + N</strong> → Wrap selected text as "name"</li>
+              <li><strong>Shift + U</strong> → Wrap selected text in uppercase quotes</li>
+              <li><strong>Ctrl/Cmd + S</strong> → Save JSON</li>
+              <li><strong>Ctrl/Cmd + E</strong> → Clear textarea</li>
+              <li><strong>Ctrl/Cmd + I</strong> → Focus editor</li>
+              <li><strong>Ctrl/Cmd + =</strong> → Increase font size</li>
+              <li><strong>Ctrl/Cmd + -</strong> → Decrease font size</li>
+            </ul>
+          `,
+          icon: "info",
+          confirmButtonText: "Got it!",
+        }).then(() => {
+          textarea.focus();
+        });
+      });
+
+      // Editor key events (unchanged)
+      textarea.addEventListener("keydown", (e) => {
+        const { selectionStart, selectionEnd, value } = textarea;
+        const selectedText = value.substring(selectionStart, selectionEnd);
+
+        if (e.key === "Enter") {
+          const before = value.substring(0, selectionStart);
+          const after = value.substring(selectionEnd);
+          const prevLine = before.split("\n").pop();
+          const indent = prevLine.match(/^\s*/)[0];
+          if (before.endsWith("{") || before.endsWith("[")) {
+            e.preventDefault();
+            textarea.value = before + "\n" + indent + "  \n" + indent + after;
+            textarea.selectionStart = textarea.selectionEnd = before.length + 1 + indent.length + 2;
+          }
+        }
+
+        if (["{", "[", '"'].includes(e.key)) {
+          e.preventDefault();
+          const pair = e.key === "{" ? "{}" : e.key === "[" ? "[]" : '""';
+          textarea.setRangeText(pair, selectionStart, selectionEnd, "end");
+          textarea.selectionStart -= 1;
+          textarea.selectionEnd = textarea.selectionStart;
+        }
+
+        if (e.ctrlKey || e.metaKey) {
+          if (e.key === "s") { e.preventDefault(); Swal.clickConfirm(); }
+          if (e.key === "e") { e.preventDefault(); textarea.value = ""; updateLineNumbers(); }
+          if (e.key === "i") { e.preventDefault(); textarea.focus(); }
+          if (e.key === "=") { e.preventDefault(); fontSize += 1; textarea.style.fontSize = fontSize + "px"; updateLineNumbers(); }
+          if (e.key === "-") { e.preventDefault(); fontSize = Math.max(8, fontSize - 1); textarea.style.fontSize = fontSize + "px"; updateLineNumbers(); }
+        }
+
+        if (e.shiftKey) {
+          if (e.key.toLowerCase() === "n") {
+            e.preventDefault();
+            textarea.setRangeText(`"name"`, selectionStart, selectionEnd, "end");
+            textarea.selectionStart = textarea.selectionEnd = selectionStart + 6;
+            updateLineNumbers();
+          }
+          if (e.key.toLowerCase() === "u" && selectedText) {
+            e.preventDefault();
+            textarea.setRangeText(`"${selectedText.toUpperCase()}"`, selectionStart, selectionEnd, "end");
+            textarea.selectionStart = textarea.selectionEnd = selectionStart + selectedText.length + 2;
+            updateLineNumbers();
+          }
+        }
+      });
     },
-    preConfirm: () => {
-      const input = document.getElementById("settingsInput").value.trim();
+    preConfirm: async () => {
+      const textarea = document.getElementById("settingsInput");
+      const input = textarea.value.trim();
+
       if (!input) {
-        showError("⚠ Please paste JSON data!");
+        showError("⚠ Please paste JSON data!", 1, 1);
         return false;
       }
+
       try {
         const parsed = JSON.parse(input);
 
-        // ✅ Validate structure: Must be object of batches
         if (typeof parsed !== "object" || Array.isArray(parsed)) {
-          throw new Error("Invalid structure, must be an object of batches.");
+          throw new Error("JSON must be an object containing batches, not an array");
         }
 
-        for (const key in parsed) {
-          const batch = parsed[key];
-          if (!batch.name || !batch.groups) {
-            throw new Error(
-              `Batch "${key}" is missing 'name' or 'groups' property.`
-            );
+        if (Object.keys(parsed).length === 0) {
+          throw new Error("JSON object is empty - please add batch data");
+        }
+
+        for (const batchId in parsed) {
+          const batch = parsed[batchId];
+
+          if (!batch.name) throw new Error(`Batch "${batchId}" is missing the 'name' property`);
+          if (!batch.groups || typeof batch.groups !== "object") throw new Error(`Batch "${batchId}" has invalid 'groups' property`);
+
+          for (const groupName in batch.groups) {
+            if (!Array.isArray(batch.groups[groupName])) throw new Error(`Group "${groupName}" in batch "${batchId}" must be an array`);
+            if (batch.groups[groupName].length === 0) throw new Error(`Group "${groupName}" in batch "${batchId}" is empty`);
           }
         }
 
         hideError();
         return parsed;
       } catch (err) {
-        showError("❌ Invalid JSON: " + err.message);
+        const { line, col } = getJSONErrorDetails(input, err);
+        showError(`❌ Error: ${err.message} (Line ${line}, Column ${col})`, line, col);
         return false;
       }
     },
   }).then(async (result) => {
     if (result.isConfirmed && result.value) {
       try {
-        // Save to Firestore
-        await setDoc(doc(db, "batches", "allBatches"), result.value, {
-          merge: true,
-        });
-        Swal.fire(
-          "✅ Imported",
-          "Batch data has been saved successfully!",
-          "success"
-        );
+        const existingBatchesSnap = await getDoc(doc(db, "batches", "allBatches"));
+        const existingBatches = existingBatchesSnap.exists() ? existingBatchesSnap.data() : {};
+
+        const duplicateBatches = [];
+        for (const batchId in result.value) {
+          if (existingBatches.hasOwnProperty(batchId)) duplicateBatches.push(batchId);
+        }
+
+        if (duplicateBatches.length > 0) {
+          Swal.fire("❌ Import Failed", `Batch(es) already exist: ${duplicateBatches.join(', ')}. Please use unique batch IDs.`, "error");
+          return;
+        }
+
+        const updatedBatches = { ...existingBatches, ...result.value };
+        await setDoc(doc(db, "batches", "allBatches"), updatedBatches, { merge: true });
+
+        Swal.fire("✅ Imported", "Batch data saved successfully!", "success");
       } catch (err) {
         Swal.fire("❌ Import Failed", err.message, "error");
       }
     }
   });
-
-  // ========== ERROR TOAST FUNCTIONS ==========
-  function showError(message) {
-    const popup = document.getElementById("errorPopup");
-    const msg = document.getElementById("errorMessage");
-    msg.textContent = message;
-    popup.style.display = "flex";
-
-    // Restart animation
-    popup.style.animation = "none";
-    popup.offsetHeight; // reflow
-    popup.style.animation = "slideIn 0.5s forwards";
-  }
-
-  function hideError() {
-    const popup = document.getElementById("errorPopup");
-    popup.style.display = "none";
-  }
 }
 
 
-// Expose functions for inline HTML onclick attributes
+// ====================== EXPOSE ======================
 window.addNewBatch = addNewBatch;
 window.addParticipant = addParticipant;
 window.removeParticipant = removeParticipant;
 window.deleteBatch = deleteBatch;
 window.toggleGroup2 = toggleGroup2;
-window.exportAllData = exportAllData;
-window.importDataFile = importDataFile;
+window.toggleParticipantType = toggleParticipantType;
 window.importData = importData;
 
 // ====================== INIT ======================
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ Batch Manager Ready");
-  listenToBatches(); // auto-load from Firestore
+  listenToBatches();
 });
