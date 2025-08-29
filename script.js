@@ -137,7 +137,7 @@ checkboxes.forEach((cb) => {
       if (this.value === "group1") {
         groupData = currentBatchData.groups.Group_1;
         Group = "Group 1";
-        console.log(groupData)
+        console.log(groupData);
       } else if (this.value === "group2") {
         if (!currentBatchData.hasGroup2) {
           Swal.fire({
@@ -205,13 +205,16 @@ function renderList() {
     .sort((a, b) => a.localeCompare(b))
     .forEach((name) => {
       const div = document.createElement("div");
+      // Add rp-row class if RP
       div.className = "person col-md-4" + (isRP[name] ? " rp-row" : "");
+      div.style.display = "inline-block";
       div.innerHTML = `
-      <div class="name col-md-6">${name}</div>
-      <div class="col-md-5">
-        <input name='alt' type="checkbox" onchange="mark('${name}','other',this)"> 🟨
-        <input name='Absent' type="checkbox" onchange="mark('${name}','absent',this)"> ❌
-      </div>`;
+      <div class="name col-md-6" style='display:inline-block;'>${name}</div>
+      <div class="col-md-5" style='display:inline-block;' >
+          <input style='display:inline-block;' name='alt' type="checkbox" class="custom-tooltip" data-tooltip="Attending alternative CS" onchange="mark('${name}','other',this)"> 🟨
+          <input style='display:inline-block;' name='Absent' type="checkbox" class="custom-tooltip" data-tooltip="Absent" onchange="mark('${name}','absent',this)"> ❌
+     </div>
+    `;
       listDiv.appendChild(div);
     });
 }
