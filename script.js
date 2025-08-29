@@ -1,6 +1,10 @@
 /* ====================== FIREBASE IMPORTS ====================== */
 import { db } from "./firebase.js";
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import {
+  doc,
+  getDoc,
+  setDoc,
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 
@@ -9,7 +13,7 @@ async function loadBatchDataFromFirestore() {
   try {
     const snap = await getDoc(doc(db, "batches", "allBatches"));
     if (snap.exists()) {
-      console.log("📥 Loaded batches from Firestore:", snap.data());
+      console.log("📥 Loaded batches from Firestore:");
       return snap.data();
     } else {
       console.log("⚠️ No batches found in Firestore, starting empty.");
@@ -54,6 +58,7 @@ async function loadBatch() {
   }
 
   const batches = await loadBatchDataFromFirestore();
+  console.log(batches);
   if (batches && batches[selectedBatch]) {
     currentBatchData = batches[selectedBatch];
     selectedBatchName = selectedBatch;
@@ -76,7 +81,9 @@ function updateGroupSwitches() {
 }
 
 function resetGroupData() {
-  document.querySelectorAll('input[name="group"]').forEach((cb) => (cb.checked = false));
+  document
+    .querySelectorAll('input[name="group"]')
+    .forEach((cb) => (cb.checked = false));
   document.getElementById("list").innerHTML = "";
   rawNames = [];
   displayNames = [];
@@ -102,7 +109,9 @@ async function populateBatchDropdown() {
       option.textContent = batchName;
       batchSelect.appendChild(option);
     });
-    console.log(`✅ Populated dropdown with ${Object.keys(batches).length} batches`);
+    console.log(
+      `✅ Populated dropdown with ${Object.keys(batches).length} batches`
+    );
   } else {
     console.log("⚠️ No batches found in Firestore");
   }
@@ -115,7 +124,11 @@ checkboxes.forEach((cb) => {
   cb.addEventListener("change", function () {
     if (this.checked) {
       if (!currentBatchData) {
-        Swal.fire({ icon: "warning", title: "No Batch Selected", text: "Please select a batch first!" });
+        Swal.fire({
+          icon: "warning",
+          title: "No Batch Selected",
+          text: "Please select a batch first!",
+        });
         this.checked = false;
         return;
       }
@@ -124,9 +137,14 @@ checkboxes.forEach((cb) => {
       if (this.value === "group1") {
         groupData = currentBatchData.groups.Group_1;
         Group = "Group 1";
+        console.log(groupData)
       } else if (this.value === "group2") {
         if (!currentBatchData.hasGroup2) {
-          Swal.fire({ icon: "warning", title: "Group 2 Not Available", text: "This batch doesn't have Group 2 enabled!" });
+          Swal.fire({
+            icon: "warning",
+            title: "Group 2 Not Available",
+            text: "This batch doesn't have Group 2 enabled!",
+          });
           this.checked = false;
           return;
         }
@@ -134,7 +152,8 @@ checkboxes.forEach((cb) => {
         Group = "Group 2";
       } else if (this.value === "combined") {
         groupData = [...currentBatchData.groups.Group_1];
-        if (currentBatchData.hasGroup2) groupData.push(...currentBatchData.groups.Group_2);
+        if (currentBatchData.hasGroup2)
+          groupData.push(...currentBatchData.groups.Group_2);
         Group = "Combined";
       }
 
@@ -167,7 +186,9 @@ checkboxes.forEach((cb) => {
       });
 
       renderList();
-      checkboxes.forEach((other) => { if (other !== this) other.checked = false; });
+      checkboxes.forEach((other) => {
+        if (other !== this) other.checked = false;
+      });
     } else {
       resetGroupData();
       renderList();
@@ -180,25 +201,30 @@ function renderList() {
   const listDiv = document.getElementById("list");
   listDiv.innerHTML = "";
 
-  displayNames.sort((a, b) => a.localeCompare(b)).forEach((name) => {
-    const div = document.createElement("div");
-    div.className = "person col-md-4" + (isRP[name] ? " rp-row" : "");
-    div.innerHTML = `
+  displayNames
+    .sort((a, b) => a.localeCompare(b))
+    .forEach((name) => {
+      const div = document.createElement("div");
+      div.className = "person col-md-4" + (isRP[name] ? " rp-row" : "");
+      div.innerHTML = `
       <div class="name col-md-6">${name}</div>
       <div class="col-md-5">
         <input name='alt' type="checkbox" onchange="mark('${name}','other',this)"> 🟨
         <input name='Absent' type="checkbox" onchange="mark('${name}','absent',this)"> ❌
       </div>`;
-    listDiv.appendChild(div);
-  });
+      listDiv.appendChild(div);
+    });
 }
 
 /* ====================== ATTENDANCE ====================== */
 function mark(name, state, checkbox) {
   const cbs = document.querySelectorAll(`.person input[onchange*="${name}"]`);
-  cbs.forEach((cb) => { if (cb !== checkbox) cb.checked = false; });
+  cbs.forEach((cb) => {
+    if (cb !== checkbox) cb.checked = false;
+  });
   attendanceStatus[name] = checkbox.checked ? state : "present";
-  if (CoordinatorsA[name]) CoordinatorsA[name] = checkbox.checked ? state : "present";
+  if (CoordinatorsA[name])
+    CoordinatorsA[name] = checkbox.checked ? state : "present";
   updateNameColors();
 }
 
@@ -219,11 +245,18 @@ function updateNameColors() {
 
 /* ====================== DATE HELPERS ====================== */
 function formatDate(date) {
-  return date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 function formatShortDate(date) {
   const d = new Date(date);
-  return `${d.getDate()} ${d.toLocaleString("en-US", { month: "short" })} ${d.getFullYear()}`;
+  return `${d.getDate()} ${d.toLocaleString("en-US", {
+    month: "short",
+  })} ${d.getFullYear()}`;
 }
 
 /* ====================== INIT ====================== */
@@ -232,4 +265,11 @@ document.addEventListener("DOMContentLoaded", async function () {
   await populateBatchDropdown();
   const currentDate = document.getElementById("currentDate");
   if (currentDate) currentDate.textContent = formatDate(new Date());
+
+  // Attach listeners here
+  const batchSelect = document.getElementById("batchSelect");
+  if (batchSelect) {
+    batchSelect.addEventListener("change", loadBatch);
+    batchSelect.addEventListener("click", loadBatchDataFromFirestore);
+  }
 });
