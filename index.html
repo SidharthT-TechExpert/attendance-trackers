@@ -123,17 +123,13 @@
             Output</button>
           <!-- Output section with copy button -->
           <hr>
-          <div id="output" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mt-3">
-              <span><strong>Output</strong></span>
-              <hr>
-              <div id="outputToolbar" class="output-toolbar">
+          <div  class="d-flex justify-content-between align-items-center mt-3">
+            <span><strong  id="outputtext" style="display: none; font-weight: bold; font-size: larger;">Output</strong></span>
+              <div style="display: none;" id="outputToolbar" class="output-toolbar">
                 <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
                 <button class="download-btn" onclick="downloadReport()">📥 Download .txt</button>
                 <button id="editBtn" class="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
               </div>
-
-            </div>
           </div>
           <hr>
 

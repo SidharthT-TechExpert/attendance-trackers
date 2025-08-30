@@ -37,7 +37,7 @@ async function loadBatchDataFromFirestore() {
         option.textContent = batchName;
         batchSelect.appendChild(option);
       });
-
+      resetGroupData();
       return data; // still return the raw batches object
     } else {
       console.log("⚠️ No batches found in Firestore, starting empty.");
@@ -158,11 +158,6 @@ checkboxes.forEach((cb) => {
   cb.addEventListener("change", function () {
     if (this.checked) {
       if (!currentBatchData) {
-        Swal.fire({
-          icon: "warning",
-          title: "No Batch Selected",
-          text: "Please select a batch first!",
-        });
         this.checked = false;
         return;
       }
@@ -173,15 +168,6 @@ checkboxes.forEach((cb) => {
         Group = "Group 1";
         console.log(groupData);
       } else if (this.value === "group2") {
-        if (!currentBatchData.hasGroup2) {
-          Swal.fire({
-            icon: "warning",
-            title: "Group 2 Not Available",
-            text: "This batch doesn't have Group 2 enabled!",
-          });
-          this.checked = false;
-          return;
-        }
         groupData = currentBatchData.groups.Group_2;
         Group = "Group 2";
       } else if (this.value === "combined") {
@@ -220,6 +206,7 @@ checkboxes.forEach((cb) => {
       });
 
       renderList();
+      document.getElementById("outputtext").style.display = "block";
       checkboxes.forEach((other) => {
         if (other !== this) other.checked = false;
       });
@@ -233,7 +220,6 @@ checkboxes.forEach((cb) => {
 /* ====================== RENDER PARTICIPANT LIST ====================== */
 function renderList() {
   document.getElementById("notifications").style.display = "block";
-  //document.getElementById('notifications').style.borderBlock = 'red'
   const listDiv = document.getElementById("list");
   listDiv.innerHTML = "";
 
@@ -287,18 +273,27 @@ function generateOutput() {
   // --- Static report headers ---
   console.log("gen S");
   const Mean = "🔒 COMMUNICATION SESSION REPORT";
-  const Batch = selectedBatchName || "BCR71"; // Use selected batch or default
+  const Batch = selectedBatchName;
 
   const date = FormateDate(new Date());
   const GroupName = Group;
   const Time = getSelectedTime(); // Get selected time from custom dropdown
 
+  if (Batch === "")
+    return Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Please Select A Batch !",
+    });
+
   if (GroupName === "")
     return Swal.fire({
       icon: "warning",
       title: "Oops...",
-      text: "Please Select The Group first!",
+      text: "Please Select The Group !",
     });
+
+  document.getElementById("outputToolbar").style.display = "flex";
   // --- Get Coordinators per group ---
   let Coordinators = Object.keys(CoordinatorsA).filter(
     (n) => CoordinatorsA[n] !== ""
@@ -478,12 +473,148 @@ function getSelectedTime() {
   return "11:30 AM - 12:30 PM"; // fallback
 }
 
+// ====================== COPY TO CLIPBOARD ======================
+function copyOutput() {
+  const viewMode = document.getElementById("outputView");
+  const editMode = document.getElementById("outputEdit");
+  const copyBtn = document.querySelector(".copy-btn");
+
+  if (viewMode.textContent === "")
+    return Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Please generate the report first!",
+    });
+
+  // Pick content from active mode
+  const textToCopy =
+    editMode.style.display === "block" ? editMode.value : viewMode.textContent;
+
+  // Copy to clipboard
+  navigator.clipboard
+    .writeText(textToCopy)
+    .then(() => {
+      copyBtn.innerText = "✅ Copied!";
+      setTimeout(() => (copyBtn.innerText = "📋 Copy"), 2000);
+    })
+    .catch((err) => {
+      console.error("Failed to copy: ", err);
+    });
+}
+
+// ====================== DOWNLOAD REPORT ======================
+function downloadReport() {
+  const viewMode = document.getElementById("outputView");
+  const editMode = document.getElementById("outputEdit");
+
+  if (viewMode.textContent === "")
+    return Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Please generate the report first!",
+    });
+
+  // Pick content from active mode
+  const textToDownload =
+    editMode.style.display === "block" ? editMode.value : viewMode.textContent;
+
+  // Create download
+  const dataBlob = new Blob([textToDownload], { type: "text/plain" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(dataBlob);
+
+  // Generate filename with current date and batch info
+  const date = new Date().toISOString().split("T")[0];
+  const batchInfo = selectedBatchName || "BCR71";
+  link.download = `attendance_report_${batchInfo}_${date}.txt`;
+
+  link.click();
+
+  Swal.fire({
+    icon: "success",
+    title: "Download Complete",
+    text: "Report has been downloaded as .txt file!",
+  });
+}
+
+// ====================== TOGGLE EDIT MODE ======================
+function toggleEdit() {
+  const outputView = document.getElementById("outputView");
+  const outputEdit = document.getElementById("outputEdit");
+  const editBtn = document.getElementById("editBtn");
+  const toolbar = document.getElementById("outputToolbar");
+  const header = document.querySelector("header");
+
+  if (outputView.textContent === "")
+    return Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Please generate the report first!",
+    });
+
+  // Place toolbar below header
+  toolbar.style.top = "40px";
+
+  // Remove leftover animations
+  outputView.classList.remove("slide-in", "slide-out");
+  outputEdit.classList.remove("slide-in", "slide-out");
+
+  if (!editingMode) {
+    // --- ENTER EDIT MODE ---
+    editingMode = true;
+    document.getElementById("list").style.display = "none";
+    toolbar.classList.add("fullscreen");
+
+    // Animate view out
+    outputView.classList.add("slide-out");
+    setTimeout(() => {
+      outputView.style.display = "none";
+
+      // Animate editor in
+      outputEdit.style.display = "block";
+      outputEdit.classList.add("edit-fullscreen", "slide-in");
+
+      // Keep text synced
+      outputEdit.value = outputView.textContent;
+
+      editBtn.textContent = "💾 Save";
+      outputEdit.focus();
+    }, 400);
+  } else {
+    // --- EXIT EDIT MODE ---
+    editingMode = false;
+
+    // Save edits
+    outputView.textContent = outputEdit.value;
+
+    // Animate editor out
+    outputEdit.classList.remove("slide-in");
+    outputEdit.classList.add("slide-out");
+    setTimeout(() => {
+      outputEdit.style.display = "none";
+
+      // Animate view in
+      outputView.style.display = "block";
+      outputView.classList.add("slide-in");
+
+      toolbar.classList.remove("fullscreen");
+      editBtn.textContent = "✏️ Edit";
+
+      document.getElementById("list").style.display = "block";
+    }, 400);
+  }
+}
+
+
 window.mark = mark;
 window.generateOutput = generateOutput;
 window.populateBatchDropdown = populateBatchDropdown;
 window.formatDate = formatDate;
 window.loadBatch = loadBatch;
 window.loadBatchDataFromFirestore = loadBatchDataFromFirestore;
+window.copyOutput = copyOutput;
+window.downloadReport = downloadReport
+window.toggleEdit = toggleEdit ;
 
 /* ====================== INIT ====================== */
 document.addEventListener("DOMContentLoaded", async function () {
