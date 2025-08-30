@@ -15,17 +15,21 @@ let selectedBatch = null;
 
 // ====================== CREATE ======================
 export async function addNewBatch() {
-  const batchSuffix = document.getElementById("newBatchName").value.trim();
-  if (!batchSuffix) {
+  let batchName = document
+    .getElementById("newBatchName")
+    .value.trim()
+    .replace(/\s+/g, "") // removes all spaces (including multiple spaces)
+    .toUpperCase();
+
+  if (!batchName) {
     Swal.fire({
       icon: "warning",
       title: "Oops...",
-      text: "Enter a batch suffix!",
+      text: "Enter a batch name!",
     });
     return;
   }
 
-  const batchName = `BC${batchSuffix}`;
   if (batches[batchName]) {
     Swal.fire({
       icon: "error",
@@ -268,34 +272,57 @@ export async function toggleParticipantType(groupName, index) {
 function renderBatchList() {
   const batchList = document.getElementById("batchList");
   if (!batchList) return;
+
+  const searchQuery =
+    document.getElementById("batchSearch")?.value.toLowerCase() || "";
   batchList.innerHTML = "";
 
-  Object.keys(batches).forEach((batchName) => {
-    const batch = batches[batchName];
-    const item = document.createElement("div");
-    item.className = `list-group-item batch-item ${
-      selectedBatch === batchName ? "active" : ""
-    }`;
-    item.setAttribute("data-batch", batchName);
-    item.onclick = () => selectBatch(batchName);
+  Object.keys(batches)
+    .filter((batchName) => batchName.toLowerCase().includes(searchQuery))
+    .sort() // ascending order
+    .forEach((batchName) => {
+      const batch = batches[batchName];
 
-    const total =
-      (batch.groups?.Group_1?.length ?? 0) +
-      (batch.hasGroup2 ? batch.groups?.Group_2?.length ?? 0 : 0);
+      const total =
+        (batch.groups?.Group_1?.length ?? 0) +
+        (batch.hasGroup2 ? batch.groups?.Group_2?.length ?? 0 : 0);
 
-    item.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <h6 class="mb-1">${batchName}</h6>
-          <small>${total} participants</small>
-        </div>
-        <span class="badge bg-primary rounded-pill">${
-          batch.hasGroup2 ? "2 Groups" : "1 Group"
-        }</span>
-      </div>
-    `;
-    batchList.appendChild(item);
-  });
+      const groupCount = batch.hasGroup2 ? 2 : 1;
+
+      // Card container
+      const card = document.createElement("div");
+      card.className = `card mb-2 shadow-sm batch-card ${
+        selectedBatch === batchName ? "active" : ""
+      }`;
+
+      card.style.cursor = "pointer";
+
+      const body = document.createElement("div");
+      body.className =
+        "card-body d-flex justify-content-between align-items-center p-2";
+
+      // Batch title + participants
+      const title = document.createElement("div");
+      title.innerHTML = `<strong>${batchName}</strong><br><small>${total} participants</small>`;
+
+      // Group badge
+      const badge = document.createElement("span");
+      badge.className = "badge bg-primary group-badge";
+      badge.textContent = `${groupCount} Group${groupCount > 1 ? "s" : ""}`;
+
+      body.appendChild(title);
+      body.appendChild(badge);
+      card.appendChild(body);
+
+      // ✅ Attach click event
+      card.addEventListener("click", () => {
+        selectedBatch = batchName;
+        renderBatchList(); // re-render with highlight
+        renderBatchDetails(batchName);
+      });
+
+      batchList.appendChild(card);
+    });
 }
 
 function renderBatchDetails() {
@@ -384,19 +411,29 @@ function renderParticipantList(groupName, participants) {
 function selectBatch(batchName) {
   selectedBatch = batchName;
   renderBatchDetails();
+
+  // remove old active
+  document.querySelectorAll("#batchList .list-group-item").forEach((el) => {
+    el.classList.remove("active-batch");
+  });
+
+  // set new active
+  const activeEl = document.getElementById(`batch-${batchName}`);
+  if (activeEl) activeEl.classList.add("active-batch");
 }
 
 // ====================== IMPORT VIA TEXTAREA ======================
 export async function importData() {
   // Completely rewritten error detection function
   function getJSONErrorDetails(input, err) {
-    let line = 1, col = 1;
+    let line = 1,
+      col = 1;
     let friendlyMessage = err.message;
 
     const positionMatch = /position (\d+)/i.exec(err.message);
     if (positionMatch) {
       const pos = parseInt(positionMatch[1], 10);
-      const lines = input.substring(0, pos).split('\n');
+      const lines = input.substring(0, pos).split("\n");
       line = lines.length;
       col = lines[lines.length - 1].length + 1;
     } else {
@@ -412,7 +449,7 @@ export async function importData() {
         }
       }
       if (errorPos > 0) {
-        const lines = input.substring(0, errorPos).split('\n');
+        const lines = input.substring(0, errorPos).split("\n");
         line = lines.length;
         col = lines[lines.length - 1].length + 1;
       }
@@ -423,18 +460,25 @@ export async function importData() {
       if (tokenMatch) {
         const token = tokenMatch[1];
         friendlyMessage = `Unexpected '${token}' - check for:`;
-        if (token === "'" || token === '"') friendlyMessage += " unclosed quotes or missing comma";
-        else if (token === ",") friendlyMessage += " extra comma or missing value";
-        else if (token === ":" || token === "}") friendlyMessage += " missing property name or value";
-        else if (token === "{") friendlyMessage += " missing property name after comma";
+        if (token === "'" || token === '"')
+          friendlyMessage += " unclosed quotes or missing comma";
+        else if (token === ",")
+          friendlyMessage += " extra comma or missing value";
+        else if (token === ":" || token === "}")
+          friendlyMessage += " missing property name or value";
+        else if (token === "{")
+          friendlyMessage += " missing property name after comma";
         else friendlyMessage += " missing comma, colon, or quotes";
       }
     } else if (err.message.includes("Unexpected end of JSON")) {
-      friendlyMessage = "Incomplete JSON - missing closing brackets, braces, or quotes";
+      friendlyMessage =
+        "Incomplete JSON - missing closing brackets, braces, or quotes";
     } else if (err.message.includes("Expected")) {
-      friendlyMessage = "Syntax error - expected a different character (check commas, colons, brackets)";
+      friendlyMessage =
+        "Syntax error - expected a different character (check commas, colons, brackets)";
     } else if (err.message.includes("property name must be a string")) {
-      friendlyMessage = "Property names must be in quotes (e.g., use \"name\" instead of name)";
+      friendlyMessage =
+        'Property names must be in quotes (e.g., use "name" instead of name)';
     } else if (input.trim() === "") {
       friendlyMessage = "Empty JSON - please enter valid JSON data";
       line = 1;
@@ -454,7 +498,7 @@ export async function importData() {
     popup.style.animation = "slideIn 0.5s forwards";
 
     const textarea = document.getElementById("settingsInput");
-    const lines = textarea.value.split('\n');
+    const lines = textarea.value.split("\n");
 
     if (line > 0 && line <= lines.length) {
       let charPos = 0;
@@ -531,7 +575,10 @@ export async function importData() {
 
       function updateLineNumbers() {
         const lines = textarea.value.split("\n").length;
-        lineNumbers.innerHTML = Array.from({ length: Math.max(lines, 1) }, (_, i) => i + 1).join("<br>");
+        lineNumbers.innerHTML = Array.from(
+          { length: Math.max(lines, 1) },
+          (_, i) => i + 1
+        ).join("<br>");
         lineNumbers.style.fontSize = fontSize + "px";
         lineNumbers.style.lineHeight = "1.5em";
       }
@@ -580,7 +627,8 @@ export async function importData() {
           if (before.endsWith("{") || before.endsWith("[")) {
             e.preventDefault();
             textarea.value = before + "\n" + indent + "  \n" + indent + after;
-            textarea.selectionStart = textarea.selectionEnd = before.length + 1 + indent.length + 2;
+            textarea.selectionStart = textarea.selectionEnd =
+              before.length + 1 + indent.length + 2;
           }
         }
 
@@ -593,24 +641,56 @@ export async function importData() {
         }
 
         if (e.ctrlKey || e.metaKey) {
-          if (e.key === "s") { e.preventDefault(); Swal.clickConfirm(); }
-          if (e.key === "e") { e.preventDefault(); textarea.value = ""; updateLineNumbers(); }
-          if (e.key === "i") { e.preventDefault(); textarea.focus(); }
-          if (e.key === "=") { e.preventDefault(); fontSize += 1; textarea.style.fontSize = fontSize + "px"; updateLineNumbers(); }
-          if (e.key === "-") { e.preventDefault(); fontSize = Math.max(8, fontSize - 1); textarea.style.fontSize = fontSize + "px"; updateLineNumbers(); }
+          if (e.key === "s") {
+            e.preventDefault();
+            Swal.clickConfirm();
+          }
+          if (e.key === "e") {
+            e.preventDefault();
+            textarea.value = "";
+            updateLineNumbers();
+          }
+          if (e.key === "i") {
+            e.preventDefault();
+            textarea.focus();
+          }
+          if (e.key === "=") {
+            e.preventDefault();
+            fontSize += 1;
+            textarea.style.fontSize = fontSize + "px";
+            updateLineNumbers();
+          }
+          if (e.key === "-") {
+            e.preventDefault();
+            fontSize = Math.max(8, fontSize - 1);
+            textarea.style.fontSize = fontSize + "px";
+            updateLineNumbers();
+          }
         }
 
         if (e.shiftKey) {
           if (e.key.toLowerCase() === "n") {
             e.preventDefault();
-            textarea.setRangeText(`"name"`, selectionStart, selectionEnd, "end");
-            textarea.selectionStart = textarea.selectionEnd = selectionStart + 6;
+            textarea.setRangeText(
+              `"name"`,
+              selectionStart,
+              selectionEnd,
+              "end"
+            );
+            textarea.selectionStart = textarea.selectionEnd =
+              selectionStart + 6;
             updateLineNumbers();
           }
           if (e.key.toLowerCase() === "u" && selectedText) {
             e.preventDefault();
-            textarea.setRangeText(`"${selectedText.toUpperCase()}"`, selectionStart, selectionEnd, "end");
-            textarea.selectionStart = textarea.selectionEnd = selectionStart + selectedText.length + 2;
+            textarea.setRangeText(
+              `"${selectedText.toUpperCase()}"`,
+              selectionStart,
+              selectionEnd,
+              "end"
+            );
+            textarea.selectionStart = textarea.selectionEnd =
+              selectionStart + selectedText.length + 2;
             updateLineNumbers();
           }
         }
@@ -629,7 +709,9 @@ export async function importData() {
         const parsed = JSON.parse(input);
 
         if (typeof parsed !== "object" || Array.isArray(parsed)) {
-          throw new Error("JSON must be an object containing batches, not an array");
+          throw new Error(
+            "JSON must be an object containing batches, not an array"
+          );
         }
 
         if (Object.keys(parsed).length === 0) {
@@ -639,12 +721,22 @@ export async function importData() {
         for (const batchId in parsed) {
           const batch = parsed[batchId];
 
-          if (!batch.name) throw new Error(`Batch "${batchId}" is missing the 'name' property`);
-          if (!batch.groups || typeof batch.groups !== "object") throw new Error(`Batch "${batchId}" has invalid 'groups' property`);
+          if (!batch.name)
+            throw new Error(
+              `Batch "${batchId}" is missing the 'name' property`
+            );
+          if (!batch.groups || typeof batch.groups !== "object")
+            throw new Error(`Batch "${batchId}" has invalid 'groups' property`);
 
           for (const groupName in batch.groups) {
-            if (!Array.isArray(batch.groups[groupName])) throw new Error(`Group "${groupName}" in batch "${batchId}" must be an array`);
-            if (batch.groups[groupName].length === 0) throw new Error(`Group "${groupName}" in batch "${batchId}" is empty`);
+            if (!Array.isArray(batch.groups[groupName]))
+              throw new Error(
+                `Group "${groupName}" in batch "${batchId}" must be an array`
+              );
+            if (batch.groups[groupName].length === 0)
+              throw new Error(
+                `Group "${groupName}" in batch "${batchId}" is empty`
+              );
           }
         }
 
@@ -652,28 +744,68 @@ export async function importData() {
         return parsed;
       } catch (err) {
         const { line, col } = getJSONErrorDetails(input, err);
-        showError(`❌ Error: ${err.message} (Line ${line}, Column ${col})`, line, col);
+        showError(
+          `❌ Error: ${err.message} (Line ${line}, Column ${col})`,
+          line,
+          col
+        );
         return false;
       }
     },
   }).then(async (result) => {
     if (result.isConfirmed && result.value) {
       try {
-        const existingBatchesSnap = await getDoc(doc(db, "batches", "allBatches"));
-        const existingBatches = existingBatchesSnap.exists() ? existingBatchesSnap.data() : {};
+        const existingBatchesSnap = await getDoc(
+          doc(db, "batches", "allBatches")
+        );
+        const existingBatches = existingBatchesSnap.exists()
+          ? existingBatchesSnap.data()
+          : {};
 
         const duplicateBatches = [];
         for (const batchId in result.value) {
-          if (existingBatches.hasOwnProperty(batchId)) duplicateBatches.push(batchId);
+          if (
+            existingBatches.hasOwnProperty(
+              batchId
+                .trim()
+                .replace(/\s+/g, "") // removes all spaces (including multiple spaces)
+                .toUpperCase()
+            )
+          )
+            duplicateBatches.push(
+              batchId
+                .trim()
+                .replace(/\s+/g, "") // removes all spaces (including multiple spaces)
+                .toUpperCase()
+            );
         }
 
         if (duplicateBatches.length > 0) {
-          Swal.fire("❌ Import Failed", `Batch(es) already exist: ${duplicateBatches.join(', ')}. Please use unique batch IDs.`, "error");
+          Swal.fire(
+            "❌ Import Failed",
+            `Batch already exist: ${duplicateBatches.join(
+              ", "
+            )}. Please use unique batch IDs.`,
+            "error"
+          );
           return;
         }
+        // Build cleaned object
+        const cleanedBatches = {};
+        for (const batchId in result.value) {
+          const cleanId = batchId.trim().replace(/\s+/g, "").toUpperCase();
+          cleanedBatches[cleanId] = result.value[batchId];
+        }
 
-        const updatedBatches = { ...existingBatches, ...result.value };
-        await setDoc(doc(db, "batches", "allBatches"), updatedBatches, { merge: true });
+        // Merge with existing batches
+        const updatedBatches = {
+          ...existingBatches,
+          ...cleanedBatches,
+        };
+
+        await setDoc(doc(db, "batches", "allBatches"), updatedBatches, {
+          merge: true,
+        });
 
         Swal.fire("✅ Imported", "Batch data saved successfully!", "success");
       } catch (err) {
@@ -682,7 +814,6 @@ export async function importData() {
     }
   });
 }
-
 
 // ====================== EXPOSE ======================
 window.addNewBatch = addNewBatch;
@@ -697,4 +828,8 @@ window.importData = importData;
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ Batch Manager Ready");
   listenToBatches();
+  const searchInput = document.getElementById("batchSearch");
+  if (searchInput) {
+    searchInput.addEventListener("input", renderBatchList);
+  }
 });

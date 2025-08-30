@@ -445,6 +445,10 @@ function getSelectedTime() {
 
 window.mark = mark ;
 window.generateOutput = generateOutput ;
+window.populateBatchDropdown = populateBatchDropdown;
+window.formatDate = formatDate ;
+window.loadBatch = loadBatch ;
+window.loadBatchDataFromFirestore = loadBatchDataFromFirestore ;
 
 /* ====================== INIT ====================== */
 document.addEventListener("DOMContentLoaded", async function () {
@@ -453,12 +457,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   const currentDate = document.getElementById("currentDate");
   if (currentDate) currentDate.textContent = formatDate(new Date());
 
-  // Attach listeners here
-  const batchSelect = document.getElementById("batchSelect");
-  if (batchSelect) {
-    batchSelect.addEventListener("change", loadBatch);
-    batchSelect.addEventListener("click", loadBatchDataFromFirestore);
-  }
 });
 
 // ====================== CUSTOM DROPDOWN ======================

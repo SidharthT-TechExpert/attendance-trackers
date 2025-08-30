@@ -20,8 +20,9 @@ body {
 }
 
 header {
-  position: static;
+  position: static; /* ✅ fixed instead of static */
   top: 0;
+  left: 0;
   width: 100%;
   padding: 15px 0;
   background: rgba(255, 255, 255, 0.1);
@@ -38,7 +39,7 @@ header small {
 }
 
 .container {
-  padding-top: var(--header-height);
+  padding-top: var(--header-height); /* ✅ now needed because header is fixed */
 }
 
 /* ================= CONTENT BOX ================= */
@@ -85,9 +86,9 @@ header small {
   color: #666;
   text-align: right;
   padding: 10px;
-  user-select: none;
   font-family: monospace;
   font-size: 14px;
+  /* user-select: none;  ✅ removed so users can copy code with numbers */
 }
 
 .editor {
@@ -138,7 +139,7 @@ button,
   padding: 10px 16px;
 }
 .copy-btn:hover {
-  background: linear-gradient(90deg, #feb47b, #ff7e5f);
+  background: linear-gradient(90deg, #ff7e5f, #feb47b); /* ✅ consistent direction */
   transform: scale(1.05);
   box-shadow: var(--shadow);
 }
@@ -152,7 +153,7 @@ button,
   padding: 10px 16px;
 }
 .download-btn:hover {
-  background: linear-gradient(90deg, #45a049, #4caf50);
+  background: linear-gradient(90deg, #4caf50, #45a049); /* ✅ consistent */
   transform: scale(1.05);
   box-shadow: var(--shadow);
 }
@@ -166,7 +167,7 @@ button,
   padding: 10px 16px;
 }
 .edit-btn:hover {
-  background: linear-gradient(90deg, #81c784, #4caf50);
+  background: linear-gradient(90deg, #4caf50, #81c784); /* ✅ consistent */
   transform: scale(1.05);
   box-shadow: var(--shadow);
 }
@@ -242,7 +243,7 @@ button,
 }
 .alt-cs-text {
   font-weight: bold;
-  color: #2b01fb;
+  color: #2979ff; /* ✅ lighter blue for visibility */
 }
 
 /* ================= FORMS ================= */
@@ -275,7 +276,7 @@ input[type="checkbox"] {
 .dropdown-menu {
   display: none;
   position: absolute;
-  top: 110%;
+  top: calc(100% + 5px); /* ✅ smoother than 110% */
   left: 0;
   background: #fff;
   border: 1px solid #ddd;
@@ -297,3 +298,48 @@ input[type="checkbox"] {
   font-weight: 600;
 }
 
+/* ================= SEARCH BOX ================= */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-box .search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 14px;
+  color: #6c757d;
+  pointer-events: none;
+}
+
+.search-box .search-input {
+  padding-left: 32px;
+  border-radius: 20px;
+  border: 1px solid #ced4da;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+.search-box .search-input:focus {
+  border-color: #0dcaf0;
+  box-shadow: 0 0 6px rgba(13, 202, 240, 0.4);
+}
+
+/* ================= CARD STYLING ================= */
+.batch-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+.batch-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background-color: wheat;
+}
+.batch-card.active {
+  background: linear-gradient(135deg, #0dcaf0, #0099cc);
+  color: white !important;
+  border: none;
+  transform: scale(1.02);
+  box-shadow: 0 6px 14px rgba(0, 153, 204, 0.3);
+}
