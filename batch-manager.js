@@ -184,11 +184,11 @@ export async function deleteBatch() {
   });
 }
 
-export async function removeParticipant(groupName, index) {
+export async function removeParticipant(groupName, index , name) {
   if (!selectedBatch) return;
   Swal.fire({
     title: "Remove Participant",
-    text: "Are you sure you want to remove this participant?",
+    text: `Are you sure you want to remove "${name}" from the participants ?`,
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Yes, remove",
@@ -202,7 +202,7 @@ export async function removeParticipant(groupName, index) {
 }
 
 // ====================== TOGGLE PARTICIPANT TYPE ======================
-export async function toggleParticipantType(groupName, index) {
+export async function toggleParticipantType(groupName, index , name) {
   if (!selectedBatch) return;
 
   let participants = batches[selectedBatch].groups[groupName];
@@ -221,9 +221,9 @@ export async function toggleParticipantType(groupName, index) {
       toast: true,
       position: "top-end",
       icon: "info",
-      title: "Coordinator → Normal",
+      title: `${name} => Coordinator → Normal`,
       showConfirmButton: false,
-      timer: 1500,
+      timer: 5000,
     });
   } else if (isRP) {
     // RP → Normal
@@ -232,9 +232,9 @@ export async function toggleParticipantType(groupName, index) {
       toast: true,
       position: "top-end",
       icon: "info",
-      title: "RP → Normal",
+      title: `${name} => RP → Normal`,
       showConfirmButton: false,
-      timer: 1500,
+      timer: 5000,
     });
   } else {
     // Normal → RP or Normal → C
@@ -245,9 +245,9 @@ export async function toggleParticipantType(groupName, index) {
         toast: true,
         position: "top-end",
         icon: "success",
-        title: "Normal → Coordinator 👑",
+        title: `${name} => Normal → Coordinator 👑`,
         showConfirmButton: false,
-        timer: 1500,
+        timer: 5000,
       });
     } else {
       // Otherwise just toggle RP
@@ -256,9 +256,9 @@ export async function toggleParticipantType(groupName, index) {
         toast: true,
         position: "top-end",
         icon: "success",
-        title: "Normal → RP 🔄",
+        title: `${name} => Normal → RP 🔄`,
         showConfirmButton: false,
-        timer: 1500,
+        timer: 5000,
       });
     }
   }
@@ -355,11 +355,17 @@ function renderParticipantList(groupName, participants) {
 
   // Header counter
   const counter = document.createElement("div");
-  counter.className = "badge bg-warning mb-2";
+  counter.className = "badge mb-2";
+  counter.style.background = "warning";
   counter.textContent = `${currentCoordinators}/2 Coordinators`;
+  if (currentCoordinators === 2) {
+    counter.style.backgroundColor = "red";
+  }
   list.appendChild(counter);
 
-  participants.forEach((participant, index) => {
+
+
+  participants.sort((a, b) => a.localeCompare(b)).forEach((participant, index) => {
     const item = document.createElement("div");
     item.className = "participant-item";
 
@@ -370,13 +376,13 @@ function renderParticipantList(groupName, participants) {
     let buttonText, buttonClass;
     if (isRP) {
       buttonText = "RP";
-      buttonClass = "btn-outline-primary";
+      buttonClass = "btn-primary";
     } else if (isC) {
       buttonText = "C";
-      buttonClass = "btn-outline-warning";
+      buttonClass = "btn-warning";
     } else {
       buttonText = "Normal";
-      buttonClass = "btn-outline-secondary";
+      buttonClass = "btn-secondary";
     }
 
     item.innerHTML = `
@@ -391,14 +397,14 @@ function renderParticipantList(groupName, participants) {
         </div>
         <div class="btn-group btn-group-sm">
           <button class="btn ${buttonClass} btn-sm"
-                  onclick="toggleParticipantType('${groupName}', ${index})">
+                  onclick="toggleParticipantType('${groupName}', ${index},'${cleanName}')">
             ${buttonText}
           </button>
           ${
             (typeof isAdmin === "function" && isAdmin()) ||
             (typeof isManager === "function" && isManager()) ||
             (typeof isCoordinator === "function" && isCoordinator())
-              ? `<button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', ${index})">🗑️</button>`
+              ? `<button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', ${index},'${cleanName}')">🗑️</button>`
               : ""
           }
         </div>

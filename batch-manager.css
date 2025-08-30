@@ -192,7 +192,7 @@ button,
 
 .participant-list {
   max-height: 300px;
-  overflow-y: auto;
+  overflow-Y: auto;
   border: 1px solid #e0e0e0;
   border-radius: var(--radius);
   padding: 10px;
@@ -200,7 +200,7 @@ button,
 }
 
 .participant-item {
-  margin-bottom: 5px;
+  margin-bottom: 10px;
 }
 .participant-item:last-child { margin-bottom: 0; }
 .participant-item .btn-group {
@@ -208,7 +208,11 @@ button,
   transition: opacity 0.3s ease;
 }
 .participant-item:hover .btn-group { opacity: 1; }
-
+.participant-item:hover {
+  transform: translateY(-5px);
+  background-color: rgb(225, 222, 218);
+  border-radius: var(--radius);
+}
 /* ================= TOOLTIP ================= */
 .custom-tooltip {
   position: relative;
@@ -343,3 +347,27 @@ input[type="checkbox"] {
   transform: scale(1.02);
   box-shadow: 0 6px 14px rgba(0, 153, 204, 0.3);
 }
+
+/* === Only the batch details panel scrolls; nothing else changes === */
+#batchDetails {
+  /* fixed viewport-based height so it doesn't push the page */
+  height: 70vh;            /* adjust to taste (60–75vh works well) */
+  overflow-y: auto;
+  padding-right: 8px;      /* room for scrollbar */
+  margin-left: 10px;
+  -webkit-overflow-scrolling: touch; /* smooth on mobile */
+}
+
+/* Optional: slight responsiveness for very tall/short screens */
+@media (min-height: 900px) {
+  #batchDetails { height: 75vh; }
+}
+@media (max-height: 700px) {
+  #batchDetails { height: 60vh; }
+}
+
+/* Optional: pretty scrollbar just for details panel */
+#batchDetails::-webkit-scrollbar { width: 8px; }
+#batchDetails::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+#batchDetails::-webkit-scrollbar-thumb:hover { background: #999; }
+
