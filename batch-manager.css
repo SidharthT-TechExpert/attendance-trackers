@@ -348,26 +348,29 @@ input[type="checkbox"] {
   box-shadow: 0 6px 14px rgba(0, 153, 204, 0.3);
 }
 
-/* === Only the batch details panel scrolls; nothing else changes === */
-#batchDetails {
-  /* fixed viewport-based height so it doesn't push the page */
-  height: 70vh;            /* adjust to taste (60–75vh works well) */
+/* Limit height for each group's participant list */
+#group1List,
+#group2List {
+  max-height: 300px;   /* adjust this based on your design */
   overflow-y: auto;
-  padding-right: 8px;      /* room for scrollbar */
-  margin-left: 10px;
-  -webkit-overflow-scrolling: touch; /* smooth on mobile */
+  padding-right: 6px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
 }
 
-/* Optional: slight responsiveness for very tall/short screens */
-@media (min-height: 900px) {
-  #batchDetails { height: 75vh; }
+/* Optional scrollbar styling */
+#group1List::-webkit-scrollbar,
+#group2List::-webkit-scrollbar {
+  width: 6px;
 }
-@media (max-height: 700px) {
-  #batchDetails { height: 60vh; }
+#group1List::-webkit-scrollbar-thumb,
+#group2List::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 4px;
 }
-
-/* Optional: pretty scrollbar just for details panel */
-#batchDetails::-webkit-scrollbar { width: 8px; }
-#batchDetails::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
-#batchDetails::-webkit-scrollbar-thumb:hover { background: #999; }
+#group1List::-webkit-scrollbar-thumb:hover,
+#group2List::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
 

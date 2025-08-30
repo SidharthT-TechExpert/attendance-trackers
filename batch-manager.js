@@ -184,7 +184,7 @@ export async function deleteBatch() {
   });
 }
 
-export async function removeParticipant(groupName, index , name) {
+export async function removeParticipant(groupName, index, name) {
   if (!selectedBatch) return;
   Swal.fire({
     title: "Remove Participant",
@@ -202,7 +202,7 @@ export async function removeParticipant(groupName, index , name) {
 }
 
 // ====================== TOGGLE PARTICIPANT TYPE ======================
-export async function toggleParticipantType(groupName, index , name) {
+export async function toggleParticipantType(groupName, index, name) {
   if (!selectedBatch) return;
 
   let participants = batches[selectedBatch].groups[groupName];
@@ -356,36 +356,45 @@ function renderParticipantList(groupName, participants) {
   // Header counter
   const counter = document.createElement("div");
   counter.className = "badge mb-2";
-  counter.style.background = "warning";
+  counter.style.background = "red";
+  counter.style.color = "yellow";
   counter.textContent = `${currentCoordinators}/2 Coordinators`;
+
+  const counterT = document.createElement("div");
+  counterT.className = "badge mb-2";
+  counterT.style.background = "red";
+  counterT.textContent = `*  ${participants.length} Total Members`;
+
   if (currentCoordinators === 2) {
-    counter.style.backgroundColor = "red";
+    counter.style.background = "yellow";
+    counter.style.color = "red";
   }
   list.appendChild(counter);
+  list.appendChild(counterT);
 
+  participants
+    .sort((a, b) => a.localeCompare(b))
+    .forEach((participant, index) => {
+      const item = document.createElement("div");
+      item.className = "participant-item";
 
+      const isRP = participant.includes("(RP)");
+      const isC = participant.includes("(C)");
+      const cleanName = participant.replace(/\(RP\)|\(C\)/g, "").trim();
 
-  participants.sort((a, b) => a.localeCompare(b)).forEach((participant, index) => {
-    const item = document.createElement("div");
-    item.className = "participant-item";
+      let buttonText, buttonClass;
+      if (isRP) {
+        buttonText = "RP";
+        buttonClass = "btn-primary";
+      } else if (isC) {
+        buttonText = "C";
+        buttonClass = "btn-warning";
+      } else {
+        buttonText = "Normal";
+        buttonClass = "btn-secondary";
+      }
 
-    const isRP = participant.includes("(RP)");
-    const isC = participant.includes("(C)");
-    const cleanName = participant.replace(/\(RP\)|\(C\)/g, "").trim();
-
-    let buttonText, buttonClass;
-    if (isRP) {
-      buttonText = "RP";
-      buttonClass = "btn-primary";
-    } else if (isC) {
-      buttonText = "C";
-      buttonClass = "btn-warning";
-    } else {
-      buttonText = "Normal";
-      buttonClass = "btn-secondary";
-    }
-
-    item.innerHTML = `
+      item.innerHTML = `
       <div class="d-flex justify-content-between align-items-center p-2 border rounded mb-1">
         <div class="d-flex align-items-center">
           <span class="me-2">${isRP ? "🔄" : isC ? "👑" : "👤"}</span>
@@ -410,8 +419,8 @@ function renderParticipantList(groupName, participants) {
         </div>
       </div>
     `;
-    list.appendChild(item);
-  });
+      list.appendChild(item);
+    });
 }
 
 function selectBatch(batchName) {

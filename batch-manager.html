@@ -110,7 +110,7 @@
                 <h6 id="selectedBatchTitle">Batch Details</h6>
 
                 <!-- Group 2 Toggle -->
-                <div class="mb-3 form-check form-switch">
+                <div class="mb-3 form-check form-switch" style="margin-left: 10px;">
                   <input class="form-check-input" type="checkbox" id="hasGroup2" onchange="toggleGroup2()">
                   <label class="form-check-label" for="hasGroup2">Enable Group 2</label>
                 </div>
@@ -119,8 +119,8 @@
                 <div class="mb-4">
                   <h6>👥 Group 1</h6>
                   <div class="input-group mb-2">
-                    <input type="text" id="newParticipant1" class="form-control" placeholder="Enter participant name">
-                    <button class="btn btn-success btn-sm" onclick="addParticipant('Group_1')">Add</button>
+                    <input type="text" id="newParticipant1" class="form-control " style="background-color: rgb(221, 212, 212);font-weight: bolder;" placeholder="Enter participant name" autocomplete="off">
+                    <button  class="btn btn-success btn-sm" onclick="addParticipant('Group_1')">Add</button>
                   </div>
                   <div id="group1List"></div>
                 </div>
@@ -129,7 +129,7 @@
                 <div id="group2Section" class="mb-4" style="display:none;">
                   <h6>👥 Group 2</h6>
                   <div class="input-group mb-2">
-                    <input type="text" id="newParticipant2" class="form-control" placeholder="Enter participant name">
+                    <input type="text" id="newParticipant2" class="form-control bg-secondary" style="background-color: rgb(221, 212, 212);font-weight: bolder;" placeholder="Enter participant name" autocomplete="off">
                     <button class="btn btn-success btn-sm" onclick="addParticipant('Group_2')">Add</button>
                   </div>
                   <div id="group2List"></div>
