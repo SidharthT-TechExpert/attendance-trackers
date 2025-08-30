@@ -92,12 +92,15 @@ async function loadBatch() {
     // ✅ Show selected batch to users
     const text = document.getElementById("selectedBatchTitle");
     text.textContent = `Selected Batch: ${selectedBatch}`;
-    text.style.color = 'red'
-    text.style.fontWeight = 'bold'
+    text.style.color = "red";
+    text.style.fontWeight = "bold";
   }
 }
 
 function updateGroupSwitches() {
+  document.getElementById("groups").style.display = "block";
+  document.getElementById("importData").style.display = "flex";
+
   const group2Switch = document.getElementById("group2");
   const group2Label = group2Switch?.nextElementSibling;
 
@@ -229,6 +232,8 @@ checkboxes.forEach((cb) => {
 
 /* ====================== RENDER PARTICIPANT LIST ====================== */
 function renderList() {
+  document.getElementById("notifications").style.display = "block";
+  //document.getElementById('notifications').style.borderBlock = 'red'
   const listDiv = document.getElementById("list");
   listDiv.innerHTML = "";
 

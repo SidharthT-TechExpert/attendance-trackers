@@ -35,34 +35,37 @@
                   <option value="">Select a batch...</option>
                 </select>
 
-               <span id="selectedBatchTitle"></span>
+                <span id="selectedBatchTitle"></span>
 
               </div>
-              <div class="col-md-6">
-                <div class="text-center">
-                  <small class="text-muted">✅ Present: Default</small><br>
-                  <small class="text-muted">🟨 Alternative CS</small><br>
-                  <small class="text-muted">❌ Absent</small>
+              <div class="col-md-6" id="notifications" style="display: none;">
+                <div class="text-dark" style="color: red; font-weight: bolder;">
+                  <small style="color: red;">✅ Present: Default</small><br>
+                  <small style="color: red;">🟨 Alternative CS</small><br>
+                  <small style="color: red;">❌ Absent</small>
                 </div>
               </div>
             </div>
             <hr>
             <!-- Group selection switches -->
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" role="switch" id="group1" name="group" value="group1">
-              <label class="form-check-label" for="group1"> Group 1</label>
-            </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" role="switch" id="group2" name="group" value="group2">
-              <label class="form-check-label" for="group2"> Group 2</label>
-            </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" role="switch" id="combined" name="group" value="combined">
-              <label class="form-check-label" for="combined"> Combined</label>
+            <div id="groups" style="display: none;">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="group1" name="group" value="group1">
+                <label class="form-check-label" for="group1"> Group 1</label>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="group2" name="group" value="group2">
+                <label class="form-check-label" for="group2"> Group 2</label>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="combined" name="group"
+                  value="combined">
+                <label class="form-check-label" for="combined"> Combined</label>
+              </div>
             </div>
           </div>
 
-          <div class="row g-3 ">
+          <div class="row g-3 " id="importData" style="display: none;">
             <!-- Session Time -->
             <div class="custom-dropdown col-md-4 time-selection">
               <label for="time" class="form-label">⏰ Select Time</label>
@@ -109,25 +112,28 @@
                 autocomplete="off">
             </div>
           </div>
-
           <hr>
+
 
           <!-- List of students or attendance items will be rendered here -->
           <div class="alt-cs-text" id="list"></div>
           <!-- Button to generate attendance output -->
           <hr>
-          <button class="btn btn-custom w-100 mt-3" onclick="generateOutput()">Generate Output</button>
+          <button class="btn btn-custom w-100 mt-3" onclick="generateOutput()">Generate
+            Output</button>
           <!-- Output section with copy button -->
           <hr>
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <span><strong>Output</strong></span>
-            <hr>
-            <div id="outputToolbar" class="output-toolbar">
-              <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
-              <button class="download-btn" onclick="downloadReport()">📥 Download .txt</button>
-              <button id="editBtn" class="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
-            </div>
+          <div id="output" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span><strong>Output</strong></span>
+              <hr>
+              <div id="outputToolbar" class="output-toolbar">
+                <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
+                <button class="download-btn" onclick="downloadReport()">📥 Download .txt</button>
+                <button id="editBtn" class="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
+              </div>
 
+            </div>
           </div>
           <hr>
 
