@@ -18,7 +18,7 @@ let defaultBatches = {
         "Jagan (C)",
         "Jasima (RP)",
         "Kadeejatu Zaiba",
-        "Karthik B",
+        "Karthik B (RP)",
         "Krishna (RP)",
         "Midhun Manoj (RP)",
         "Neethu George",
