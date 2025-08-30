@@ -14,7 +14,7 @@ async function loadBatchDataFromFirestore() {
     const snap = await getDoc(doc(db, "batches", "allBatches"));
     if (snap.exists()) {
       const data = snap.data(); // object of batches
-      console.log("📥 Loaded batches from Firestore:", data);
+      console.log("📥 Loaded batches from Firestore");
 
       // Get <select> element
       const batchSelect = document.getElementById("batchSelect");
@@ -82,7 +82,6 @@ async function loadBatch() {
   }
 
   const batches = await loadBatchDataFromFirestore();
-  console.log(batches);
 
   if (batches && batches[selectedBatch]) {
     currentBatchData = batches[selectedBatch];
@@ -94,6 +93,8 @@ async function loadBatch() {
     text.textContent = `Selected Batch: ${selectedBatch}`;
     text.style.color = "red";
     text.style.fontWeight = "bold";
+    document.getElementById("Time").innerHTML =
+      currentBatchData?.Time ?? "⏰ Select Time";
   }
 }
 
@@ -166,7 +167,6 @@ checkboxes.forEach((cb) => {
       if (this.value === "group1") {
         groupData = currentBatchData.groups.Group_1;
         Group = "Group 1";
-        console.log(groupData);
       } else if (this.value === "group2") {
         groupData = currentBatchData.groups.Group_2;
         Group = "Group 2";
@@ -222,7 +222,6 @@ function renderList() {
   document.getElementById("notifications").style.display = "block";
   const listDiv = document.getElementById("list");
   listDiv.innerHTML = "";
-
   displayNames
     .sort((a, b) => a.localeCompare(b))
     .forEach((name) => {
@@ -271,13 +270,12 @@ function updateNameColors() {
 // ====================== REPORT GENERATION ======================
 function generateOutput() {
   // --- Static report headers ---
-  console.log("gen S");
   const Mean = "🔒 COMMUNICATION SESSION REPORT";
   const Batch = selectedBatchName;
 
   const date = FormateDate(new Date());
   const GroupName = Group;
-  const Time = getSelectedTime(); // Get selected time from custom dropdown
+  const Time = currentBatchData?.Time !== getSelectedTime() ? getSelectedTime() : currentBatchData?.Time; // Get selected time from custom dropdown
 
   if (Batch === "")
     return Swal.fire({
@@ -321,7 +319,7 @@ function generateOutput() {
     });
   }
 
-  const Trainer = " Sarang TP";
+  const Trainer = currentBatchData.Trainer;
 
   let Duck = "";
 
@@ -355,9 +353,6 @@ function generateOutput() {
   const Report = `♻ Session Overview:\n           ${reportByText}`;
 
   // --- Attendance builder helper ---
-  //("Presentees", "🟩", "present", "✅");
-  console.log(attendanceStatus);
-
   let textMaker = (text, icon, status, textIcon, check = attendanceStatus) => {
     let Text;
     // If check is an array (OtherBatch), handle differently
@@ -466,7 +461,7 @@ function FormateDate(date) {
 
 // Function to get the selected time from the custom dropdown
 function getSelectedTime() {
-  const btn = document.querySelector(".custom-dropdown .dropdown-btn");
+  const btn = document.querySelector(".custom-dropdownH .dropdown-btnH");
   if (btn) {
     return btn.textContent.replace("⌄", "").replace("⏰", "").trim();
   }
@@ -605,7 +600,6 @@ function toggleEdit() {
   }
 }
 
-
 window.mark = mark;
 window.generateOutput = generateOutput;
 window.populateBatchDropdown = populateBatchDropdown;
@@ -613,56 +607,48 @@ window.formatDate = formatDate;
 window.loadBatch = loadBatch;
 window.loadBatchDataFromFirestore = loadBatchDataFromFirestore;
 window.copyOutput = copyOutput;
-window.downloadReport = downloadReport
-window.toggleEdit = toggleEdit ;
+window.downloadReport = downloadReport;
+window.toggleEdit = toggleEdit;
 
 /* ====================== INIT ====================== */
 document.addEventListener("DOMContentLoaded", async function () {
   console.log("✅ DOM Ready");
-  await populateBatchDropdown();
+  // await populateBatchDropdown();
   const currentDate = document.getElementById("currentDate");
   if (currentDate) currentDate.textContent = formatDate(new Date());
 });
 
 // ====================== CUSTOM DROPDOWN ======================
 document.addEventListener("DOMContentLoaded", function () {
-  // Custom dropdown functionality
-  document.querySelectorAll(".custom-dropdown").forEach((drop) => {
-    const btn = drop.querySelector(".dropdown-btn");
-    if (btn) {
-      btn.addEventListener("click", () => {
-        drop.classList.toggle("active");
-      });
-    }
+  const dropdown = document.querySelector(".custom-dropdownH");
+  const btn = dropdown.querySelector(".dropdown-btnH");
+  const menuItems = dropdown.querySelectorAll(".dropdown-menuH li");
+  const hiddenInput = document.getElementById("timeH");
 
-    drop.querySelectorAll(".dropdown-menu li").forEach((item) => {
-      item.addEventListener("click", () => {
-        if (btn) {
-          btn.innerHTML =
-            "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
-        }
-        drop.classList.remove("active");
-      });
+  // Toggle dropdown
+  btn.addEventListener("click", () => {
+    dropdown.classList.toggle("active");
+  });
+
+  // Handle item click
+  menuItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      btn.innerHTML =
+        "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
+      hiddenInput.value = item.textContent;
+      dropdown.classList.remove("active");
     });
   });
 
   // Close if clicked outside
   window.addEventListener("click", (e) => {
-    document.querySelectorAll(".custom-dropdown").forEach((drop) => {
-      if (!drop.contains(e.target)) drop.classList.remove("active");
-    });
+    if (!dropdown.contains(e.target)) {
+      dropdown.classList.remove("active");
+    }
   });
 
   // Set default time
   const defaultTime = "11:30 AM - 12:30 PM";
-  const btn = document.querySelector(".custom-dropdown .dropdown-btn");
-  const hiddenInput = document.getElementById("time");
-
-  if (btn) {
-    btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
-  }
-
-  if (hiddenInput) {
-    hiddenInput.value = defaultTime;
-  }
+  btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
+  hiddenInput.value = defaultTime;
 });

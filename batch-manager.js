@@ -63,7 +63,7 @@ export function listenToBatches() {
     (snap) => {
       if (snap.exists()) {
         batches = snap.data();
-        console.log("📡 Live update:", batches);
+        console.log("📡 Live update");
         if (typeof renderBatchList === "function") renderBatchList();
       } else {
         batches = {};
@@ -130,6 +130,28 @@ export async function addParticipant(groupName) {
   await saveBatches();
   renderBatchDetails();
   document.getElementById(inputId).value = "";
+}
+
+export async function addTrainer() {
+  let Trainer = document.getElementById("TrainerName").value.trim();
+  if (!Trainer) {
+    Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Enter a Trainer name !",
+    });
+    return;
+  }
+
+  // ✅ Get batch name from heading
+  let Batch = document
+    .getElementById("selectedBatchTitle")
+    .textContent.replace("Details", "")
+    .trim();
+
+  // Prevent duplicates
+  batches[Batch].Trainer = Trainer;
+  await saveBatches();
 }
 
 export async function toggleGroup2() {
@@ -332,12 +354,21 @@ function renderBatchDetails() {
   document.getElementById(
     "selectedBatchTitle"
   ).textContent = `${selectedBatch} Details`;
+
   document.getElementById("hasGroup2").checked = !!batch.hasGroup2;
   document.getElementById("group2Section").style.display = batch.hasGroup2
     ? "block"
     : "none";
 
+  document.getElementById("TrainerName").placeholder =
+    batch?.Trainer ||
+    "e.g.: Afzal Nazar (One-time set or for editing purposes)";
+
+  document.getElementById("TimeB").innerHTML =
+    batch?.Time || "⏰ Select Time";
+
   renderParticipantList("Group_1", batch.groups?.Group_1 ?? []);
+
   if (batch.hasGroup2)
     renderParticipantList("Group_2", batch.groups?.Group_2 ?? []);
 
@@ -849,6 +880,7 @@ window.deleteBatch = deleteBatch;
 window.toggleGroup2 = toggleGroup2;
 window.toggleParticipantType = toggleParticipantType;
 window.importData = importData;
+window.addTrainer = addTrainer;
 
 // ====================== INIT ======================
 document.addEventListener("DOMContentLoaded", () => {
@@ -857,5 +889,50 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("batchSearch");
   if (searchInput) {
     searchInput.addEventListener("input", renderBatchList);
+  }
+});
+
+// ====================== CUSTOM DROPDOWN ======================
+document.addEventListener("DOMContentLoaded", function () {
+  // Custom dropdown functionality
+  document.querySelectorAll(".custom-dropdown").forEach((drop) => {
+    const btn = drop.querySelector(".dropdown-btn");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        drop.classList.toggle("active");
+      });
+    }
+
+    drop.querySelectorAll(".dropdown-menu li").forEach((item) => {
+      item.addEventListener("click", async () => {
+        if (btn) {
+          btn.innerHTML =
+            "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
+        }
+        batches[selectedBatch].Time = item.textContent;
+        drop.classList.remove("active");
+        await saveBatches();
+      });
+    });
+  });
+
+  // Close if clicked outside
+  window.addEventListener("click", (e) => {
+    document.querySelectorAll(".custom-dropdown").forEach((drop) => {
+      if (!drop.contains(e.target)) drop.classList.remove("active");
+    });
+  });
+
+  // Set default time
+  const defaultTime = "11:30 AM - 12:30 PM";
+  const btn = document.querySelector(".custom-dropdown .dropdown-btn");
+  const hiddenInput = document.getElementById("time");
+
+  if (btn) {
+    btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
+  }
+
+  if (hiddenInput) {
+    hiddenInput.value = defaultTime;
   }
 });

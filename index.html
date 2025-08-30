@@ -67,16 +67,16 @@
 
           <div class="row g-3 " id="importData" style="display: none;">
             <!-- Session Time -->
-            <div class="custom-dropdown col-md-4 time-selection">
-              <label for="time" class="form-label">⏰ Select Time</label>
-              <button class="dropdown-btn">⏰ Select Time <span class="arrow">⌄</span></button>
-              <ul class="dropdown-menu">
+            <div class="custom-dropdownH col-md-4 time-selection">
+              <label for="time" class="form-labelH">⏰ Select Time</label>
+              <button id="Time" class="dropdown-btnH">⏰ Select Time <span class="arrow">⌄</span></button>
+              <ul class="dropdown-menuH">
                 <li>11:30 AM - 12:30 PM</li>
                 <li>11:00 AM - 12:00 PM</li>
                 <li>10:30 AM - 11:30 AM</li>
                 <li>10:00 AM - 11:00 AM</li>
               </ul>
-              <input type="hidden" id="time">
+              <input type="hidden" id="timeH">
             </div>
 
             <!-- TLDV Link -->
@@ -123,13 +123,14 @@
             Output</button>
           <!-- Output section with copy button -->
           <hr>
-          <div  class="d-flex justify-content-between align-items-center mt-3">
-            <span><strong  id="outputtext" style="display: none; font-weight: bold; font-size: larger;">Output</strong></span>
-              <div style="display: none;" id="outputToolbar" class="output-toolbar">
-                <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
-                <button class="download-btn" onclick="downloadReport()">📥 Download .txt</button>
-                <button id="editBtn" class="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
-              </div>
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <span><strong id="outputtext"
+                style="display: none; font-weight: bold; font-size: larger;">Output</strong></span>
+            <div style="display: none;" id="outputToolbar" class="output-toolbar">
+              <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
+              <button class="download-btn" onclick="downloadReport()">📥 Download .txt</button>
+              <button id="editBtn" class="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
+            </div>
           </div>
           <hr>
 
