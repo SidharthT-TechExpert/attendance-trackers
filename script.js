@@ -13,8 +13,32 @@ async function loadBatchDataFromFirestore() {
   try {
     const snap = await getDoc(doc(db, "batches", "allBatches"));
     if (snap.exists()) {
-      console.log("📥 Loaded batches from Firestore:");
-      return snap.data();
+      const data = snap.data(); // object of batches
+      console.log("📥 Loaded batches from Firestore:", data);
+
+      // Get <select> element
+      const batchSelect = document.getElementById("batchSelect");
+      batchSelect.innerHTML = `<option value="">Select a batch...</option>`;
+
+      // Extract & sort batch names (numeric-aware if possible)
+      const batchNames = Object.keys(data).sort((a, b) => {
+        const numA = parseInt(a.match(/\d+/));
+        const numB = parseInt(b.match(/\d+/));
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return numA - numB; // numeric sort (Batch 1, Batch 2, Batch 10)
+        }
+        return a.localeCompare(b); // fallback string sort
+      });
+
+      // Add sorted options to <select>
+      batchNames.forEach((batchName) => {
+        const option = document.createElement("option");
+        option.value = batchName;
+        option.textContent = batchName;
+        batchSelect.appendChild(option);
+      });
+
+      return data; // still return the raw batches object
     } else {
       console.log("⚠️ No batches found in Firestore, starting empty.");
       return {};
@@ -59,10 +83,17 @@ async function loadBatch() {
 
   const batches = await loadBatchDataFromFirestore();
   console.log(batches);
+
   if (batches && batches[selectedBatch]) {
     currentBatchData = batches[selectedBatch];
     selectedBatchName = selectedBatch;
     updateGroupSwitches();
+
+    // ✅ Show selected batch to users
+    const text = document.getElementById("selectedBatchTitle");
+    text.textContent = `Selected Batch: ${selectedBatch}`;
+    text.style.color = 'red'
+    text.style.fontWeight = 'bold'
   }
 }
 
@@ -249,7 +280,7 @@ function updateNameColors() {
 // ====================== REPORT GENERATION ======================
 function generateOutput() {
   // --- Static report headers ---
-console.log('gen S')
+  console.log("gen S");
   const Mean = "🔒 COMMUNICATION SESSION REPORT";
   const Batch = selectedBatchName || "BCR71"; // Use selected batch or default
 
@@ -275,7 +306,7 @@ console.log('gen S')
   } else if (Coordinators.length === 2) {
     Coordinators = Coordinators[0] + ` & ` + Coordinators[1];
   } else if (Coordinators.length === 4) {
-   let Names = Coordinators;
+    let Names = Coordinators;
     Coordinators = "";
     Names.forEach((n, i) => {
       if (i === Names.length - 2) {
@@ -409,7 +440,6 @@ console.log('gen S')
   document.getElementById("outputEdit").value = finalText;
 }
 
-
 /* ====================== DATE HELPERS ====================== */
 function formatDate(date) {
   return date.toLocaleDateString("en-US", {
@@ -443,12 +473,12 @@ function getSelectedTime() {
   return "11:30 AM - 12:30 PM"; // fallback
 }
 
-window.mark = mark ;
-window.generateOutput = generateOutput ;
+window.mark = mark;
+window.generateOutput = generateOutput;
 window.populateBatchDropdown = populateBatchDropdown;
-window.formatDate = formatDate ;
-window.loadBatch = loadBatch ;
-window.loadBatchDataFromFirestore = loadBatchDataFromFirestore ;
+window.formatDate = formatDate;
+window.loadBatch = loadBatch;
+window.loadBatchDataFromFirestore = loadBatchDataFromFirestore;
 
 /* ====================== INIT ====================== */
 document.addEventListener("DOMContentLoaded", async function () {
@@ -456,7 +486,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   await populateBatchDropdown();
   const currentDate = document.getElementById("currentDate");
   if (currentDate) currentDate.textContent = formatDate(new Date());
-
 });
 
 // ====================== CUSTOM DROPDOWN ======================
@@ -501,4 +530,3 @@ document.addEventListener("DOMContentLoaded", function () {
     hiddenInput.value = defaultTime;
   }
 });
-

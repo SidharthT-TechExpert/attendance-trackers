@@ -43,7 +43,7 @@
               <div class="input-group mb-3">
                 <span class="input-group-text">Batch</span>
                 <input type="text" id="newBatchName" class="form-control"
-                  placeholder="Enter batch ID (e.g., BCR71, BRA1, BCK28)">
+                  placeholder="Enter batch ID (e.g., BCR71, BRA1, BCK28)" autocomplete="off">
                 <button class="btn btn-success" onclick="addNewBatch()">Add Batch</button>
               </div>
             </div>
@@ -119,17 +119,21 @@
                 <div class="mb-4">
                   <h6>👥 Group 1</h6>
                   <div class="input-group mb-2">
-                    <input type="text" id="newParticipant1" class="form-control " style="background-color: rgb(221, 212, 212);font-weight: bolder;" placeholder="Enter participant name" autocomplete="off">
-                    <button  class="btn btn-success btn-sm" onclick="addParticipant('Group_1')">Add</button>
+                    <input type="text" id="newParticipant1" class="form-control "
+                      style="background-color: rgb(221, 212, 212);font-weight: bolder;"
+                      placeholder="Enter participant name" autocomplete="off">
+                    <button class="btn btn-success btn-sm" onclick="addParticipant('Group_1')">Add</button>
                   </div>
                   <div id="group1List"></div>
                 </div>
 
                 <!-- Group 2 -->
-                <div id="group2Section" class="mb-4" style="display:none;">
+                <div id="group2Section" class="mb-4 " style="display:none;">
                   <h6>👥 Group 2</h6>
                   <div class="input-group mb-2">
-                    <input type="text" id="newParticipant2" class="form-control bg-secondary" style="background-color: rgb(221, 212, 212);font-weight: bolder;" placeholder="Enter participant name" autocomplete="off">
+                    <input type="text" id="newParticipant2" class="form-control bg-secondary"
+                      style="background-color: rgb(221, 212, 212);font-weight: bolder;"
+                      placeholder="Enter participant name" autocomplete="off">
                     <button class="btn btn-success btn-sm" onclick="addParticipant('Group_2')">Add</button>
                   </div>
                   <div id="group2List"></div>

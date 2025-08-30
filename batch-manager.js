@@ -354,23 +354,34 @@ function renderParticipantList(groupName, participants) {
   ).length;
 
   // Header counter
-  const counter = document.createElement("div");
-  counter.className = "badge mb-2";
-  counter.style.background = "red";
-  counter.style.color = "yellow";
-  counter.textContent = `${currentCoordinators}/2 Coordinators`;
+  const counterCoordinactor = document.createElement("div");
+  counterCoordinactor.className = "badge mb-2";
+  counterCoordinactor.style.background = "red";
+  counterCoordinactor.style.color = "yellow";
+  counterCoordinactor.style.marginLeft = "10px";
+  counterCoordinactor.textContent = `${currentCoordinators}/2 Coordinators`;
 
-  const counterT = document.createElement("div");
-  counterT.className = "badge mb-2";
-  counterT.style.background = "red";
-  counterT.textContent = `*  ${participants.length} Total Members`;
+  const counterTotal = document.createElement("div");
+  counterTotal.className = "badge mb-2";
+  counterTotal.style.background = "red";
+  counterTotal.style.marginLeft = "10px";
+  counterTotal.textContent = `* Total Members : ${participants.length}`;
+
+  const counterActive = document.createElement("div");
+  counterActive.className = "badge mb-2 bg-info";
+  counterActive.style.marginLeft = "10px";
+  counterActive.textContent = `* Active Members : ${
+    participants.length -
+    participants.filter((name) => name.includes("(RP)")).length
+  } `;
 
   if (currentCoordinators === 2) {
-    counter.style.background = "yellow";
-    counter.style.color = "red";
+    counterCoordinactor.style.background = "yellow";
+    counterCoordinactor.style.color = "red";
   }
-  list.appendChild(counter);
-  list.appendChild(counterT);
+  list.appendChild(counterCoordinactor);
+  list.appendChild(counterTotal);
+  list.appendChild(counterActive);
 
   participants
     .sort((a, b) => a.localeCompare(b))
