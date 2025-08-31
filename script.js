@@ -24,6 +24,7 @@ async function loadBatchDataFromFirestore() {
       const batchNames = Object.keys(data).sort((a, b) => {
         const numA = parseInt(a.match(/\d+/));
         const numB = parseInt(b.match(/\d+/));
+        
         if (!isNaN(numA) && !isNaN(numB)) {
           return numA - numB; // numeric sort (Batch 1, Batch 2, Batch 10)
         }

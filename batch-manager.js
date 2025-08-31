@@ -364,8 +364,7 @@ function renderBatchDetails() {
     batch?.Trainer ||
     "e.g.: Afzal Nazar (One-time set or for editing purposes)";
 
-  document.getElementById("TimeB").innerHTML =
-    batch?.Time || "⏰ Select Time";
+  document.getElementById("TimeB").innerHTML = batch?.Time || "⏰ Select Time";
 
   renderParticipantList("Group_1", batch.groups?.Group_1 ?? []);
 
@@ -479,7 +478,7 @@ function selectBatch(batchName) {
   if (activeEl) activeEl.classList.add("active-batch");
 }
 
-// ====================== IMPORT VIA TEXTAREA ======================
+// ====================== IMPORT VIA TEXTAREA ======================/*/
 export async function importData() {
   // Completely rewritten error detection function
   function getJSONErrorDetails(input, err) {
@@ -604,6 +603,8 @@ export async function importData() {
   "BC2024": {
     "name": "BC2024",
     "hasGroup2": true,
+    "Trainer" : "Afzal Nazar",
+    "Time" : "11:30Am - 12:30Pm",
     "groups": {
       "Group_1": ["Alice", "Bob (C)"],
       "Group_2": ["Charlie", "Diana (RP)"]
@@ -778,10 +779,22 @@ export async function importData() {
         for (const batchId in parsed) {
           const batch = parsed[batchId];
 
+          // ✅ Must have name
           if (!batch.name)
             throw new Error(
               `Batch "${batchId}" is missing the 'name' property`
             );
+
+          // ✅ Check if batch.name matches batchId (case-insensitive, trimmed, no spaces)
+          const cleanBatchId = batchId.trim().replace(/\s+/g, "").toUpperCase();
+          const cleanName = batch.name.trim().replace(/\s+/g, "").toUpperCase();
+          if (cleanBatchId !== cleanName) {
+            throw new Error(
+              `Batch "${batchId}" has name "${batch.name}" which does not match its ID`
+            );
+          }
+
+          // ✅ Must have groups
           if (!batch.groups || typeof batch.groups !== "object")
             throw new Error(`Batch "${batchId}" has invalid 'groups' property`);
 

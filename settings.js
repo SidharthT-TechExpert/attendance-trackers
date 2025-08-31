@@ -14,7 +14,6 @@ import {
   orderBy,
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-
 /* ====================== DEFAULT SETTINGS ====================== */
 let settings = {
   autoBackup: true,
@@ -72,7 +71,6 @@ window.updateBackupFrequency = async function () {
   if (settings.autoBackup) scheduleNextBackup();
 };
 
-
 window.clearAllData = async function () {
   Swal.fire({
     title: "Clear All Data?",
@@ -123,10 +121,8 @@ async function createBackup(type = "manual") {
     await addDoc(collection(db, "backups"), backupData);
     console.log(`💾 Backup (${type}) created successfully!`);
 
-
     await cleanupOldBackups(); // 🗑️ auto-delete old backups
     loadBackupHistory();
-
   } catch (err) {
     console.error("❌ Backup failed:", err);
   }
@@ -161,11 +157,15 @@ async function loadBackupHistory() {
   const historyTable = document.getElementById("backupHistoryBody");
   historyTable.innerHTML = "";
 
-  const snaps = await getDocs(collection(db, "backups"));
+  // 🔥 Create a query ordered by createdAt DESC
+  const q = query(collection(db, "backups"), orderBy("createdAt", "desc"));
+
+  const snaps = await getDocs(q);
+
   snaps.forEach((docSnap) => {
     const backup = docSnap.data();
     const date = backup.createdAt?.toDate().toLocaleString() || "Pending...";
-    const type = backup.type || "manual";
+    const type = backup?.type || "manual";
     const size = JSON.stringify(backup.data).length;
 
     const row = `
@@ -209,11 +209,14 @@ async function updateStatistics() {
     const snap = await getDoc(doc(db, "batches", "allBatches"));
     if (!snap.exists()) return;
 
-    const batches = snap.data();
+    const batches = Object.fromEntries(
+      Object.entries(snap.data()).sort(([a], [b]) => a.localeCompare(b))
+    );
+
     let totalParticipants = 0,
       totalCoordinators = 0,
       totalRP = 0;
-
+    let FullParticipants = 0;
     Object.keys(batches).forEach((batchName) => {
       const batch = batches[batchName];
       const g1 = batch.groups?.Group_1 || [];
@@ -394,7 +397,10 @@ async function loadNotifications() {
   const notifCount = document.getElementById("notifCount");
   const notifDropdown = document.getElementById("notifDropdown");
 
-  const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
+  const q = query(
+    collection(db, "notifications"),
+    orderBy("createdAt", "desc")
+  );
   onSnapshot(q, (snapshot) => {
     notifList.innerHTML = "";
     let count = 0;
@@ -433,7 +439,6 @@ async function loadNotifications() {
       notifDropdown.style.display === "none" ? "block" : "none";
   });
 }
-
 
 // Delete notification after admin marks as read
 window.deleteNotification = async function (id) {
