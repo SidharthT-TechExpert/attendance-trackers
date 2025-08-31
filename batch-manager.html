@@ -48,10 +48,11 @@
               </div>
             </div>
             <div class="col-md-6">
-              <h5>📊 Batches </h5>
+              <h5>📊Import Batches </h5>
               <div class="d-flex gap-2">
                 <button class="btn btn-info btn-sm" onclick="importData()">📥 Import</button>
-                <button class="btn btn-info btn-sm" onclick="exportAllData()">📤 Export</button>
+                <button id="export" style="display: none;" class="btn btn-info btn-sm" onclick="exportAllData()">📤
+                  Export</button>
               </div>
             </div>
           </div>
@@ -121,7 +122,7 @@
                     <span class="input-group-text">Trainer</span>
                     <input type="text" id="TrainerName" class="form-control"
                       placeholder="e.g.: Afzal Nazar (One-time set or for editing purposes)" autocomplete="off">
-                    <button class="btn btn-success" onclick="addTrainer()">Set</button>
+                    <button id="Trainer" class="btn btn-success" onclick="addTrainer()">Set</button>
                   </div>
                 </div>
 
@@ -184,7 +185,7 @@
           <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
           <script type="module" src="firebase.js"></script>
           <script type="module" src="batch-manager.js"></script>
-          <script src="auth.js"></script>
+          <script type="module"src="auth.js"></script>
 
           <script type="module">
             import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
@@ -233,6 +234,7 @@
                 case "admin":
                   roleBadgeEl.className = "badge bg-danger ms-2";
                   document.getElementById("settingsBtn").style.display = "inline-block";
+                  document.getElementById("export").style.display = "inline-block"
                   break;
                 case "manager":
                   roleBadgeEl.className = "badge bg-warning ms-2";

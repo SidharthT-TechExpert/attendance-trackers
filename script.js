@@ -482,13 +482,6 @@ function copyOutput() {
   const editMode = document.getElementById("outputEdit");
   const copyBtn = document.querySelector(".copy-btn");
 
-  if (viewMode.textContent === "")
-    return Swal.fire({
-      icon: "warning",
-      title: "Oops...",
-      text: "Please generate the report first!",
-    });
-
   // Pick content from active mode
   const textToCopy =
     editMode.style.display === "block" ? editMode.value : viewMode.textContent;
@@ -504,6 +497,7 @@ function copyOutput() {
       console.error("Failed to copy: ", err);
     });
 }
+
 
 // ====================== DOWNLOAD REPORT ======================
 function downloadReport() {
@@ -541,20 +535,13 @@ function downloadReport() {
 }
 
 // ====================== TOGGLE EDIT MODE ======================
+
 function toggleEdit() {
   const outputView = document.getElementById("outputView");
   const outputEdit = document.getElementById("outputEdit");
   const editBtn = document.getElementById("editBtn");
   const toolbar = document.getElementById("outputToolbar");
   const header = document.querySelector("header");
-
-  if (outputView.textContent === "")
-    return Swal.fire({
-      icon: "warning",
-      title: "Oops...",
-      text: "Please generate the report first!",
-    });
-
   // Place toolbar below header
   toolbar.style.top = "40px";
 
@@ -608,6 +595,7 @@ function toggleEdit() {
   }
 }
 
+
 window.mark = mark;
 window.generateOutput = generateOutput;
 window.populateBatchDropdown = populateBatchDropdown;
@@ -637,6 +625,7 @@ document.addEventListener("DOMContentLoaded", function () {
   btn.addEventListener("click", () => {
     dropdown.classList.toggle("active");
   });
+
 
   // Handle item click
   menuItems.forEach((item) => {

@@ -12,57 +12,74 @@ export async function authenticateAndRedirect() {
     return;
   }
 
+  const eyeSVG = `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+         xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"
+            stroke="#000000ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="12" cy="12" r="3" stroke="#000000ff" stroke-width="2"/>
+    </svg>`;
+  const eyeOffSVG = `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+         xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M17.94 17.94C16.16 19.23 14.17 20 12 20 5.5 20 2 12.99 2 12s3.5-8 10-8c2.17 0 4.16.77 5.94 2.06"
+            stroke="#ff0000ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M1 1l22 22" stroke="#000000ff" stroke-width="2" stroke-linecap="round"/>
+      <path d="M9.88 9.88A3 3 0 0012 15a3 3 0 002.12-.88" stroke="#000000ff" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
   try {
     const result = await Swal.fire({
       icon: "question",
       title: "Login Required",
       html: `
-        <div style="text-align: left; padding: 10px 20px; overflow: hidden">
+        <div style="text-align:left;padding:10px 20px;overflow:hidden">
           <!-- Email -->
-          <div style="margin-bottom: 18px;">
-            <label 
-              for="auth-email" 
-              style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;">
+          <div style="margin-bottom:18px;">
+            <label for="auth-email"
+              style="display:block;margin-bottom:6px;font-weight:600;font-size:15px;color:#333;">
               📧 Email Address:
             </label>
-            <input 
-              type="email" 
-              id="auth-email" 
-              class="swal2-input" 
-              placeholder="Enter your email" 
-              style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; font-size: 15px; outline: none; transition: border 0.3s, box-shadow 0.3s;"
+            <input
+              type="email"
+              id="auth-email"
+              class="swal2-input"
+              placeholder="Enter your email"
+              style="width:100%;padding:12px;border:2px solid #ccc;border-radius:10px;font-size:15px;outline:none;transition:border .3s, box-shadow .3s;"
+              autocomplete="email"
             >
           </div>
 
           <!-- Password -->
-          <div style="margin-bottom: 18px;">
-            <label 
-              for="auth-password" 
-              style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;">
+          <div style="margin-bottom:18px;">
+            <label for="auth-password"
+              style="display:block;margin-bottom:6px;font-weight:600;font-size:15px;color:#333;">
               🔑 Password:
             </label>
-            <div style="position: relative;">
-              <input 
-                type="password" 
-                id="auth-password" 
-                class="swal2-input" 
+            <div style="position:relative;">
+              <input
+                type="password"
+                id="auth-password"
+                class="swal2-input"
                 placeholder="Enter your password"
-                style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; font-size: 15px; padding-right: 45px; outline: none; transition: border 0.3s, box-shadow 0.3s;"
+                style="width:100%;padding:12px;border:2px solid #ccc;border-radius:10px;font-size:15px;padding-right:46px;outline:none;transition:border .3s, box-shadow .3s;"
+                autocomplete="current-password"
               >
-              <button 
-                type="button" 
-                id="toggle-password" 
-                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 20px; color: #555;"
+              <button
+                type="button"
+                id="toggle-password"
+                aria-label="Show password"
+                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;line-height:0;"
               >
-                <span id="toggle-icon">👁️</span>
+                <span id="toggle-icon" aria-hidden="true"></span>
               </button>
             </div>
           </div>
 
-          <!-- Forgot / Help -->
-          <div style="margin-top: 15px; text-align: center;">
-            <small style="color: #555; font-size: 14px;">
-              💡 <a href="#" onclick="showCredentials()" style="color: #007bff; text-decoration: none;">Click here for help</a>
+          <div style="margin-top:15px;text-align:center;">
+            <small style="color:#555;font-size:14px;">
+              💡 <a href="#" onclick="showCredentials?.()" style="color:#007bff;text-decoration:none;">Click here for help</a>
             </small>
           </div>
         </div>
@@ -74,34 +91,47 @@ export async function authenticateAndRedirect() {
       cancelButtonColor: "#6c757d",
       width: "50%",
       focusConfirm: false,
-      allowOutsideClick: false,
-      allowEscapeKey: false,
+      allowOutsideClick: true,
+      allowEscapeKey: true,
+
       didOpen: () => {
-        const emailInput = document.getElementById("auth-email");
-        const passwordInput = document.getElementById("auth-password");
-        const toggleBtn = document.getElementById("toggle-password");
-        const toggleIcon = document.getElementById("toggle-icon");
+        const html = Swal.getHtmlContainer();
+        const emailInput    = html.querySelector("#auth-email");
+        const passwordInput = html.querySelector("#auth-password");
+        const toggleIcon    = html.querySelector("#toggle-icon");
 
-        emailInput.focus();
+        // set initial eye icon
+        toggleIcon.innerHTML = eyeSVG;
 
-        // ✅ Enter key support
+        // focus email
+        emailInput?.focus();
+
+        // Enter submits
         [emailInput, passwordInput].forEach((el) => {
-          el.addEventListener("keyup", (e) => {
-            if (e.key === "Enter") {
-              Swal.clickConfirm();
-            }
+          el?.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") Swal.clickConfirm();
           });
         });
 
-        // ✅ Toggle password visibility
-        if (toggleBtn && passwordInput) {
-          toggleBtn.addEventListener("click", () => {
-            const isHidden = passwordInput.type === "password";
-            passwordInput.type = isHidden ? "text" : "password";
-            toggleIcon.textContent = isHidden ? "🙈" : "👁️"; // only updates the icon
-          });
-        }
+        // 🔒 Event delegation: works even if DOM rerenders
+        html.addEventListener("click", (e) => {
+          const btn = e.target.closest("#toggle-password");
+          if (!btn) return;
+
+          e.preventDefault();
+          const hidden = passwordInput.type === "password";
+          passwordInput.type = hidden ? "text" : "password";
+          btn.setAttribute("aria-label", hidden ? "Hide password" : "Show password");
+          toggleIcon.innerHTML = hidden ? eyeOffSVG : eyeSVG;
+
+          // keep focus + caret at end
+          passwordInput.focus({ preventScroll: true });
+          const v = passwordInput.value;
+          passwordInput.value = "";
+          passwordInput.value = v;
+        });
       },
+
       preConfirm: () => {
         const email = document.getElementById("auth-email").value.trim();
         const password = document.getElementById("auth-password").value.trim();
@@ -115,19 +145,11 @@ export async function authenticateAndRedirect() {
 
     if (result.isConfirmed && result.value) {
       const { email, password } = result.value;
-
       try {
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        sessionStorage.setItem(
-          "currentUser",
-          JSON.stringify({ email: user.email })
-        );
+        sessionStorage.setItem("currentUser", JSON.stringify({ email: user.email }));
 
         await Swal.fire({
           icon: "success",
@@ -147,6 +169,8 @@ export async function authenticateAndRedirect() {
     console.error("Authentication error:", err);
   }
 }
+
+
 
 // ====================== LOGOUT ======================
 export async function logoutUser() {

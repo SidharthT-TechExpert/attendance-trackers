@@ -17,8 +17,8 @@ let selectedBatch = null;
 export async function addNewBatch() {
   let batchName = document
     .getElementById("newBatchName")
-    .value.trim()
-    .replace(/\s+/g, "") // removes all spaces (including multiple spaces)
+    ?.value.trim()
+    .replace(/\s+/g, "")
     .toUpperCase();
 
   if (!batchName) {
@@ -47,7 +47,8 @@ export async function addNewBatch() {
 
   batches[batchName] = newBatch;
   await saveBatches();
-  document.getElementById("newBatchName").value = "";
+  const input = document.getElementById("newBatchName");
+  if (input) input.value = "";
   Swal.fire({
     icon: "success",
     title: "Batch Created",
@@ -61,14 +62,9 @@ export function listenToBatches() {
   onSnapshot(
     batchesRef,
     (snap) => {
-      if (snap.exists()) {
-        batches = snap.data();
-        console.log("📡 Live update");
-        if (typeof renderBatchList === "function") renderBatchList();
-      } else {
-        batches = {};
-        if (typeof renderBatchList === "function") renderBatchList();
-      }
+      batches = snap.exists() ? snap.data() : {};
+      if (typeof renderBatchList === "function") renderBatchList();
+      if (selectedBatch && batches[selectedBatch]) renderBatchDetails();
     },
     (err) => console.log("❌ Realtime error:", err)
   );
@@ -88,8 +84,8 @@ export async function addParticipant(groupName) {
   if (!selectedBatch) return;
   const inputId =
     groupName === "Group_1" ? "newParticipant1" : "newParticipant2";
-  const name = document.getElementById(inputId).value.trim();
-
+  const inputEl = document.getElementById(inputId);
+  const name = inputEl?.value.trim();
   if (!name) {
     Swal.fire({
       icon: "warning",
@@ -99,22 +95,21 @@ export async function addParticipant(groupName) {
     return;
   }
 
-  // Prevent duplicates
+  // Prevent duplicates across both groups (by clean name)
   const all = [
-    ...batches[selectedBatch].groups.Group_1,
+    ...(batches[selectedBatch].groups?.Group_1 ?? []),
     ...(batches[selectedBatch].hasGroup2
-      ? batches[selectedBatch].groups.Group_2 ?? []
+      ? batches[selectedBatch].groups?.Group_2 ?? []
       : []),
   ];
-  if (
-    all.some(
-      (p) =>
-        p
-          .replace(/\(RP\)|\(C\)/g, "")
-          .trim()
-          .toLowerCase() === name.toLowerCase()
-    )
-  ) {
+  const exists = all.some(
+    (p) =>
+      p
+        .replace(/\(RP\)|\(C\)/g, "")
+        .trim()
+        .toLowerCase() === name.toLowerCase()
+  );
+  if (exists) {
     Swal.fire({
       icon: "error",
       title: "Duplicate Name",
@@ -129,11 +124,11 @@ export async function addParticipant(groupName) {
   batches[selectedBatch].groups[groupName].push(name);
   await saveBatches();
   renderBatchDetails();
-  document.getElementById(inputId).value = "";
+  if (inputEl) inputEl.value = "";
 }
 
 export async function addTrainer() {
-  let Trainer = document.getElementById("TrainerName").value.trim();
+  let Trainer = document.getElementById("TrainerName")?.value.trim();
   if (!Trainer) {
     Swal.fire({
       icon: "warning",
@@ -143,15 +138,23 @@ export async function addTrainer() {
     return;
   }
 
-  // ✅ Get batch name from heading
   let Batch = document
     .getElementById("selectedBatchTitle")
     .textContent.replace("Details", "")
     .trim();
 
-  // Prevent duplicates
-  batches[Batch].Trainer = Trainer;
-  await saveBatches();
+  if (Trainer !== batches[Batch]?.Trainer) {
+    batches[Batch].Trainer = Trainer;
+    await saveBatches();
+    return
+  }
+
+  Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: `"${batches[Batch]?.Trainer}" is already saved as the trainer name!`,
+    });
+    
 }
 
 export async function toggleGroup2() {
@@ -169,8 +172,7 @@ export async function toggleGroup2() {
 export async function deleteBatch() {
   if (!selectedBatch) return;
   const batchName = selectedBatch;
-  const userIsAdmin = window.currentUser?.role === "admin" ? true : false;
-  console.log(window.currentUser.role);
+  const userIsAdmin = ["admin"].includes(window.currentUser?.role);
   if (!userIsAdmin) {
     Swal.fire({
       icon: "error",
@@ -206,29 +208,51 @@ export async function deleteBatch() {
   });
 }
 
-export async function removeParticipant(groupName, index, name) {
+// ====================== REMOVE / TOGGLE (robust for filtered lists) ======================
+export async function removeParticipant(groupName, _index, cleanName) {
   if (!selectedBatch) return;
   Swal.fire({
     title: "Remove Participant",
-    text: `Are you sure you want to remove "${name}" from the participants ?`,
+    text: `Are you sure you want to remove "${cleanName}" from the participants ?`,
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Yes, remove",
   }).then(async (result) => {
-    if (result.isConfirmed) {
-      batches[selectedBatch].groups[groupName].splice(index, 1);
+    if (!result.isConfirmed) return;
+
+    const arr = batches[selectedBatch].groups[groupName] ?? [];
+    const realIndex = arr.findIndex(
+      (p) =>
+        p
+          .replace(/\(RP\)|\(C\)/g, "")
+          .trim()
+          .toLowerCase() === cleanName.toLowerCase()
+    );
+    if (realIndex >= 0) {
+      arr.splice(realIndex, 1);
       await saveBatches();
       renderBatchDetails();
     }
   });
 }
 
-// ====================== TOGGLE PARTICIPANT TYPE ======================
-export async function toggleParticipantType(groupName, index, name) {
+export async function toggleParticipantType(groupName, _index, cleanName) {
   if (!selectedBatch) return;
 
   let participants = batches[selectedBatch].groups[groupName];
-  let participant = participants[index];
+  if (!participants) return;
+
+  // Find the real index by clean name (works for filtered/sorted views)
+  const idx = participants.findIndex(
+    (p) =>
+      p
+        .replace(/\(RP\)|\(C\)/g, "")
+        .trim()
+        .toLowerCase() === cleanName.toLowerCase()
+  );
+  if (idx < 0) return;
+
+  let participant = participants[idx];
   const isRP = participant.includes("(RP)");
   const isC = participant.includes("(C)");
 
@@ -237,55 +261,50 @@ export async function toggleParticipantType(groupName, index, name) {
   ).length;
 
   if (isC) {
-    // C → Normal
     participant = participant.replace("(C)", "").trim();
     Swal.fire({
       toast: true,
       position: "top-end",
       icon: "info",
-      title: `${name} => Coordinator → Normal`,
+      title: `${cleanName} => Coordinator → Normal`,
       showConfirmButton: false,
       timer: 5000,
     });
   } else if (isRP) {
-    // RP → Normal
     participant = participant.replace("(RP)", "").trim();
     Swal.fire({
       toast: true,
       position: "top-end",
       icon: "info",
-      title: `${name} => RP → Normal`,
+      title: `${cleanName} => RP → Normal`,
       showConfirmButton: false,
       timer: 5000,
     });
   } else {
-    // Normal → RP or Normal → C
     if (currentCoordinators < 2) {
-      // First promotion → Coordinator
       participant = participant + " (C)";
       Swal.fire({
         toast: true,
         position: "top-end",
         icon: "success",
-        title: `${name} => Normal → Coordinator 👑`,
+        title: `${cleanName} => Normal → Coordinator 👑`,
         showConfirmButton: false,
         timer: 5000,
       });
     } else {
-      // Otherwise just toggle RP
       participant = participant + " (RP)";
       Swal.fire({
         toast: true,
         position: "top-end",
         icon: "success",
-        title: `${name} => Normal → RP 🔄`,
+        title: `${cleanName} => Normal → RP 🔄`,
         showConfirmButton: false,
         timer: 5000,
       });
     }
   }
 
-  participants[index] = participant;
+  participants[idx] = participant;
   await saveBatches();
   renderBatchDetails();
 }
@@ -301,7 +320,7 @@ function renderBatchList() {
 
   Object.keys(batches)
     .filter((batchName) => batchName.toLowerCase().includes(searchQuery))
-    .sort() // ascending order
+    .sort()
     .forEach((batchName) => {
       const batch = batches[batchName];
 
@@ -311,23 +330,19 @@ function renderBatchList() {
 
       const groupCount = batch.hasGroup2 ? 2 : 1;
 
-      // Card container
       const card = document.createElement("div");
       card.className = `card mb-2 shadow-sm batch-card ${
         selectedBatch === batchName ? "active" : ""
       }`;
-
       card.style.cursor = "pointer";
 
       const body = document.createElement("div");
       body.className =
         "card-body d-flex justify-content-between align-items-center p-2";
 
-      // Batch title + participants
       const title = document.createElement("div");
       title.innerHTML = `<strong>${batchName}</strong><br><small>${total} participants</small>`;
 
-      // Group badge
       const badge = document.createElement("span");
       badge.className = "badge bg-primary group-badge";
       badge.textContent = `${groupCount} Group${groupCount > 1 ? "s" : ""}`;
@@ -336,11 +351,10 @@ function renderBatchList() {
       body.appendChild(badge);
       card.appendChild(body);
 
-      // ✅ Attach click event
       card.addEventListener("click", () => {
         selectedBatch = batchName;
         renderBatchList(); // re-render with highlight
-        renderBatchDetails(batchName);
+        renderBatchDetails();
       });
 
       batchList.appendChild(card);
@@ -348,20 +362,23 @@ function renderBatchList() {
 }
 
 function renderBatchDetails() {
-  if (!selectedBatch) return;
+  if (!selectedBatch || !batches[selectedBatch]) return;
   const batch = batches[selectedBatch];
 
   document.getElementById(
     "selectedBatchTitle"
   ).textContent = `${selectedBatch} Details`;
-
   document.getElementById("hasGroup2").checked = !!batch.hasGroup2;
   document.getElementById("group2Section").style.display = batch.hasGroup2
     ? "block"
     : "none";
-
   document.getElementById("TrainerName").value = batch?.Trainer || "";
   document.getElementById("TimeB").innerHTML = batch?.Time || "⏰ Select Time";
+
+  document.getElementById("newParticipant1").value = null;
+  document.getElementById("newParticipant2").value = null;
+
+  if (batch?.Trainer) document.getElementById("Trainer").innerHTML = "Reset !";
 
   renderParticipantList("Group_1", batch.groups?.Group_1 ?? []);
 
@@ -376,15 +393,16 @@ function renderParticipantList(groupName, participants) {
   const list = document.getElementById(listId);
   list.innerHTML = "";
 
-  const currentCoordinators = participants.filter((p) =>
-    p.includes("(C)")
-  ).length;
+  // Counters are based on the full group (not the filtered view)
+  const fullGroup = batches[selectedBatch]?.groups?.[groupName] ?? [];
+  const currentCoordinators = fullGroup.filter((p) => p.includes("(C)")).length;
 
-  // Header counter
   const counterCoordinactor = document.createElement("div");
   counterCoordinactor.className = "badge mb-2";
-  counterCoordinactor.style.background = "red";
-  counterCoordinactor.style.color = "yellow";
+  counterCoordinactor.style.background =
+    currentCoordinators === 2 ? "yellow" : "red";
+  counterCoordinactor.style.color =
+    currentCoordinators === 2 ? "red" : "yellow";
   counterCoordinactor.style.marginLeft = "10px";
   counterCoordinactor.textContent = `${currentCoordinators}/2 Coordinators`;
 
@@ -392,27 +410,23 @@ function renderParticipantList(groupName, participants) {
   counterTotal.className = "badge mb-2";
   counterTotal.style.background = "red";
   counterTotal.style.marginLeft = "10px";
-  counterTotal.textContent = `* Total Members : ${participants.length}`;
+  counterTotal.textContent = `* Total Members : ${fullGroup.length}`;
 
   const counterActive = document.createElement("div");
   counterActive.className = "badge mb-2 bg-info";
   counterActive.style.marginLeft = "10px";
   counterActive.textContent = `* Active Members : ${
-    participants.length -
-    participants.filter((name) => name.includes("(RP)")).length
+    fullGroup.length - fullGroup.filter((name) => name.includes("(RP)")).length
   } `;
 
-  if (currentCoordinators === 2) {
-    counterCoordinactor.style.background = "yellow";
-    counterCoordinactor.style.color = "red";
-  }
   list.appendChild(counterCoordinactor);
   list.appendChild(counterTotal);
   list.appendChild(counterActive);
 
-  participants
+  // render given (possibly filtered) list, sorted
+  [...participants]
     .sort((a, b) => a.localeCompare(b))
-    .forEach((participant, index) => {
+    .forEach((participant) => {
       const item = document.createElement("div");
       item.className = "participant-item";
 
@@ -423,7 +437,7 @@ function renderParticipantList(groupName, participants) {
       let buttonText, buttonClass;
       if (isRP) {
         buttonText = "RP";
-        buttonClass = "btn-primary";
+        buttonClass = "btn-info";
       } else if (isC) {
         buttonText = "C";
         buttonClass = "btn-warning";
@@ -433,51 +447,59 @@ function renderParticipantList(groupName, participants) {
       }
 
       item.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center p-2 border rounded mb-1">
-        <div class="d-flex align-items-center">
-          <span class="me-2">${isRP ? "🔄" : isC ? "👑" : "👤"}</span>
-          <span class="${
-            isRP ? "text-info" : isC ? "text-warning" : ""
-          }">${cleanName}</span>
-          ${isRP ? '<span class="badge bg-info ms-2">RP</span>' : ""}
-          ${isC ? '<span class="badge bg-warning ms-2">C</span>' : ""}
+        <div class="d-flex justify-content-between align-items-center p-2 border rounded mb-1">
+          <div class="d-flex align-items-center">
+            <span class="me-2">${isRP ? "🔄" : isC ? "👑" : "👤"}</span>
+            <span class="${
+              isRP ? "text-info" : isC ? "text-warning" : ""
+            }">${cleanName}</span>
+            ${isRP ? '<span class="badge bg-info ms-2">RP</span>' : ""}
+            ${isC ? '<span class="badge bg-warning ms-2">C</span>' : ""}
+          </div>
+          <div class="btn-group btn-group-sm">
+            <button class="btn ${buttonClass} btn-sm"
+                    onclick="toggleParticipantType('${groupName}', -1, '${cleanName}')">
+              ${buttonText}
+            </button>
+            ${
+              ["admin", "manager"].includes(window.currentUser?.role)
+                ? `<button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', -1, '${cleanName}')">🗑️</button>`
+                : ""
+            }
+          </div>
         </div>
-        <div class="btn-group btn-group-sm">
-          <button class="btn ${buttonClass} btn-sm"
-                  onclick="toggleParticipantType('${groupName}', ${index},'${cleanName}')">
-            ${buttonText}
-          </button>
-          ${
-            (typeof isAdmin === "function" && isAdmin()) ||
-            (typeof isManager === "function" && isManager()) ||
-            (typeof isCoordinator === "function" && isCoordinator())
-              ? `<button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', ${index},'${cleanName}')">🗑️</button>`
-              : ""
-          }
-        </div>
-      </div>
-    `;
+      `;
       list.appendChild(item);
     });
+}
+
+// Live filter (does not mutate data)
+function filterParticipants(groupName, searchText) {
+  if (!selectedBatch) return;
+  const allParticipants = batches[selectedBatch]?.groups?.[groupName] || [];
+  const filtered = allParticipants.filter((name) =>
+    name
+      .replace(/\(RP\)|\(C\)/g, "")
+      .trim()
+      .toLowerCase()
+      .includes(searchText.toLowerCase())
+  );
+  renderParticipantList(groupName, filtered);
 }
 
 function selectBatch(batchName) {
   selectedBatch = batchName;
   renderBatchDetails();
 
-  // remove old active
   document.querySelectorAll("#batchList .list-group-item").forEach((el) => {
     el.classList.remove("active-batch");
   });
-
-  // set new active
   const activeEl = document.getElementById(`batch-${batchName}`);
   if (activeEl) activeEl.classList.add("active-batch");
 }
 
-// ====================== IMPORT VIA TEXTAREA ======================/*/
+// ====================== IMPORT VIA TEXTAREA ======================
 export async function importData() {
-  // Completely rewritten error detection function
   function getJSONErrorDetails(input, err) {
     let line = 1,
       col = 1;
@@ -529,9 +551,6 @@ export async function importData() {
     } else if (err.message.includes("Expected")) {
       friendlyMessage =
         "Syntax error - expected a different character (check commas, colons, brackets)";
-    } else if (err.message.includes("property name must be a string")) {
-      friendlyMessage =
-        'Property names must be in quotes (e.g., use "name" instead of name)';
     } else if (input.trim() === "") {
       friendlyMessage = "Empty JSON - please enter valid JSON data";
       line = 1;
@@ -557,7 +576,6 @@ export async function importData() {
       let charPos = 0;
       for (let i = 0; i < line - 1; i++) charPos += lines[i].length + 1;
       charPos += col - 1;
-
       textarea.focus();
       textarea.setSelectionRange(charPos, charPos + 1);
       textarea.scrollTop = textarea.scrollHeight;
@@ -565,10 +583,8 @@ export async function importData() {
 
     setTimeout(hideError, 8000);
   }
-
   function hideError() {
-    const popup = document.getElementById("errorPopup");
-    popup.style.display = "none";
+    document.getElementById("errorPopup").style.display = "none";
   }
 
   Swal.fire({
@@ -601,7 +617,7 @@ export async function importData() {
     "name": "BC2024",
     "hasGroup2": true,
     "Trainer" : "Afzal Nazar",
-    "Time" : "11:30Am - 12:30Pm",
+    "Time" : "11:30 AM - 12:30 PM",
     "groups": {
       "Group_1": ["Alice", "Bob (C)"],
       "Group_2": ["Charlie", "Diana (RP)"]
@@ -614,7 +630,7 @@ export async function importData() {
       <div id="errorPopup" class="error-popup">
         <span class="icon">⚠</span>
         <span id="errorMessage"></span>
-        <button onclick="hideError()" style="background:none; border:none; color:white; cursor:pointer; margin-left:10px;">✕</button>
+        <button onclick="(${hideError.toString()})()" style="background:none; border:none; color:white; cursor:pointer; margin-left:10px;">✕</button>
       </div>
     `,
     width: "650px",
@@ -638,14 +654,11 @@ export async function importData() {
         lineNumbers.style.lineHeight = "1.5em";
       }
 
-      textarea.addEventListener("input", () => {
-        updateLineNumbers();
-      });
-
-      textarea.addEventListener("scroll", () => {
-        lineNumbers.scrollTop = textarea.scrollTop;
-      });
-
+      textarea.addEventListener("input", updateLineNumbers);
+      textarea.addEventListener(
+        "scroll",
+        () => (lineNumbers.scrollTop = textarea.scrollTop)
+      );
       updateLineNumbers();
 
       shortcutBtn.addEventListener("click", () => {
@@ -664,12 +677,9 @@ export async function importData() {
           `,
           icon: "info",
           confirmButtonText: "Got it!",
-        }).then(() => {
-          textarea.focus();
-        });
+        }).then(() => textarea.focus());
       });
 
-      // Editor key events (unchanged)
       textarea.addEventListener("keydown", (e) => {
         const { selectionStart, selectionEnd, value } = textarea;
         const selectedText = value.substring(selectionStart, selectionEnd);
@@ -754,7 +764,6 @@ export async function importData() {
     preConfirm: async () => {
       const textarea = document.getElementById("settingsInput");
       const input = textarea.value.trim();
-
       if (!input) {
         showError("⚠ Please paste JSON data!", 1, 1);
         return false;
@@ -762,27 +771,21 @@ export async function importData() {
 
       try {
         const parsed = JSON.parse(input);
-
         if (typeof parsed !== "object" || Array.isArray(parsed)) {
           throw new Error(
             "JSON must be an object containing batches, not an array"
           );
         }
-
         if (Object.keys(parsed).length === 0) {
           throw new Error("JSON object is empty - please add batch data");
         }
 
         for (const batchId in parsed) {
           const batch = parsed[batchId];
-
-          // ✅ Must have name
           if (!batch.name)
             throw new Error(
               `Batch "${batchId}" is missing the 'name' property`
             );
-
-          // ✅ Check if batch.name matches batchId (case-insensitive, trimmed, no spaces)
           const cleanBatchId = batchId.trim().replace(/\s+/g, "").toUpperCase();
           const cleanName = batch.name.trim().replace(/\s+/g, "").toUpperCase();
           if (cleanBatchId !== cleanName) {
@@ -790,24 +793,22 @@ export async function importData() {
               `Batch "${batchId}" has name "${batch.name}" which does not match its ID`
             );
           }
-
-          // ✅ Must have groups
-          if (!batch.groups || typeof batch.groups !== "object")
+          if (!batch.groups || typeof batch.groups !== "object") {
             throw new Error(`Batch "${batchId}" has invalid 'groups' property`);
-
+          }
           for (const groupName in batch.groups) {
-            if (!Array.isArray(batch.groups[groupName]))
+            if (!Array.isArray(batch.groups[groupName])) {
               throw new Error(
                 `Group "${groupName}" in batch "${batchId}" must be an array`
               );
-            if (batch.groups[groupName].length === 0)
+            }
+            if (batch.groups[groupName].length === 0) {
               throw new Error(
                 `Group "${groupName}" in batch "${batchId}" is empty`
               );
+            }
           }
         }
-
-        hideError();
         return parsed;
       } catch (err) {
         const { line, col } = getJSONErrorDetails(input, err);
@@ -820,64 +821,46 @@ export async function importData() {
       }
     },
   }).then(async (result) => {
-    if (result.isConfirmed && result.value) {
-      try {
-        const existingBatchesSnap = await getDoc(
-          doc(db, "batches", "allBatches")
-        );
-        const existingBatches = existingBatchesSnap.exists()
-          ? existingBatchesSnap.data()
-          : {};
+    if (!(result.isConfirmed && result.value)) return;
+    try {
+      const existingBatchesSnap = await getDoc(
+        doc(db, "batches", "allBatches")
+      );
+      const existingBatches = existingBatchesSnap.exists()
+        ? existingBatchesSnap.data()
+        : {};
 
-        const duplicateBatches = [];
-        for (const batchId in result.value) {
-          if (
-            existingBatches.hasOwnProperty(
-              batchId
-                .trim()
-                .replace(/\s+/g, "") // removes all spaces (including multiple spaces)
-                .toUpperCase()
-            )
-          )
-            duplicateBatches.push(
-              batchId
-                .trim()
-                .replace(/\s+/g, "") // removes all spaces (including multiple spaces)
-                .toUpperCase()
-            );
-        }
-
-        if (duplicateBatches.length > 0) {
-          Swal.fire(
-            "❌ Import Failed",
-            `Batch already exist: ${duplicateBatches.join(
-              ", "
-            )}. Please use unique batch IDs.`,
-            "error"
-          );
-          return;
-        }
-        // Build cleaned object
-        const cleanedBatches = {};
-        for (const batchId in result.value) {
-          const cleanId = batchId.trim().replace(/\s+/g, "").toUpperCase();
-          cleanedBatches[cleanId] = result.value[batchId];
-        }
-
-        // Merge with existing batches
-        const updatedBatches = {
-          ...existingBatches,
-          ...cleanedBatches,
-        };
-
-        await setDoc(doc(db, "batches", "allBatches"), updatedBatches, {
-          merge: true,
-        });
-
-        Swal.fire("✅ Imported", "Batch data saved successfully!", "success");
-      } catch (err) {
-        Swal.fire("❌ Import Failed", err.message, "error");
+      const duplicateBatches = [];
+      for (const batchId in result.value) {
+        const cleanId = batchId.trim().replace(/\s+/g, "").toUpperCase();
+        if (existingBatches.hasOwnProperty(cleanId))
+          duplicateBatches.push(cleanId);
       }
+      if (duplicateBatches.length > 0) {
+        Swal.fire(
+          "❌ Import Failed",
+          `Batch already exist: ${duplicateBatches.join(
+            ", "
+          )}. Please use unique batch IDs.`,
+          "error"
+        );
+        return;
+      }
+
+      const cleanedBatches = {};
+      for (const batchId in result.value) {
+        const cleanId = batchId.trim().replace(/\s+/g, "").toUpperCase();
+        cleanedBatches[cleanId] = result.value[batchId];
+      }
+
+      const updatedBatches = { ...existingBatches, ...cleanedBatches };
+      await setDoc(doc(db, "batches", "allBatches"), updatedBatches, {
+        merge: true,
+      });
+
+      Swal.fire("✅ Imported", "Batch data saved successfully!", "success");
+    } catch (err) {
+      Swal.fire("❌ Import Failed", err.message, "error");
     }
   });
 }
@@ -896,15 +879,27 @@ window.addTrainer = addTrainer;
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ Batch Manager Ready");
   listenToBatches();
+
   const searchInput = document.getElementById("batchSearch");
-  if (searchInput) {
-    searchInput.addEventListener("input", renderBatchList);
+  if (searchInput) searchInput.addEventListener("input", renderBatchList);
+
+  const newParticipant1 = document.getElementById("newParticipant1");
+  const newParticipant2 = document.getElementById("newParticipant2");
+
+  if (newParticipant1) {
+    newParticipant1.addEventListener("input", function () {
+      filterParticipants("Group_1", this.value);
+    });
+  }
+  if (newParticipant2) {
+    newParticipant2.addEventListener("input", function () {
+      filterParticipants("Group_2", this.value);
+    });
   }
 });
 
-// ====================== CUSTOM DROPDOWN ======================
+// ====================== CUSTOM DROPDOWN (Time) ======================
 document.addEventListener("DOMContentLoaded", function () {
-  // Custom dropdown functionality
   document.querySelectorAll(".custom-dropdown").forEach((drop) => {
     const btn = drop.querySelector(".dropdown-btn");
     if (btn) {
@@ -919,9 +914,11 @@ document.addEventListener("DOMContentLoaded", function () {
           btn.innerHTML =
             "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
         }
-        batches[selectedBatch].Time = item.textContent;
+        if (selectedBatch) {
+          batches[selectedBatch].Time = item.textContent;
+          await saveBatches();
+        }
         drop.classList.remove("active");
-        await saveBatches();
       });
     });
   });
@@ -933,16 +930,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Set default time
-  const defaultTime = "11:30 AM - 12:30 PM";
+  // Set default time only if current batch has none
   const btn = document.querySelector(".custom-dropdown .dropdown-btn");
-  const hiddenInput = document.getElementById("time");
-
   if (btn) {
+    const current = selectedBatch && batches[selectedBatch]?.Time;
+    const defaultTime = current || "11:00 AM - 12:00 PM";
     btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
-  }
-
-  if (hiddenInput) {
-    hiddenInput.value = defaultTime;
+    const hiddenInput = document.getElementById("time");
+    if (hiddenInput && !hiddenInput.value) hiddenInput.value = defaultTime;
   }
 });

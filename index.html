@@ -9,6 +9,13 @@
   <link href="https://raw.githubusercontent.com/SidharthT-TechExpert/attendance-tracker/refs/heads/main/Img/logo.webp"
     rel="icon">
   <link rel="stylesheet" href="style.css">
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const currentDate = document.getElementById("currentDate");
+      currentDate.textContent = new Date().toDateString();
+      loadBatchDataFromFirestore();
+    });
+  </script>
 </head>
 
 <body>
@@ -122,14 +129,17 @@
           <!-- Output -->
           <div class="d-flex justify-content-between align-items-center mt-3">
             <span><strong id="outputtext" style="display: none;">Output</strong></span>
-            <div style="display: none;" id="outputToolbar">
-              <button class="btn btn-sm btn-outline-secondary" onclick="copyOutput()">📋 Copy</button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="downloadReport()">📥 Download .txt</button>
-              <button id="editBtn" class="btn btn-sm btn-outline-secondary" onclick="toggleEdit()">✏️ Edit</button>
+            <div id="outputToolbar" class="output-toolbar">
+              <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
+              <button class="download-btn" onclick="downloadReport()">📥 Download .txt</button>
+              <button id="editBtn" class="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
             </div>
           </div>
           <hr>
-          <pre id="outputView" class="form-control" style="padding-top: 35px;"></pre>
+          <!-- View Mode -->
+          <pre id="outputView" class="form-control" style="padding-top: 35px; white-space: pre-dark;"></pre>
+
+          <!-- Edit Mode -->
           <textarea id="outputEdit" class="form-control" style="padding-top: 35px; display:none;"></textarea>
         </div>
       </div>
@@ -137,41 +147,25 @@
   </div>
   </div>
 
+
   <!-- Scripts -->
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const currentDate = document.getElementById("currentDate");
-      if (currentDate) currentDate.textContent = new Date().toDateString();
-      loadBatchDataFromFirestore()
-    });
-  </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Firebase first -->
   <script type="module" src="firebase.js"></script>
+
+  <!-- Feature modules -->
   <script type="module" src="batch-manager.js"></script>
   <script type="module" src="script.js"></script>
-  <script src="settings.js"></script>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const currentDate = document.getElementById("currentDate");
-      if (currentDate) currentDate.textContent = new Date().toDateString();
-    });
-  </script>
 
+  <!-- Button that opens the protected manager area -->
   <script type="module">
     import { authenticateAndRedirect } from "./auth.js";
-    document.getElementById("manageBtn").addEventListener("click", () => {
-      authenticateAndRedirect();
-    });
+    const btn = document.getElementById("manageBtn");
+    if (btn) btn.addEventListener("click", authenticateAndRedirect);
   </script>
 
-
-  <script type="module">
-    import { authenticateAndRedirect } from "./auth.js";
-    document.getElementById("manageBtn").addEventListener("click", () => {
-      authenticateAndRedirect();
-    });
-  </script>
 </body>
 
 </html>
