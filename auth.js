@@ -7,24 +7,22 @@ import {
 
 // ====================== LOGIN FUNCTION ======================
 export async function authenticateAndRedirect() {
-  // ✅ First check if user already logged in
   if (auth.currentUser) {
-    // Direct redirect without popup
     window.location.href = "batch-manager.html";
     return;
   }
 
   try {
     const result = await Swal.fire({
-      title: "🔒 Login Required",
+      icon: "question",
+      title: "Login Required",
       html: `
         <div style="text-align: left; padding: 10px 20px; overflow: hidden">
           <!-- Email -->
           <div style="margin-bottom: 18px;">
             <label 
               for="auth-email" 
-              style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;"
-            >
+              style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;">
               📧 Email Address:
             </label>
             <input 
@@ -33,8 +31,6 @@ export async function authenticateAndRedirect() {
               class="swal2-input" 
               placeholder="Enter your email" 
               style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; font-size: 15px; outline: none; transition: border 0.3s, box-shadow 0.3s;"
-              onfocus="this.style.border='2px solid #007bff'; this.style.boxShadow='0 0 6px rgba(0,123,255,0.3)'" 
-              onblur="this.style.border='2px solid #ccc'; this.style.boxShadow='none'"
             >
           </div>
 
@@ -42,8 +38,7 @@ export async function authenticateAndRedirect() {
           <div style="margin-bottom: 18px;">
             <label 
               for="auth-password" 
-              style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;"
-            >
+              style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;">
               🔑 Password:
             </label>
             <div style="position: relative;">
@@ -53,16 +48,13 @@ export async function authenticateAndRedirect() {
                 class="swal2-input" 
                 placeholder="Enter your password"
                 style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; font-size: 15px; padding-right: 45px; outline: none; transition: border 0.3s, box-shadow 0.3s;"
-                onfocus="this.style.border='2px solid #007bff'; this.style.boxShadow='0 0 6px rgba(0,123,255,0.3)'" 
-                onblur="this.style.border='2px solid #ccc'; this.style.boxShadow='none'"
               >
               <button 
                 type="button" 
                 id="toggle-password" 
-                onclick="togglePassword()" 
-                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; color: #555;"
+                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 20px; color: #555;"
               >
-                👁️
+                <span id="toggle-icon">👁️</span>
               </button>
             </div>
           </div>
@@ -75,9 +67,6 @@ export async function authenticateAndRedirect() {
           </div>
         </div>
       `,
-      icon: "question",
-      showCancelButton: true,
-      icon: "question",
       showCancelButton: true,
       confirmButtonText: "🚀 Access Batch Manager",
       cancelButtonText: "❌ Cancel",
@@ -86,30 +75,36 @@ export async function authenticateAndRedirect() {
       width: "50%",
       focusConfirm: false,
       allowOutsideClick: false,
+      allowEscapeKey: false,
       didOpen: () => {
-        // Add password toggle functionality
-        const toggleBtn = document.getElementById("toggle-password");
+        const emailInput = document.getElementById("auth-email");
         const passwordInput = document.getElementById("auth-password");
+        const toggleBtn = document.getElementById("toggle-password");
+        const toggleIcon = document.getElementById("toggle-icon");
 
-        if (toggleBtn && passwordInput) {
-          toggleBtn.addEventListener("click", () => {
-            if (passwordInput.type === "password") {
-              passwordInput.type = "text";
-              toggleBtn.textContent = "🙈";
-            } else {
-              passwordInput.type = "password";
-              toggleBtn.textContent = "👁️";
+        emailInput.focus();
+
+        // ✅ Enter key support
+        [emailInput, passwordInput].forEach((el) => {
+          el.addEventListener("keyup", (e) => {
+            if (e.key === "Enter") {
+              Swal.clickConfirm();
             }
           });
-        }
+        });
 
-        // Focus on email input
-        document.getElementById("auth-email").focus();
+        // ✅ Toggle password visibility
+        if (toggleBtn && passwordInput) {
+          toggleBtn.addEventListener("click", () => {
+            const isHidden = passwordInput.type === "password";
+            passwordInput.type = isHidden ? "text" : "password";
+            toggleIcon.textContent = isHidden ? "🙈" : "👁️"; // only updates the icon
+          });
+        }
       },
       preConfirm: () => {
         const email = document.getElementById("auth-email").value.trim();
         const password = document.getElementById("auth-password").value.trim();
-
         if (!email || !password) {
           Swal.showValidationMessage("❌ Please enter both email and password");
           return false;
@@ -122,7 +117,6 @@ export async function authenticateAndRedirect() {
       const { email, password } = result.value;
 
       try {
-        // ✅ Verify user with Firebase Auth
         const userCredential = await signInWithEmailAndPassword(
           auth,
           email,
@@ -132,13 +126,9 @@ export async function authenticateAndRedirect() {
 
         sessionStorage.setItem(
           "currentUser",
-          JSON.stringify({
-            email: user.email,
-            role: user.role, // ⚠️ user.role may not exist in Firebase by default
-          })
+          JSON.stringify({ email: user.email })
         );
 
-        // Show success message
         await Swal.fire({
           icon: "success",
           title: "✅ Authentication Successful!",
@@ -148,7 +138,6 @@ export async function authenticateAndRedirect() {
           timerProgressBar: true,
         });
 
-        // 🔥 Redirect to batch-manager.html
         window.location.href = "batch-manager.html";
       } catch (err) {
         Swal.fire("❌ Login Failed", err.message, "error");
@@ -181,5 +170,43 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+// Function to show valid credentials (helper function)
+function showCredentials() {
+  Swal.fire({
+    title: "🔑 Valid Test Credentials",
+    html: `
+            <div style="text-align: left; padding: 0 20px;">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h6 style="color: #004d61; margin-bottom: 8px;">👑 Admin Access:</h6>
+                    <p style="margin: 5px 0;"><strong>Email:</strong> admin@gmail.com</p>
+                    <p style="margin: 5px 0;"><strong>Password:</strong> admin123</p>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h6 style="color: #004d61; margin-bottom: 8px;">🏢 Manager Access:</h6>
+                    <p style="margin: 5px 0;"><strong>Email:</strong> manager@attendance.com</p>
+                    <p style="margin: 5px 0;"><strong>Password:</strong> manager123</p>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h6 style="color: #004d61; margin-bottom: 8px;">🤝 Coordinator Access:</h6>
+                    <p style="margin: 5px 0;"><strong>Email:</strong> coordinator@attendance.com</p>
+                    <p style="margin: 5px 0;"><strong>Password:</strong> coord123</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px;">
+                    <small style="color: #666; font-style: italic;">
+                        ℹ️ These are demo credentials for testing purposes
+                    </small>
+                </div>
+            </div>
+        `,
+    icon: "info",
+    confirmButtonText: "Got it! 👍",
+    confirmButtonColor: "#004d61",
+    width: "500px",
+  });
+}
 
-window.logoutUser = logoutUser ;
+window.logoutUser = logoutUser;
+window.showCredentials = showCredentials;

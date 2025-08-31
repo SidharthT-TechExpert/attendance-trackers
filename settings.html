@@ -22,7 +22,7 @@
         Attendance</button>
       <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch
         Manager</button>
-              <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn" onclick="window.location.href='settings.html'"
+      <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn" onclick="window.location.href='settings.html'"
         style="display: none;">⚙️ Settings</button>
       <button class="btn btn-outline-danger btn-sm" id="logoutBtn">🚪 Logout</button>
     </div>
@@ -264,65 +264,65 @@
     });
   </script>
 
-<script type="module">
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  <script type="module">
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-  import { db, auth } from "./firebase.js"; // 👈 use the exports you already made
+    import { db, auth } from "./firebase.js"; // 👈 use the exports you already made
 
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      await Swal.fire({
-        icon: "warning",
-        title: "Access Denied",
-        text: "Please log in first.",
-      });
-      window.location.href = "/";
-      return;
-    }
-
-    try {
-      // 👇 roles collection
-      const userRef = doc(db, "roles", user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
         await Swal.fire({
-          icon: "error",
-          title: "Role Not Found",
-          text: "Your account has no assigned role.",
+          icon: "warning",
+          title: "Access Denied",
+          text: "Please log in first.",
         });
-        window.location.href = "login.html";
+        window.location.href = "/";
         return;
       }
 
-      const role = userSnap.data().role;
+      try {
+        // 👇 roles collection
+        const userRef = doc(db, "roles", user.uid);
+        const userSnap = await getDoc(userRef);
 
-      // ✅ Only admins allowed here
-      if (role !== "admin") {
+        if (!userSnap.exists()) {
+          await Swal.fire({
+            icon: "error",
+            title: "Role Not Found",
+            text: "Your account has no assigned role.",
+          });
+          window.location.href = "login.html";
+          return;
+        }
+
+        const role = userSnap.data().role;
+
+        // ✅ Only admins allowed here
+        if (role !== "admin") {
+          await Swal.fire({
+            icon: "error",
+            title: "Access Restricted",
+            text: "This page is for Admins only.",
+          });
+          window.location.href = "index.html";
+        }
+      } catch (err) {
+        console.error("Role check failed:", err);
         await Swal.fire({
           icon: "error",
-          title: "Access Restricted",
-          text: "This page is for Admins only.",
+          title: "Error",
+          text: "Failed to validate user role.",
         });
-        window.location.href = "index.html";
+        window.location.href = "login.html";
       }
-    } catch (err) {
-      console.error("Role check failed:", err);
-      await Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Failed to validate user role.",
-      });
-      window.location.href = "login.html";
-    }
-  });
+    });
 
-   // Logout click
+    // Logout click
     document.getElementById("logoutBtn").addEventListener("click", () => {
       logoutUser();
     });
-</script>
+  </script>
 
 
 </body>

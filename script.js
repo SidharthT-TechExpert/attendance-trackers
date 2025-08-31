@@ -660,4 +660,3 @@ document.addEventListener("DOMContentLoaded", function () {
   btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
   hiddenInput.value = defaultTime;
 });
-
