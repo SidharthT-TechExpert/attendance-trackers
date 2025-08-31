@@ -1,7 +1,7 @@
 :root {
-  --primary-color: #004d61;   /* Dark teal */
+  --primary-color: #004d61; /* Dark teal */
   --secondary-color: #00b7c2; /* Aqua */
-  --accent-color: #f4f7f9;    /* Light gray */
+  --accent-color: #f4f7f9; /* Light gray */
   --danger-color: #ea5455;
   --success-color: #28c76f;
   --warning-color: #ff9f43;
@@ -11,7 +11,11 @@
 }
 
 body {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: #fff;
   min-height: 100vh;
   font-family: "Segoe UI", Roboto, sans-serif;
@@ -20,12 +24,12 @@ body {
 /* ===== Header ===== */
 header {
   padding: 1rem;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(10px);
   text-align: center;
   border-bottom-left-radius: 16px;
   border-bottom-right-radius: 16px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 header h4 {
   margin: 0;
@@ -40,7 +44,7 @@ header small {
   background: #fff;
   color: #333;
   border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   padding: 24px;
   margin-top: 1rem;
   animation: fadeIn 0.4s ease-in-out;
@@ -48,8 +52,14 @@ header small {
 
 /* ===== Animations ===== */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===== Section Headings ===== */
@@ -67,12 +77,12 @@ h5 {
   border: none;
   border-radius: 14px;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.25s ease-in-out;
 }
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 .card-body {
   padding: 1.5rem;
@@ -86,14 +96,34 @@ h5 {
 }
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
-.btn-primary { background: var(--primary-color); border: none; }
-.btn-success { background: var(--success-color); border: none; }
-.btn-warning { background: var(--warning-color); border: none; color: #fff; }
-.btn-info    { background: var(--info-color); border: none; color: #fff; }
-.btn-outline-danger { border-color: var(--danger-color); color: var(--danger-color); }
-.btn-outline-danger:hover { background: var(--danger-color); color: #fff; }
+.btn-primary {
+  background: var(--primary-color);
+  border: none;
+}
+.btn-success {
+  background: var(--success-color);
+  border: none;
+}
+.btn-warning {
+  background: var(--warning-color);
+  border: none;
+  color: #fff;
+}
+.btn-info {
+  background: var(--info-color);
+  border: none;
+  color: #fff;
+}
+.btn-outline-danger {
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+.btn-outline-danger:hover {
+  background: var(--danger-color);
+  color: #fff;
+}
 
 /* ===== Stats Cards ===== */
 .card.text-center h3 {
@@ -117,16 +147,23 @@ h5 {
   color: #333;
   font-weight: 600;
 }
-.table td, .table th { padding: 0.75rem; }
-.table-hover tbody tr:hover { background: #f8fbff; }
+.table td,
+.table th {
+  padding: 0.75rem;
+}
+.table-hover tbody tr:hover {
+  background: #f8fbff;
+}
 
 /* ===== Switches ===== */
 .form-check-input:checked {
   background-color: var(--secondary-color);
   border-color: var(--secondary-color);
-  box-shadow: 0 0 0 0.2rem rgba(0,183,194,0.25);
+  box-shadow: 0 0 0 0.2rem rgba(0, 183, 194, 0.25);
 }
-.form-check-label { font-size: 0.9rem; }
+.form-check-label {
+  font-size: 0.9rem;
+}
 
 /* ===== Backup History Table ===== */
 #backupHistory .table th {
@@ -136,7 +173,13 @@ h5 {
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
-  header h4 { font-size: 1.2rem; }
-  .container-box { padding: 1rem; }
-  .card-body { padding: 1rem; }
+  header h4 {
+    font-size: 1.2rem;
+  }
+  .container-box {
+    padding: 1rem;
+  }
+  .card-body {
+    padding: 1rem;
+  }
 }

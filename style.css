@@ -84,6 +84,10 @@ header {
   border-radius: 10px;
 }
 
+.btn {
+  border-radius:15px;
+  transition: all 0.25s ease;
+}
 .btn-custom {
   background-color: var(--secondary-color);
   border: none;

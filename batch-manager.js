@@ -360,10 +360,7 @@ function renderBatchDetails() {
     ? "block"
     : "none";
 
-  document.getElementById("TrainerName").placeholder =
-    batch?.Trainer ||
-    "e.g.: Afzal Nazar (One-time set or for editing purposes)";
-
+  document.getElementById("TrainerName").value = batch?.Trainer || "";
   document.getElementById("TimeB").innerHTML = batch?.Time || "⏰ Select Time";
 
   renderParticipantList("Group_1", batch.groups?.Group_1 ?? []);

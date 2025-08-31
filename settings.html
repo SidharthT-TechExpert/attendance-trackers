@@ -22,6 +22,10 @@
         Attendance</button>
       <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch
         Manager</button>
+              <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn" onclick="window.location.href='settings.html'"
+        style="display: none;">⚙️ Settings</button>
+      <button class="btn btn-outline-danger btn-sm" id="logoutBtn">🚪 Logout</button>
+    </div>
     </div>
 
     <!-- 🔔 Notification Bell -->
@@ -56,7 +60,8 @@
                   <div class="mb-3">
                     <label class="form-label">Automatic Backup</label>
                     <div class="form-check form-switch">
-                      <input class="form-check-input" type="checkbox" id="autoBackup" checked onchange="toggleAutoBackup()">
+                      <input class="form-check-input" type="checkbox" id="autoBackup" checked
+                        onchange="toggleAutoBackup()">
                       <label class="form-check-label" for="autoBackup">Enable automatic backup</label>
                     </div>
                   </div>
@@ -250,6 +255,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script type="module" src="firebase.js"></script>
   <script type="module" src="settings.js"></script>
+  <script type="module" src="auth.js"></script>
   <!-- Simple toggle JS -->
   <script>
     document.getElementById("notifBell").addEventListener("click", () => {
@@ -257,6 +263,68 @@
       dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
     });
   </script>
+
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+  import { db, auth } from "./firebase.js"; // 👈 use the exports you already made
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Access Denied",
+        text: "Please log in first.",
+      });
+      window.location.href = "/";
+      return;
+    }
+
+    try {
+      // 👇 roles collection
+      const userRef = doc(db, "roles", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await Swal.fire({
+          icon: "error",
+          title: "Role Not Found",
+          text: "Your account has no assigned role.",
+        });
+        window.location.href = "login.html";
+        return;
+      }
+
+      const role = userSnap.data().role;
+
+      // ✅ Only admins allowed here
+      if (role !== "admin") {
+        await Swal.fire({
+          icon: "error",
+          title: "Access Restricted",
+          text: "This page is for Admins only.",
+        });
+        window.location.href = "index.html";
+      }
+    } catch (err) {
+      console.error("Role check failed:", err);
+      await Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to validate user role.",
+      });
+      window.location.href = "login.html";
+    }
+  });
+
+   // Logout click
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      logoutUser();
+    });
+</script>
+
+
 </body>
 
 </html>

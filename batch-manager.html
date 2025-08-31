@@ -124,7 +124,7 @@
                     <button class="btn btn-success" onclick="addTrainer()">Set</button>
                   </div>
                 </div>
-                
+
                 <!-- Session Time -->
                 <div class="custom-dropdown col-md-4 time-selection">
                   <label for="time" class="form-label">⏰ Select Time</label>
@@ -137,7 +137,7 @@
                   </ul>
                   <input type="hidden" id="time">
                 </div>
-                
+
 
                 <!-- Group 1 -->
                 <div class="mb-4">
@@ -186,102 +186,93 @@
           <script type="module" src="batch-manager.js"></script>
           <script src="auth.js"></script>
 
-          <script>
-            // ====================== AUTHENTICATION CHECK ======================
+          <script type="module">
+            import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+            import { auth, db } from "./firebase.js";
+            import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-            // Check if user is authenticated when page loads
-            document.addEventListener('DOMContentLoaded', function () {
-              // Check if user is authenticated
-              window.currentUser = getCurrentUser();
+            const authStatusEl = document.getElementById("authStatus");
+            const currentUserEl = document.getElementById("currentUser");
+            const roleBadgeEl = document.getElementById("userRole");
 
-              if (!currentUser) {
-                // If not authenticated, redirect back
+            // 🔥 Listen for login/logout
+            onAuthStateChanged(auth, async (user) => {
+              if (!user) {
+                authStatusEl.className = "alert alert-danger mb-4";
+                currentUserEl.textContent = "Not logged in";
+                roleBadgeEl.textContent = "";
                 Swal.fire({
-                  icon: 'warning',
-                  title: '🔒 Access Denied',
-                  text: 'Please authenticate through the main page to access Batch Manager.',
-                  confirmButtonText: 'Go to Login',
-                  confirmButtonColor: '#004d61',
-                  allowOutsideClick: false,
-                  allowEscapeKey: false
+                  icon: "warning",
+                  title: "🔒 Access Denied",
+                  text: "Please login first!",
+                  confirmButtonText: "Go Back",
                 }).then(() => {
-                  window.location.href = 'index.html';
+                  window.location.href = "../index.html";
                 });
                 return;
               }
 
-              // Set session flag to allow direct refresh
-              sessionStorage.setItem('batchManagerAccess', 'true');
+              // ✅ Show email
+              authStatusEl.className = "alert alert-success mb-4";
+              currentUserEl.textContent = user.email;
 
-              // Update current user display
-              document.getElementById('currentUser').textContent = currentUser.email;
+              // ✅ Fetch role from Firestore
+              let role = "coordinator"; // default
+              try {
+                const snap = await getDoc(doc(db, "roles", user.uid));
+                if (snap.exists() && snap.data().role) {
+                  role = snap.data().role;
+                }
+              } catch (err) {
+                console.error("Error fetching role:", err);
+              }
 
-              // Update role badge
-              const roleBadge = document.getElementById('userRole');
-              roleBadge.textContent = currentUser.role.toUpperCase();
-
-              // Set badge color based on role
-              switch (currentUser.role) {
-                case 'admin':
-                  roleBadge.className = 'badge bg-danger ms-2';
+              // ✅ Update badge
+              roleBadgeEl.textContent = role.toUpperCase();
+              switch (role) {
+                case "admin":
+                  roleBadgeEl.className = "badge bg-danger ms-2";
+                  document.getElementById("settingsBtn").style.display = "inline-block";
                   break;
-                case 'manager':
-                  roleBadge.className = 'badge bg-warning ms-2';
+                case "manager":
+                  roleBadgeEl.className = "badge bg-warning ms-2";
                   break;
-                case 'coordinator':
-                  roleBadge.className = 'badge bg-info ms-2';
+                case "coordinator":
+                  roleBadgeEl.className = "badge bg-info ms-2";
                   break;
                 default:
-                  roleBadge.className = 'badge bg-secondary ms-2';
+                  roleBadgeEl.className = "badge bg-secondary ms-2";
               }
 
-              // Show settings button only for admin users
-              if (currentUser.role === 'admin') {
-                document.getElementById('settingsBtn').style.display = 'inline-block';
-              }
+              // ✅ Make globally accessible
+              window.currentUser = { email: user.email, role };
             });
 
-            // Logout function
-            function logout() {
+            // ====================== LOGOUT ======================
+            window.logout = async function () {
               Swal.fire({
-                title: '🚪 Logout',
-                text: 'Are you sure you want to logout?',
-                icon: 'question',
+                title: "🚪 Logout",
+                text: "Are you sure you want to logout?",
+                icon: "question",
                 showCancelButton: true,
-                confirmButtonText: 'Yes, logout',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#004d61'
-              }).then((result) => {
+                confirmButtonText: "Yes, logout",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#004d61",
+              }).then(async (result) => {
                 if (result.isConfirmed) {
-                  // Clear session
-                  sessionStorage.removeItem('batchManagerAccess');
-                  sessionStorage.removeItem('currentUser');
-
+                  await auth.signOut();
                   Swal.fire({
-                    icon: 'success',
-                    title: '👋 Logged Out',
-                    text: 'You have been logged out successfully',
+                    icon: "success",
+                    title: "👋 Logged Out",
+                    text: "You have been logged out successfully",
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1500,
                   }).then(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = "index.html";
                   });
                 }
               });
-            }
-
-            // ============= ERROR POPUP HANDLER =============
-            function showError(message) {
-              const popup = document.getElementById("errorPopup");
-              popup.textContent = message;
-              popup.style.display = "block";
-            }
-
-            function hideError() {
-              document.getElementById("errorPopup").style.display = "none";
-            }
-            window.showError = showError;
-            window.hideError = hideError;
+            };
           </script>
 
 </body>

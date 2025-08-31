@@ -12,58 +12,58 @@
 </head>
 
 <body>
-  <!-- Header section: displays app title and current date -->
-  <header class="text-center text-white">
-    <h4 class="m-0">Attendance Tracker</h4>
-    <small id="currentDate"></small>
-    <p>Welcome to the Attendance Tracker. Easily record and manage attendance for your sessions.</p>
-    <div class="mt-2">
-      <button class="btn btn-outline-light btn-sm" onclick="authenticateAndRedirect()">📚 Manage Batches</button>
-    </div>
-  </header>
+  <!-- ================= MAIN APP ================= -->
+    <!-- Header section -->
+    <header class="text-center text-white p-3 y">
+      <h4 class="m-0">Attendance Tracker</h4>
+      <small id="currentDate"></small>
+      <p class="mb-2">Welcome to the Attendance Tracker. Easily record and manage attendance for your sessions.</p>
+      <div>
+        <button id="manageBtn" class="btn btn-outline-light btn-sm me-2">📚 Manage Batches</button>
+      </div>
+    </header>
 
-  <div class="container py-4">
-    <div class="row justify-content-center">
-      <div class="col-lg-12 col-md-10">
-        <div class="container-box">
-          <!-- Batch Selection -->
-          <div class="p-3 bg-light border rounded mb-3 text-dark" style="font-weight: bold;">
-            <div class="row">
-              <div class="col-md-6">
-                <select id="batchSelect" class="form-select mb-2" onclick="loadBatchDataFromFirestore()"
-                  onchange="loadBatch()">
-                  <option value="">Select a batch...</option>
-                </select>
-
-                <span id="selectedBatchTitle"></span>
-
+    <!-- Main Content -->
+    <div class="container py-4">
+      <div class="row justify-content-center">
+        <div class="col-lg-12 col-md-10">
+          <div class="container-box">
+            <!-- Batch Selection -->
+            <div class="p-3 bg-light border rounded mb-3 text-dark fw-bold">
+              <div class="row">
+                <div class="col-md-6">
+                  <select id="batchSelect" class="form-select mb-2" onclick="loadBatchDataFromFirestore()"
+                    onchange="loadBatch()">
+                    <option value="">Select a batch...</option>
+                  </select>
+                  <span id="selectedBatchTitle"></span>
+                </div>
+                <div class="col-md-6" id="notifications" style="display: none;">
+                  <div class="text-dark fw-bold">
+                    <small>✅ Present: Default</small><br>
+                    <small>🟨 Alternative CS</small><br>
+                    <small>❌ Absent</small>
+                  </div>
+                </div>
               </div>
-              <div class="col-md-6" id="notifications" style="display: none;">
-                <div class="text-dark" style="color: red; font-weight: bolder;">
-                  <small style="color: red;">✅ Present: Default</small><br>
-                  <small style="color: red;">🟨 Alternative CS</small><br>
-                  <small style="color: red;">❌ Absent</small>
+              <hr>
+              <!-- Groups -->
+              <div id="groups" style="display: none;">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="group1" name="group" value="group1">
+                  <label class="form-check-label" for="group1">Group 1</label>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="group2" name="group" value="group2">
+                  <label class="form-check-label" for="group2">Group 2</label>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="combined" name="group"
+                    value="combined">
+                  <label class="form-check-label" for="combined">Combined</label>
                 </div>
               </div>
             </div>
-            <hr>
-            <!-- Group selection switches -->
-            <div id="groups" style="display: none;">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" id="group1" name="group" value="group1">
-                <label class="form-check-label" for="group1"> Group 1</label>
-              </div>
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" id="group2" name="group" value="group2">
-                <label class="form-check-label" for="group2"> Group 2</label>
-              </div>
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" id="combined" name="group"
-                  value="combined">
-                <label class="form-check-label" for="combined"> Combined</label>
-              </div>
-            </div>
-          </div>
 
           <div class="row g-3 " id="importData" style="display: none;">
             <!-- Session Time -->
@@ -112,56 +112,66 @@
                 autocomplete="off">
             </div>
           </div>
-          <hr>
 
+            <hr>
+            <div class="alt-cs-text" id="list"></div>
+            <hr>
+            <button class="btn btn-custom w-100 mt-3" onclick="generateOutput()">Generate Output</button>
+            <hr>
 
-          <!-- List of students or attendance items will be rendered here -->
-          <div class="alt-cs-text" id="list"></div>
-          <!-- Button to generate attendance output -->
-          <hr>
-          <button class="btn btn-custom w-100 mt-3" onclick="generateOutput()">Generate
-            Output</button>
-          <!-- Output section with copy button -->
-          <hr>
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <span><strong id="outputtext"
-                style="display: none; font-weight: bold; font-size: larger;">Output</strong></span>
-            <div style="display: none;" id="outputToolbar" class="output-toolbar">
-              <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
-              <button class="download-btn" onclick="downloadReport()">📥 Download .txt</button>
-              <button id="editBtn" class="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
+            <!-- Output -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span><strong id="outputtext" style="display: none;">Output</strong></span>
+              <div style="display: none;" id="outputToolbar">
+                <button class="btn btn-sm btn-outline-secondary" onclick="copyOutput()">📋 Copy</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="downloadReport()">📥 Download .txt</button>
+                <button id="editBtn" class="btn btn-sm btn-outline-secondary" onclick="toggleEdit()">✏️ Edit</button>
+              </div>
             </div>
+            <hr>
+            <pre id="outputView" class="form-control" style="padding-top: 35px;"></pre>
+            <textarea id="outputEdit" class="form-control" style="padding-top: 35px; display:none;"></textarea>
           </div>
-          <hr>
-
-          <!-- View Mode -->
-          <pre id="outputView" class="form-control" style="padding-top: 35px; white-space: pre-dark;"></pre>
-
-          <!-- Edit Mode -->
-          <textarea id="outputEdit" class="form-control" style="padding-top: 35px; display:none;"></textarea>
-
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Main JavaScript files -->
+  <!-- Scripts -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const currentDate = document.getElementById("currentDate");
+      if (currentDate) currentDate.textContent = new Date().toDateString();
+      loadBatchDataFromFirestore()
+    });
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
   <script type="module" src="firebase.js"></script>
   <script type="module" src="batch-manager.js"></script>
   <script type="module" src="script.js"></script>
   <script src="settings.js"></script>
-  <script src="auth.js"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", async function () {
-      console.log("✅ DOM Ready");
+    document.addEventListener("DOMContentLoaded", () => {
       const currentDate = document.getElementById("currentDate");
-      if (currentDate) currentDate.textContent = formatDate(new Date());
+      if (currentDate) currentDate.textContent = new Date().toDateString();
     });
   </script>
 
+  <script type="module">
+    import { authenticateAndRedirect } from "./auth.js";
+    document.getElementById("manageBtn").addEventListener("click", () => {
+      authenticateAndRedirect();
+    });
+  </script>
+
+
+  <script type="module">
+    import { authenticateAndRedirect } from "./auth.js";
+    document.getElementById("manageBtn").addEventListener("click", () => {
+      authenticateAndRedirect();
+    });
+  </script>
 </body>
 
 </html>

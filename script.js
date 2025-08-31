@@ -276,7 +276,10 @@ function generateOutput() {
 
   const date = FormateDate(new Date());
   const GroupName = Group;
-  const Time = currentBatchData?.Time !== getSelectedTime() ? getSelectedTime() : currentBatchData?.Time; // Get selected time from custom dropdown
+  const Time =
+    currentBatchData?.Time !== getSelectedTime()
+      ? getSelectedTime()
+      : currentBatchData?.Time; // Get selected time from custom dropdown
 
   if (Batch === "")
     return Swal.fire({
@@ -332,7 +335,6 @@ function generateOutput() {
     } catch (error) {
       Duck = "🔷".repeat(27);
     }
-    
   }
 
   // --- Collect extra details ---
@@ -658,3 +660,4 @@ document.addEventListener("DOMContentLoaded", function () {
   btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
   hiddenInput.value = defaultTime;
 });
+
