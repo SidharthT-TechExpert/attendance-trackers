@@ -24,7 +24,7 @@ async function loadBatchDataFromFirestore() {
       const batchNames = Object.keys(data).sort((a, b) => {
         const numA = parseInt(a.match(/\d+/));
         const numB = parseInt(b.match(/\d+/));
-        
+
         if (!isNaN(numA) && !isNaN(numB)) {
           return numA - numB; // numeric sort (Batch 1, Batch 2, Batch 10)
         }
@@ -327,7 +327,12 @@ function generateOutput() {
   if (Group === "Combined") {
     Duck = "🔷".repeat(27);
   } else {
-    Duck = "🔷".repeat(Coordinators.length / 2 + 6);
+    try {
+      Duck = "🔷".repeat(Coordinators.length / 2 + 6);
+    } catch (error) {
+      Duck = "🔷".repeat(27);
+    }
+    
   }
 
   // --- Collect extra details ---
