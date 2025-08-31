@@ -94,7 +94,7 @@ window.clearAllData = async function () {
 function scheduleNextBackup() {
   clearTimeout(backupTimer);
 
-  let interval = 10*1000 //24 * 60 * 60 * 1000; // daily
+  let interval = 24 * 60 * 60 * 1000; // daily
   if (settings.backupFrequency === "weekly") interval = 7 * interval;
   if (settings.backupFrequency === "monthly") interval = 30 * interval;
 
