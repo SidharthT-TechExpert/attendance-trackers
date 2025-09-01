@@ -10,6 +10,16 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 
+// Utility function for escaping HTML special characters
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ====================== STATE ======================
 
 let batches = {};
@@ -914,7 +924,7 @@ document.addEventListener("DOMContentLoaded", function () {
       item.addEventListener("click", async () => {
         if (btn) {
           btn.innerHTML =
-            "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
+            "⏰ " + escapeHTML(item.textContent) + ' <span class="arrow">⌄</span>';
         }
         if (selectedBatch) {
           batches[selectedBatch].Time = item.textContent;
@@ -937,7 +947,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (btn) {
     const current = selectedBatch && batches[selectedBatch]?.Time;
     const defaultTime = current || "11:00 AM - 12:00 PM";
-    btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
+    btn.innerHTML = `⏰ ${escapeHTML(defaultTime)} <span class="arrow">⌄</span>`;
     const hiddenInput = document.getElementById("time");
     if (hiddenInput && !hiddenInput.value) hiddenInput.value = defaultTime;
   }
