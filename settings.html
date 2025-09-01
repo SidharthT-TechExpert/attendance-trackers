@@ -253,9 +253,9 @@
 
   <!-- Main JavaScript file -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script type="module" src="firebase.js"></script>
-  <script type="module" src="settings.js"></script>
-  <script type="module" src="auth.js"></script>
+  <script type="module" src="/src/firebase.js"></script>
+  <script type="module" src="/src/settings.js"></script>
+  <script type="module" src="/src/auth.js"></script>
   <!-- Simple toggle JS -->
   <script>
     document.getElementById("notifBell").addEventListener("click", () => {
@@ -265,10 +265,10 @@
   </script>
 
   <script type="module">
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-    import { db, auth } from "./firebase.js"; // 👈 use the exports you already made
+    // auth.js (or wherever you’re checking roles)
+    import { onAuthStateChanged } from "firebase/auth";
+    import { doc, getDoc } from "firebase/firestore";
+    import { db, auth } from "./src/firebase.js";
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {

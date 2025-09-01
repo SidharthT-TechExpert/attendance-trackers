@@ -1,9 +1,10 @@
-import { auth } from "./firebase.js";
+import { auth, db } from "./firebase.js";
+import { doc, getDoc } from "firebase/firestore";
 import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+} from "firebase/auth";
 
 // ====================== LOGIN FUNCTION ======================
 export async function authenticateAndRedirect() {
@@ -41,12 +42,9 @@ export async function authenticateAndRedirect() {
               style="display:block;margin-bottom:6px;font-weight:600;font-size:15px;color:#333;">
               📧 Email Address:
             </label>
-            <input
-              type="email"
-              id="auth-email"
-              class="swal2-input"
+            <input type="email" id="auth-email" class="swal2-input"
               placeholder="Enter your email"
-              style="width:100%;padding:12px;border:2px solid #ccc;border-radius:10px;font-size:15px;outline:none;transition:border .3s, box-shadow .3s;"
+              style="width:100%;padding:12px;border:2px solid #ccc;border-radius:10px;font-size:15px;outline:none;"
               autocomplete="email"
             >
           </div>
@@ -58,20 +56,15 @@ export async function authenticateAndRedirect() {
               🔑 Password:
             </label>
             <div style="position:relative;">
-              <input
-                type="password"
-                id="auth-password"
-                class="swal2-input"
+              <input type="password" id="auth-password" class="swal2-input"
                 placeholder="Enter your password"
-                style="width:100%;padding:12px;border:2px solid #ccc;border-radius:10px;font-size:15px;padding-right:46px;outline:none;transition:border .3s, box-shadow .3s;"
+                style="width:100%;padding:12px;border:2px solid #ccc;border-radius:10px;font-size:15px;padding-right:46px;outline:none;"
                 autocomplete="current-password"
               >
-              <button
-                type="button"
-                id="toggle-password"
+              <button type="button" id="toggle-password"
                 aria-label="Show password"
-                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;line-height:0;"
-              >
+                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                       background:none;border:none;cursor:pointer;padding:6px;line-height:0;">
                 <span id="toggle-icon" aria-hidden="true"></span>
               </button>
             </div>
@@ -100,20 +93,15 @@ export async function authenticateAndRedirect() {
         const passwordInput = html.querySelector("#auth-password");
         const toggleIcon    = html.querySelector("#toggle-icon");
 
-        // set initial eye icon
         toggleIcon.innerHTML = eyeSVG;
-
-        // focus email
         emailInput?.focus();
 
-        // Enter submits
         [emailInput, passwordInput].forEach((el) => {
           el?.addEventListener("keydown", (e) => {
             if (e.key === "Enter") Swal.clickConfirm();
           });
         });
 
-        // 🔒 Event delegation: works even if DOM rerenders
         html.addEventListener("click", (e) => {
           const btn = e.target.closest("#toggle-password");
           if (!btn) return;
@@ -124,7 +112,6 @@ export async function authenticateAndRedirect() {
           btn.setAttribute("aria-label", hidden ? "Hide password" : "Show password");
           toggleIcon.innerHTML = hidden ? eyeOffSVG : eyeSVG;
 
-          // keep focus + caret at end
           passwordInput.focus({ preventScroll: true });
           const v = passwordInput.value;
           passwordInput.value = "";
@@ -149,7 +136,18 @@ export async function authenticateAndRedirect() {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        sessionStorage.setItem("currentUser", JSON.stringify({ email: user.email }));
+        // 🔑 Fetch role from Firestore
+        let role = "coordinator"; // fallback
+        try {
+          const snap = await getDoc(doc(db, "roles", user.uid));
+          if (snap.exists()) role = snap.data().role;
+        } catch (e) {
+          console.error("Role fetch failed:", e);
+        }
+
+        const currentUser = { uid: user.uid, email: user.email, role };
+        window.currentUser = currentUser;
+        sessionStorage.setItem("currentUser", JSON.stringify(currentUser));
 
         await Swal.fire({
           icon: "success",
@@ -170,8 +168,6 @@ export async function authenticateAndRedirect() {
   }
 }
 
-
-
 // ====================== LOGOUT ======================
 export async function logoutUser() {
   try {
@@ -188,43 +184,40 @@ export async function logoutUser() {
 // ====================== LISTEN FOR LOGIN STATE ======================
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    console.log("User logged");
+    console.log("User logged in:", user.email);
   } else {
     console.log("No user logged in");
   }
 });
 
-// Function to show valid credentials (helper function)
+// ====================== HELPER: Show test creds ======================
 function showCredentials() {
   Swal.fire({
     title: "🔑 Valid Test Credentials",
     html: `
-            <div style="text-align: left; padding: 0 20px;">
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h6 style="color: #004d61; margin-bottom: 8px;">👑 Admin Access:</h6>
-                    <p style="margin: 5px 0;"><strong>Email:</strong> admin@gmail.com</p>
-                    <p style="margin: 5px 0;"><strong>Password:</strong> admin123</p>
-                </div>
-                
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h6 style="color: #004d61; margin-bottom: 8px;">🏢 Manager Access:</h6>
-                    <p style="margin: 5px 0;"><strong>Email:</strong> manager@attendance.com</p>
-                    <p style="margin: 5px 0;"><strong>Password:</strong> manager123</p>
-                </div>
-                
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h6 style="color: #004d61; margin-bottom: 8px;">🤝 Coordinator Access:</h6>
-                    <p style="margin: 5px 0;"><strong>Email:</strong> coordinator@attendance.com</p>
-                    <p style="margin: 5px 0;"><strong>Password:</strong> coord123</p>
-                </div>
-                
-                <div style="text-align: center; margin-top: 15px;">
-                    <small style="color: #666; font-style: italic;">
-                        ℹ️ These are demo credentials for testing purposes
-                    </small>
-                </div>
-            </div>
-        `,
+      <div style="text-align: left; padding: 0 20px;">
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h6 style="color: #004d61; margin-bottom: 8px;">👑 Admin Access:</h6>
+          <p><strong>Email:</strong> admin@gmail.com</p>
+          <p><strong>Password:</strong> admin123</p>
+        </div>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h6 style="color: #004d61; margin-bottom: 8px;">🏢 Manager Access:</h6>
+          <p><strong>Email:</strong> manager@attendance.com</p>
+          <p><strong>Password:</strong> manager123</p>
+        </div>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+          <h6 style="color: #004d61; margin-bottom: 8px;">🤝 Coordinator Access:</h6>
+          <p><strong>Email:</strong> coordinator@attendance.com</p>
+          <p><strong>Password:</strong> coord123</p>
+        </div>
+        <div style="text-align: center; margin-top: 15px;">
+          <small style="color: #666; font-style: italic;">
+            ℹ️ These are demo credentials for testing purposes
+          </small>
+        </div>
+      </div>
+    `,
     icon: "info",
     confirmButtonText: "Got it! 👍",
     confirmButtonColor: "#004d61",

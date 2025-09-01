@@ -12,7 +12,7 @@ import {
   onSnapshot,
   query,
   orderBy,
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+} from "firebase/firestore";
 
 /* ====================== DEFAULT SETTINGS ====================== */
 let settings = {

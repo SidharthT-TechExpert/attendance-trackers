@@ -4,7 +4,9 @@ import {
   doc,
   getDoc,
   setDoc,
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  collection,
+  getDocs
+} from "firebase/firestore";
 
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 

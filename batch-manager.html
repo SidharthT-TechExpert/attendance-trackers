@@ -184,14 +184,14 @@
 
           <!-- JavaScript files -->
           <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-          <script type="module" src="firebase.js"></script>
-          <script type="module" src="batch-manager.js"></script>
-          <script type="module" src="auth.js"></script>
+          <script type="module" src="/src/firebase.js"></script>
+          <script type="module" src="/src/batch-manager.js"></script>
+          <script type="module" src="/src/auth.js"></script>
 
           <script type="module">
-            import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-            import { auth, db } from "./firebase.js";
-            import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+            import { auth, db } from "./src/firebase.js";
+            import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+            import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 
             const authStatusEl = document.getElementById("authStatus");
             const currentUserEl = document.getElementById("currentUser");
