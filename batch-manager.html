@@ -131,10 +131,12 @@
                   <label for="time" class="form-label">⏰ Select Time</label>
                   <button id="TimeB" class="dropdown-btn">⏰ Select Time <span class="arrow">⌄</span></button>
                   <ul class="dropdown-menu">
-                    <li>11:30 AM - 12:30 PM</li>
-                    <li>11:00 AM - 12:00 PM</li>
-                    <li>10:30 AM - 11:30 AM</li>
                     <li>10:00 AM - 11:00 AM</li>
+                    <li>11:30 AM - 12:30 PM</li>
+                    <li>02:00 PM - 03:00 PM</li>
+                    <li>03:00 PM - 04:00 PM</li>
+                    <li>04:00 PM - 05:00 PM</li>
+                    <li>04:30 PM - 05:30 PM</li>
                   </ul>
                   <input type="hidden" id="time">
                 </div>
@@ -184,7 +186,7 @@
           <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
           <script type="module" src="firebase.js"></script>
           <script type="module" src="batch-manager.js"></script>
-          <script type="module"src="auth.js"></script>
+          <script type="module" src="auth.js"></script>
 
           <script type="module">
             import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
