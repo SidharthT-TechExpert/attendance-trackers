@@ -1,3 +1,4 @@
+
 // ====================== FIRESTORE IMPORTS ======================
 import { db } from "./firebase.js";
 import {
@@ -10,6 +11,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 // ====================== STATE ======================
+
 let batches = {};
 let selectedBatch = null;
 
