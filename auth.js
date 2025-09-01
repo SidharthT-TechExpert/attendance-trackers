@@ -1,76 +1,89 @@
-// ====================== AUTHENTICATION SYSTEM ======================
+import { auth } from "./firebase.js";
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-const AUTH_CONFIG = {
-  validCredentials: [
-    { email: "admin@gmail.com", password: "admin123", role: "admin" },
-    {
-      email: "manager@attendance.com",
-      password: "manager123",
-      role: "manager",
-    },
-    {
-      email: "coordinator@attendance.com",
-      password: "coord123",
-      role: "coordinator",
-    },
-  ],
-};
+// ====================== LOGIN FUNCTION ======================
+export async function authenticateAndRedirect() {
+  if (auth.currentUser) {
+    window.location.href = "batch-manager.html";
+    return;
+  }
 
-// Main authentication function called when "Manage Batches" is clicked
-async function authenticateAndRedirect() {
+  const eyeSVG = `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+         xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"
+            stroke="#000000ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="12" cy="12" r="3" stroke="#000000ff" stroke-width="2"/>
+    </svg>`;
+  const eyeOffSVG = `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+         xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M17.94 17.94C16.16 19.23 14.17 20 12 20 5.5 20 2 12.99 2 12s3.5-8 10-8c2.17 0 4.16.77 5.94 2.06"
+            stroke="#ff0000ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M1 1l22 22" stroke="#000000ff" stroke-width="2" stroke-linecap="round"/>
+      <path d="M9.88 9.88A3 3 0 0012 15a3 3 0 002.12-.88" stroke="#000000ff" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
   try {
     const result = await Swal.fire({
-      title: "🔒 Authentication Required",
-      html: `
-<div style="text-align: left; padding: 10px 20px; overflow: hidden">
-  <!-- Email -->
-  <div style="margin-bottom: 18px;">
-    <label for="auth-email" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;">
-      📧 Email Address:
-    </label>
-    <input 
-      type="email" 
-      id="auth-email" 
-      class="swal2-input" 
-      placeholder="Enter your email" 
-      style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; font-size: 15px; outline: none; transition: border 0.3s, box-shadow 0.3s;"
-      onfocus="this.style.border='2px solid #007bff'; this.style.boxShadow='0 0 6px rgba(0,123,255,0.3)'" 
-      onblur="this.style.border='2px solid #ccc'; this.style.boxShadow='none'">
-  </div>
-
-  <!-- Password -->
-  <div style="margin-bottom: 18px;">
-    <label for="auth-password" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; color: #333;">
-      🔑 Password:
-    </label>
-    <div style="position: relative;">
-      <input 
-        type="password" 
-        id="auth-password" 
-        class="swal2-input" 
-        placeholder="Enter your password"
-        style="width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px; font-size: 15px; padding-right: 45px; outline: none; transition: border 0.3s, box-shadow 0.3s;"
-        onfocus="this.style.border='2px solid #007bff'; this.style.boxShadow='0 0 6px rgba(0,123,255,0.3)'" 
-        onblur="this.style.border='2px solid #ccc'; this.style.boxShadow='none'">
-      <button 
-        type="button" 
-        id="toggle-password" 
-        onclick="togglePassword()" 
-        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; color: #555;">
-        👁️
-      </button>
-    </div>
-  </div>
-
-  <!-- Forgot / Help -->
-  <div style="margin-top: 15px; text-align: center;">
-    <small style="color: #555; font-size: 14px;">
-      💡 <a href="#" onclick="showCredentials()" style="color: #007bff; text-decoration: none;">Click here for help</a>
-    </small>
-  </div>
-</div>
-            `,
       icon: "question",
+      title: "Login Required",
+      html: `
+        <div style="text-align:left;padding:10px 20px;overflow:hidden">
+          <!-- Email -->
+          <div style="margin-bottom:18px;">
+            <label for="auth-email"
+              style="display:block;margin-bottom:6px;font-weight:600;font-size:15px;color:#333;">
+              📧 Email Address:
+            </label>
+            <input
+              type="email"
+              id="auth-email"
+              class="swal2-input"
+              placeholder="Enter your email"
+              style="width:100%;padding:12px;border:2px solid #ccc;border-radius:10px;font-size:15px;outline:none;transition:border .3s, box-shadow .3s;"
+              autocomplete="email"
+            >
+          </div>
+
+          <!-- Password -->
+          <div style="margin-bottom:18px;">
+            <label for="auth-password"
+              style="display:block;margin-bottom:6px;font-weight:600;font-size:15px;color:#333;">
+              🔑 Password:
+            </label>
+            <div style="position:relative;">
+              <input
+                type="password"
+                id="auth-password"
+                class="swal2-input"
+                placeholder="Enter your password"
+                style="width:100%;padding:12px;border:2px solid #ccc;border-radius:10px;font-size:15px;padding-right:46px;outline:none;transition:border .3s, box-shadow .3s;"
+                autocomplete="current-password"
+              >
+              <button
+                type="button"
+                id="toggle-password"
+                aria-label="Show password"
+                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;line-height:0;"
+              >
+                <span id="toggle-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+
+          <div style="margin-top:15px;text-align:center;">
+            <small style="color:#555;font-size:14px;">
+              💡 <a href="#" onclick="showCredentials?.()" style="color:#007bff;text-decoration:none;">Click here for help</a>
+            </small>
+          </div>
+        </div>
+      `,
       showCancelButton: true,
       confirmButtonText: "🚀 Access Batch Manager",
       cancelButtonText: "❌ Cancel",
@@ -78,106 +91,108 @@ async function authenticateAndRedirect() {
       cancelButtonColor: "#6c757d",
       width: "50%",
       focusConfirm: false,
-      allowOutsideClick: false,
+      allowOutsideClick: true,
+      allowEscapeKey: true,
+
       didOpen: () => {
-        // Add password toggle functionality
-        const toggleBtn = document.getElementById("toggle-password");
-        const passwordInput = document.getElementById("auth-password");
+        const html = Swal.getHtmlContainer();
+        const emailInput    = html.querySelector("#auth-email");
+        const passwordInput = html.querySelector("#auth-password");
+        const toggleIcon    = html.querySelector("#toggle-icon");
 
-        if (toggleBtn && passwordInput) {
-          toggleBtn.addEventListener("click", () => {
-            if (passwordInput.type === "password") {
-              passwordInput.type = "text";
-              toggleBtn.textContent = "🙈";
-            } else {
-              passwordInput.type = "password";
-              toggleBtn.textContent = "👁️";
-            }
+        // set initial eye icon
+        toggleIcon.innerHTML = eyeSVG;
+
+        // focus email
+        emailInput?.focus();
+
+        // Enter submits
+        [emailInput, passwordInput].forEach((el) => {
+          el?.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") Swal.clickConfirm();
           });
-        }
+        });
 
-        // Focus on email input
-        document.getElementById("auth-email").focus();
+        // 🔒 Event delegation: works even if DOM rerenders
+        html.addEventListener("click", (e) => {
+          const btn = e.target.closest("#toggle-password");
+          if (!btn) return;
+
+          e.preventDefault();
+          const hidden = passwordInput.type === "password";
+          passwordInput.type = hidden ? "text" : "password";
+          btn.setAttribute("aria-label", hidden ? "Hide password" : "Show password");
+          toggleIcon.innerHTML = hidden ? eyeOffSVG : eyeSVG;
+
+          // keep focus + caret at end
+          passwordInput.focus({ preventScroll: true });
+          const v = passwordInput.value;
+          passwordInput.value = "";
+          passwordInput.value = v;
+        });
       },
+
       preConfirm: () => {
         const email = document.getElementById("auth-email").value.trim();
-        const password = document.getElementById("auth-password").value;
-
-        // Validation checks
-        if (!email) {
-          Swal.showValidationMessage("❌ Please enter your email address");
+        const password = document.getElementById("auth-password").value.trim();
+        if (!email || !password) {
+          Swal.showValidationMessage("❌ Please enter both email and password");
           return false;
         }
-
-        if (!password) {
-          Swal.showValidationMessage("❌ Please enter your password");
-          return false;
-        }
-
-        // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-          Swal.showValidationMessage("❌ Please enter a valid email address");
-          return false;
-        }
-
-        // Check credentials against our valid list
-        const validUser = AUTH_CONFIG.validCredentials.find(
-          (user) =>
-            user.email.toLowerCase() === email.toLowerCase() &&
-            user.password === password
-        );
-
-        if (!validUser) {
-          Swal.showValidationMessage(
-            "❌ Invalid email or password. Please check your credentials and try again."
-          );
-          return false;
-        }
-
-        return {
-          email: validUser.email,
-          password: validUser.password,
-          role: validUser.role,
-        };
+        return { email, password };
       },
     });
 
-    // If user confirmed and validation passed
     if (result.isConfirmed && result.value) {
-      // Store user data in sessionStorage
-      sessionStorage.setItem(
-        "currentUser",
-        JSON.stringify({
-          email: result.value.email,
-          role: result.value.role,
-        })
-      );
+      const { email, password } = result.value;
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
-      // Show success message
-      await Swal.fire({
-        icon: "success",
-        title: "✅ Authentication Successful!",
-        text: `Welcome ${result.value.email}! Redirecting to Batch Manager...`,
-        showConfirmButton: false,
-        timer: 1500,
-        timerProgressBar: true,
-      });
+        sessionStorage.setItem("currentUser", JSON.stringify({ email: user.email }));
 
-      // Redirect to batch manager after success message
-      window.location.href = "batch-manager.html";
+        await Swal.fire({
+          icon: "success",
+          title: "✅ Authentication Successful!",
+          text: `Welcome ${user.email}! Redirecting to Batch Manager...`,
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+        });
+
+        window.location.href = "batch-manager.html";
+      } catch (err) {
+        Swal.fire("❌ Login Failed", err.message, "error");
+      }
     }
-    // If user cancelled or validation failed, stay on current page
-    // No action needed - user stays on index.html
-  } catch (error) {
-    console.error("Authentication error:", error);
-    Swal.fire({
-      icon: "error",
-      title: "Authentication Error",
-      text: "An error occurred during authentication. Please try again.",
-    });
+  } catch (err) {
+    console.error("Authentication error:", err);
   }
 }
+
+
+
+// ====================== LOGOUT ======================
+export async function logoutUser() {
+  try {
+    await signOut(auth);
+    sessionStorage.removeItem("currentUser");
+
+    Swal.fire("✅ Logged Out", "You have been logged out.", "success");
+    window.location.href = "index.html";
+  } catch (err) {
+    Swal.fire("❌ Logout Failed", err.message, "error");
+  }
+}
+
+// ====================== LISTEN FOR LOGIN STATE ======================
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("User logged");
+  } else {
+    console.log("No user logged in");
+  }
+});
 
 // Function to show valid credentials (helper function)
 function showCredentials() {
@@ -217,23 +232,5 @@ function showCredentials() {
   });
 }
 
-// Utility functions to check user role
-function getCurrentUser() {
-  const userData = sessionStorage.getItem("currentUser");
-  return userData ? JSON.parse(userData) : null;
-}
-
-function isAdmin() {
-  const user = getCurrentUser();
-  return user && user.role === "admin";
-}
-
-function isManager() {
-  const user = getCurrentUser();
-  return user && user.role === "manager";
-}
-
-function isCoordinator() {
-  const user = getCurrentUser();
-  return user && user.role === "coordinator";
-}
+window.logoutUser = logoutUser;
+window.showCredentials = showCredentials;

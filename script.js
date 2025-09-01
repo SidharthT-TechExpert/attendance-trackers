@@ -1,73 +1,124 @@
+/* ====================== FIREBASE IMPORTS ====================== */
+import { db } from "./firebase.js";
+import {
+  doc,
+  getDoc,
+  setDoc,
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 
-// ✅ Clear attendance-related data on every page load
-window.addEventListener("DOMContentLoaded", () => {
-  localStorage.removeItem("attendanceBatches");
-  console.log("✅ Cleared attendanceBatches from localStorage on page load");
-});
+// Load batch data from Firestore
+async function loadBatchDataFromFirestore() {
+  try {
+    const snap = await getDoc(doc(db, "batches", "allBatches"));
+    if (snap.exists()) {
+      const data = snap.data(); // object of batches
+      console.log("📥 Loaded batches from Firestore");
 
-// Load batch data from localStorage
-function loadBatchDataFromStorage() {
-  const saved = localStorage.getItem("attendanceBatches");
-  if (saved) {
-    return JSON.parse(saved);
-  } else {
-    // If no saved data, initialize with default batches
-    localStorage.setItem("attendanceBatches", JSON.stringify(defaultBatches));
-    return defaultBatches;
+      // Get <select> element
+      const batchSelect = document.getElementById("batchSelect");
+      batchSelect.innerHTML = `<option value="">Select a batch...</option>`;
+
+      // Extract & sort batch names (numeric-aware if possible)
+      const batchNames = Object.keys(data).sort((a, b) => {
+        const numA = parseInt(a.match(/\d+/));
+        const numB = parseInt(b.match(/\d+/));
+
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return numA - numB; // numeric sort (Batch 1, Batch 2, Batch 10)
+        }
+        return a.localeCompare(b); // fallback string sort
+      });
+
+      // Add sorted options to <select>
+      batchNames.forEach((batchName) => {
+        const option = document.createElement("option");
+        option.value = batchName;
+        option.textContent = batchName;
+        batchSelect.appendChild(option);
+      });
+      resetGroupData();
+      return data; // still return the raw batches object
+    } else {
+      console.log("⚠️ No batches found in Firestore, starting empty.");
+      return {};
+    }
+  } catch (err) {
+    console.error("❌ Error loading batches:", err);
+    return {};
   }
 }
 
-// Get current batch data
+// Save batch data to Firestore
+async function saveBatchData(batches) {
+  try {
+    await setDoc(doc(db, "batches", "allBatches"), batches, { merge: true });
+    console.log("✅ Saved batches to Firestore");
+  } catch (err) {
+    console.error("❌ Error saving batches:", err);
+  }
+}
+
+/* ====================== STATE VARIABLES ====================== */
 let currentBatchData = null;
 let selectedBatchName = "";
+let rawNames = [];
+let displayNames = [];
+let attendanceStatus = {};
+let isRP = {};
+let CoordinatorsA = {};
+let Group = "";
+let editingMode = false;
 
-// ====================== BATCH SELECTION ======================
-function loadBatch() {
+/* ====================== BATCH SELECTION ====================== */
+async function loadBatch() {
   const batchSelect = document.getElementById("batchSelect");
   const selectedBatch = batchSelect.value;
-  // Update view modes
   document.getElementById("outputView").textContent = "";
 
   if (!selectedBatch) {
-    currentBatchData = null;
-    selectedBatchName = "";
     resetGroupData();
     return;
   }
 
-  const batches = loadBatchDataFromStorage();
+  const batches = await loadBatchDataFromFirestore();
+
   if (batches && batches[selectedBatch]) {
     currentBatchData = batches[selectedBatch];
     selectedBatchName = selectedBatch;
     updateGroupSwitches();
+
+    // ✅ Show selected batch to users
+    const text = document.getElementById("selectedBatchTitle");
+    text.textContent = `Selected Batch: ${selectedBatch}`;
+    text.style.color = "red";
+    text.style.fontWeight = "bold";
+    document.getElementById("Time").innerHTML =
+      currentBatchData?.Time ?? "⏰ Select Time";
   }
 }
 
 function updateGroupSwitches() {
+  document.getElementById("groups").style.display = "block";
   const group2Switch = document.getElementById("group2");
-  const group2Label = group2Switch.nextElementSibling;
+  const group2Label = group2Switch?.nextElementSibling;
 
   if (currentBatchData && currentBatchData.hasGroup2) {
     group2Switch.disabled = false;
-    group2Label.style.opacity = "1";
+    if (group2Label) group2Label.style.opacity = "1";
   } else {
     group2Switch.disabled = true;
     group2Switch.checked = false;
-    group2Label.style.opacity = "0.5";
+    if (group2Label) group2Label.style.opacity = "0.5";
   }
 }
 
 function resetGroupData() {
-  // Reset all group checkboxes
-  document.querySelectorAll('input[name="group"]').forEach((cb) => {
-    cb.checked = false;
-  });
-
-  // Clear the participant list
+  document
+    .querySelectorAll('input[name="group"]')
+    .forEach((cb) => (cb.checked = false));
   document.getElementById("list").innerHTML = "";
-
-  // Reset state variables
   rawNames = [];
   displayNames = [];
   attendanceStatus = {};
@@ -77,143 +128,98 @@ function resetGroupData() {
 }
 
 // Populate batch dropdown
-function populateBatchDropdown() {
+async function populateBatchDropdown() {
   const batchSelect = document.getElementById("batchSelect");
 
-  // Clear existing options except the first one
   while (batchSelect.children.length > 1) {
     batchSelect.removeChild(batchSelect.lastChild);
   }
 
-  const batches = loadBatchDataFromStorage();
-
-  if (batches) {
+  const batches = await loadBatchDataFromFirestore();
+  if (batches && Object.keys(batches).length > 0) {
     Object.keys(batches).forEach((batchName) => {
       const option = document.createElement("option");
       option.value = batchName;
       option.textContent = batchName;
       batchSelect.appendChild(option);
     });
-
     console.log(
-      `Populated dropdown with ${Object.keys(batches).length} batches`
+      `✅ Populated dropdown with ${Object.keys(batches).length} batches`
     );
   } else {
-    console.log("No batches found in storage");
+    console.log("⚠️ No batches found in Firestore");
   }
 }
 
-// Checkbox selector for group selection
+/* ====================== GROUP SELECTION ====================== */
 const checkboxes = document.querySelectorAll('input[name="group"]');
 
-// ====================== STATE VARIABLES ======================
-let rawNames; // raw list selected from Group_1 / Group_2 / Combined
-let displayNames = []; // cleaned names without RP / C tags
-let attendanceStatus = {}; // stores status of each name (present, RP, absent, etc.)
-let isRP = {}; // RP-specific flag for highlighting rows
-let CoordinatorsA = {}; // stores coordinators per group
-let Group = ""; // holds selected group label
-
-// ====================== GROUP SELECTION ======================
 checkboxes.forEach((cb) => {
   cb.addEventListener("change", function () {
     if (this.checked) {
-      // Check if batch is selected
-      if (!currentBatchData) {
-        Swal.fire({
-          icon: "warning",
-          title: "No Batch Selected",
-          text: "Please select a batch first!",
-        });
-        this.checked = false;
-        return;
-      }
+      let groupData = [];
 
-      // --- Pick rawNames based on selected checkbox and current batch ---
-      let groupData;
+      document.getElementById("importData").style.display = "flex";
+
       if (this.value === "group1") {
         groupData = currentBatchData.groups.Group_1;
         Group = "Group 1";
       } else if (this.value === "group2") {
-        if (!currentBatchData.hasGroup2) {
-          Swal.fire({
-            icon: "warning",
-            title: "Group 2 Not Available",
-            text: "This batch doesn't have Group 2 enabled!",
-          });
-          this.checked = false;
-          return;
-        }
         groupData = currentBatchData.groups.Group_2;
         Group = "Group 2";
       } else if (this.value === "combined") {
         groupData = [...currentBatchData.groups.Group_1];
-        if (currentBatchData.hasGroup2) {
-          groupData = [...groupData, ...currentBatchData.groups.Group_2];
-        }
+        if (currentBatchData.hasGroup2)
+          groupData.push(...currentBatchData.groups.Group_2);
         Group = "Combined";
       }
 
       rawNames = groupData;
-
-      // Reset state
       displayNames = [];
       attendanceStatus = {};
       isRP = {};
       CoordinatorsA = {};
 
-      // --- Clean and categorize names ---
       displayNames = rawNames
         .filter((n) => {
           if (n.includes("(RP)")) {
-            // If RP → mark as RP (but don't show in list)
-            const cleanName = n.replace(" (RP)", "");
-            attendanceStatus[cleanName] = "RP";
-            isRP[cleanName] = true; // ✅ use RP flag for row highlight
+            const clean = n.replace(" (RP)", "");
+            attendanceStatus[clean] = "RP";
+            isRP[clean] = true;
             return false;
           }
           if (n.includes("(C)")) {
-            // If Coordinator → mark as C and show
-            CoordinatorsA[n.replace(" (C)", "")] = "present"; // Store coordinator status
-
-            const cleanName = n.replace(" (C)", "");
-            attendanceStatus[cleanName] = "C";
+            const clean = n.replace(" (C)", "");
+            CoordinatorsA[clean] = "present";
+            attendanceStatus[clean] = "C";
             return true;
           }
-          return true; // normal names → show
+          return true;
         })
-        .map((n) => {
-          if (n.includes("(C)")) {
-            return n.replace(" (C)", ""); // remove (C) in display
-          }
-          attendanceStatus[n] = "present"; // default status
-          return n;
-        });
+        .map((n) => n.replace(" (C)", ""));
 
-      // Render updated list
-      console.log(attendanceStatus);
+      displayNames.forEach((n) => {
+        if (!attendanceStatus[n]) attendanceStatus[n] = "present";
+      });
+
       renderList();
-
-      // --- Ensure only one group checkbox stays checked ---
+      document.getElementById("outputtext").style.display = "block";
       checkboxes.forEach((other) => {
         if (other !== this) other.checked = false;
       });
     } else {
-      // --- If unchecked → reset everything ---
-      displayNames = [];
-      attendanceStatus = {};
-      isRP = {};
-      rawNames = [];
+      document.getElementById("importData").style.display = "none";
+      resetGroupData();
       renderList();
     }
   });
 });
 
-// ====================== RENDER PARTICIPANT LIST ======================
+/* ====================== RENDER PARTICIPANT LIST ====================== */
 function renderList() {
+  document.getElementById("notifications").style.display = "block";
   const listDiv = document.getElementById("list");
-  listDiv.innerHTML = ""; // Clear previous
-
+  listDiv.innerHTML = "";
   displayNames
     .sort((a, b) => a.localeCompare(b))
     .forEach((name) => {
@@ -224,78 +230,76 @@ function renderList() {
       div.innerHTML = `
       <div class="name col-md-6" style='display:inline-block;'>${name}</div>
       <div class="col-md-5" style='display:inline-block;' >
-          <input style='display:inline-block;' name='alt' type="checkbox" class="custom-tooltip" data-tooltip="Attending alternative CS" onchange="mark('${name}','other',this)"> 🟨
-          <input style='display:inline-block;' name='Absent' type="checkbox" class="custom-tooltip" data-tooltip="Absent" onchange="mark('${name}','absent',this)"> ❌
+          <input style='display:inline-block;' name='alt' type="checkbox" class="custom-tooltip" data-tooltip="Attending alternative CS" onchange="mark('${name}','other',this);"> 🟨
+          <input style='display:inline-block;' name='Absent' type="checkbox" class="custom-tooltip" data-tooltip="Absent" onchange="mark('${name}','absent',this);"> ❌
      </div>
     `;
       listDiv.appendChild(div);
     });
 }
 
-// ====================== MARK ATTENDANCE ======================
+/* ====================== ATTENDANCE ====================== */
 function mark(name, state, checkbox) {
-  // --- Ensure only one checkbox can be active at a time ---
   const cbs = document.querySelectorAll(`.person input[onchange*="${name}"]`);
   cbs.forEach((cb) => {
     if (cb !== checkbox) cb.checked = false;
   });
-
-  // --- Update attendance state ---
   attendanceStatus[name] = checkbox.checked ? state : "present";
-  
   if (CoordinatorsA[name])
     CoordinatorsA[name] = checkbox.checked ? state : "present";
-
-  // --- Update color coding ---
   updateNameColors();
 }
 
-// ====================== COLOR CODING ======================
 function updateNameColors() {
   document.querySelectorAll(".person").forEach((row) => {
-    const altChecked = row.querySelector('input[name="alt"]').checked;
-    const absentChecked = row.querySelector('input[name="Absent"]').checked;
+    const alt = row.querySelector('input[name="alt"]').checked;
+    const absent = row.querySelector('input[name="Absent"]').checked;
     const nameSpan = row.querySelector(".name");
+    if (!nameSpan) return;
 
-    if (nameSpan) {
-      // Reset default style
-      nameSpan.style.color = "";
-      nameSpan.style.fontWeight = "bold";
-      nameSpan.style.textShadow = "";
+    nameSpan.style.color = "";
+    nameSpan.style.fontWeight = "bold";
 
-      // Apply state styles
-      if (altChecked) {
-        nameSpan.style.color = "var(--bs-warning)"; // yellow
-        nameSpan.style.textShadow = "1px 1px 2px red";
-      } else if (absentChecked) {
-        nameSpan.style.color = "var(--bs-danger)"; // red
-        nameSpan.style.textShadow = "1px 1px 2px darkred";
-      }
-    }
+    if (alt) nameSpan.style.color = "orange";
+    else if (absent) nameSpan.style.color = "red";
   });
 }
 
 // ====================== REPORT GENERATION ======================
 function generateOutput() {
   // --- Static report headers ---
-
   const Mean = "🔒 COMMUNICATION SESSION REPORT";
-  const Batch = selectedBatchName || "BCR71"; // Use selected batch or default
+  const Batch = selectedBatchName;
 
   const date = FormateDate(new Date());
   const GroupName = Group;
-  const Time = getSelectedTime(); // Get selected time from custom dropdown
+  const Time =
+    currentBatchData?.Time !== getSelectedTime()
+      ? getSelectedTime()
+      : currentBatchData?.Time; // Get selected time from custom dropdown
+
+  if (Batch === "")
+    return Swal.fire({
+      icon: "warning",
+      title: "Oops...",
+      text: "Please Select A Batch !",
+    });
 
   if (GroupName === "")
     return Swal.fire({
       icon: "warning",
       title: "Oops...",
-      text: "Please Select The Group first!",
+      text: "Please Select The Group !",
     });
+
+  document.getElementById("none").style.display = "flex";
+  document.querySelector(".btn-group").style.display = "flex";
+
   // --- Get Coordinators per group ---
   let Coordinators = Object.keys(CoordinatorsA).filter(
     (n) => CoordinatorsA[n] !== ""
   );
+
   if (Coordinators.length === 0) {
     Coordinators = null; // If no coordinators found, set to null
   } else if (Coordinators.length === 1) {
@@ -303,7 +307,7 @@ function generateOutput() {
   } else if (Coordinators.length === 2) {
     Coordinators = Coordinators[0] + ` & ` + Coordinators[1];
   } else if (Coordinators.length === 4) {
-    Names = Coordinators;
+    let Names = Coordinators;
     Coordinators = "";
     Names.forEach((n, i) => {
       if (i === Names.length - 2) {
@@ -318,14 +322,18 @@ function generateOutput() {
     });
   }
 
-  const Trainer = " Sarang TP";
+  const Trainer = currentBatchData.Trainer;
 
   let Duck = "";
 
   if (Group === "Combined") {
     Duck = "🔷".repeat(27);
   } else {
-    Duck = "🔷".repeat(Coordinators.length / 2 + 6);
+    try {
+      Duck = "🔷".repeat(Coordinators.length / 2 + 6);
+    } catch (error) {
+      Duck = "🔷".repeat(27);
+    }
   }
 
   // --- Collect extra details ---
@@ -352,9 +360,6 @@ function generateOutput() {
   const Report = `♻ Session Overview:\n           ${reportByText}`;
 
   // --- Attendance builder helper ---
-  //("Presentees", "🟩", "present", "✅");
-  console.log(attendanceStatus);
-
   let textMaker = (text, icon, status, textIcon, check = attendanceStatus) => {
     let Text;
     // If check is an array (OtherBatch), handle differently
@@ -437,15 +442,20 @@ function generateOutput() {
   document.getElementById("outputEdit").value = finalText;
 }
 
-// ====================== UTILITIES ======================
+/* ====================== DATE HELPERS ====================== */
 function formatDate(date) {
-  const options = {
+  return date.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
-  };
-  return date.toLocaleDateString("en-US", options);
+  });
+}
+function formatShortDate(date) {
+  const d = new Date(date);
+  return `${d.getDate()} ${d.toLocaleString("en-US", {
+    month: "short",
+  })} ${d.getFullYear()}`;
 }
 
 function FormateDate(date) {
@@ -456,18 +466,20 @@ function FormateDate(date) {
   return `${day} ${month} ${year}`;
 }
 
+// Function to get the selected time from the custom dropdown
+function getSelectedTime() {
+  const btn = document.querySelector(".custom-dropdownH .dropdown-btnH");
+  if (btn) {
+    return btn.textContent.replace("⌄", "").replace("⏰", "").trim();
+  }
+  return "11:30 AM - 12:30 PM"; // fallback
+}
+
 // ====================== COPY TO CLIPBOARD ======================
 function copyOutput() {
   const viewMode = document.getElementById("outputView");
   const editMode = document.getElementById("outputEdit");
   const copyBtn = document.querySelector(".copy-btn");
-
-  if (viewMode.textContent === "")
-    return Swal.fire({
-      icon: "warning",
-      title: "Oops...",
-      text: "Please generate the report first!",
-    });
 
   // Pick content from active mode
   const textToCopy =
@@ -521,21 +533,12 @@ function downloadReport() {
 }
 
 // ====================== TOGGLE EDIT MODE ======================
-let editingMode = false;
 
 function toggleEdit() {
   const outputView = document.getElementById("outputView");
   const outputEdit = document.getElementById("outputEdit");
   const editBtn = document.getElementById("editBtn");
   const toolbar = document.getElementById("outputToolbar");
-  const header = document.querySelector("header");
-
-  if (outputView.textContent === "")
-    return Swal.fire({
-      icon: "warning",
-      title: "Oops...",
-      text: "Please generate the report first!",
-    });
 
   // Place toolbar below header
   toolbar.style.top = "40px";
@@ -590,83 +593,55 @@ function toggleEdit() {
   }
 }
 
-// ====================== INIT BOOTSTRAP TOOLTIP & DATE ======================
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("DOM Content Loaded - initializing...");
+window.mark = mark;
+window.generateOutput = generateOutput;
+window.populateBatchDropdown = populateBatchDropdown;
+window.formatDate = formatDate;
+window.loadBatch = loadBatch;
+window.loadBatchDataFromFirestore = loadBatchDataFromFirestore;
+window.copyOutput = copyOutput;
+window.downloadReport = downloadReport;
+window.toggleEdit = toggleEdit;
 
-  // Enable Bootstrap tooltips
-  const tooltipTriggerList = [].slice.call(
-    document.querySelectorAll('[data-bs-toggle="tooltip"]')
-  );
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-
-  // Display current date
+/* ====================== INIT ====================== */
+document.addEventListener("DOMContentLoaded", async function () {
+  console.log("✅ DOM Ready");
+  // await populateBatchDropdown();
   const currentDate = document.getElementById("currentDate");
-  if (currentDate) {
-    currentDate.textContent = formatDate(new Date());
-  }
-
-  // Populate batch dropdown - This is the key fix
-  populateBatchDropdown();
-
-  // Set up group checkboxes event listeners (they're defined globally above)
-  // Make sure checkboxes are available
-  setTimeout(() => {
-    const groupCheckboxes = document.querySelectorAll('input[name="group"]');
-    console.log(`Found ${groupCheckboxes.length} group checkboxes`);
-  }, 100);
+  if (currentDate) currentDate.textContent = formatDate(new Date());
 });
 
 // ====================== CUSTOM DROPDOWN ======================
 document.addEventListener("DOMContentLoaded", function () {
-  // Custom dropdown functionality
-  document.querySelectorAll(".custom-dropdown").forEach((drop) => {
-    const btn = drop.querySelector(".dropdown-btn");
-    if (btn) {
-      btn.addEventListener("click", () => {
-        drop.classList.toggle("active");
-      });
-    }
+  const dropdown = document.querySelector(".custom-dropdownH");
+  const btn = dropdown.querySelector(".dropdown-btnH");
+  const menuItems = dropdown.querySelectorAll(".dropdown-menuH li");
+  const hiddenInput = document.getElementById("timeH");
 
-    drop.querySelectorAll(".dropdown-menu li").forEach((item) => {
-      item.addEventListener("click", () => {
-        if (btn) {
-          btn.innerHTML =
-            "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
-        }
-        drop.classList.remove("active");
-      });
+  // Toggle dropdown
+  btn.addEventListener("click", () => {
+    dropdown.classList.toggle("active");
+  });
+
+  // Handle item click
+  menuItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      btn.innerHTML =
+        "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
+      hiddenInput.value = item.textContent;
+      dropdown.classList.remove("active");
     });
   });
 
   // Close if clicked outside
   window.addEventListener("click", (e) => {
-    document.querySelectorAll(".custom-dropdown").forEach((drop) => {
-      if (!drop.contains(e.target)) drop.classList.remove("active");
-    });
+    if (!dropdown.contains(e.target)) {
+      dropdown.classList.remove("active");
+    }
   });
 
   // Set default time
   const defaultTime = "11:30 AM - 12:30 PM";
-  const btn = document.querySelector(".custom-dropdown .dropdown-btn");
-  const hiddenInput = document.getElementById("time");
-
-  if (btn) {
-    btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
-  }
-
-  if (hiddenInput) {
-    hiddenInput.value = defaultTime;
-  }
+  btn.innerHTML = `⏰ ${defaultTime} <span class="arrow">⌄</span>`;
+  hiddenInput.value = defaultTime;
 });
-
-// Function to get the selected time from the custom dropdown
-function getSelectedTime() {
-  const btn = document.querySelector(".custom-dropdown .dropdown-btn");
-  if (btn) {
-    return btn.textContent.replace("⌄", "").replace("⏰", "").trim();
-  }
-  return "11:30 AM - 12:30 PM"; // fallback
-}
