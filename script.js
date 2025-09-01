@@ -101,8 +101,6 @@ async function loadBatch() {
 
 function updateGroupSwitches() {
   document.getElementById("groups").style.display = "block";
-  document.getElementById("importData").style.display = "flex";
-
   const group2Switch = document.getElementById("group2");
   const group2Label = group2Switch?.nextElementSibling;
 
@@ -159,12 +157,10 @@ const checkboxes = document.querySelectorAll('input[name="group"]');
 checkboxes.forEach((cb) => {
   cb.addEventListener("change", function () {
     if (this.checked) {
-      if (!currentBatchData) {
-        this.checked = false;
-        return;
-      }
-
       let groupData = [];
+
+      document.getElementById("importData").style.display = "flex";
+
       if (this.value === "group1") {
         groupData = currentBatchData.groups.Group_1;
         Group = "Group 1";
@@ -212,6 +208,7 @@ checkboxes.forEach((cb) => {
         if (other !== this) other.checked = false;
       });
     } else {
+      document.getElementById("importData").style.display = "none";
       resetGroupData();
       renderList();
     }
@@ -295,7 +292,9 @@ function generateOutput() {
       text: "Please Select The Group !",
     });
 
-  document.getElementById("outputToolbar").style.display = "flex";
+  document.getElementById("none").style.display = "flex";
+  document.querySelector(".btn-group").style.display = "flex";
+
   // --- Get Coordinators per group ---
   let Coordinators = Object.keys(CoordinatorsA).filter(
     (n) => CoordinatorsA[n] !== ""
@@ -498,7 +497,6 @@ function copyOutput() {
     });
 }
 
-
 // ====================== DOWNLOAD REPORT ======================
 function downloadReport() {
   const viewMode = document.getElementById("outputView");
@@ -541,7 +539,7 @@ function toggleEdit() {
   const outputEdit = document.getElementById("outputEdit");
   const editBtn = document.getElementById("editBtn");
   const toolbar = document.getElementById("outputToolbar");
-  const header = document.querySelector("header");
+
   // Place toolbar below header
   toolbar.style.top = "40px";
 
@@ -595,7 +593,6 @@ function toggleEdit() {
   }
 }
 
-
 window.mark = mark;
 window.generateOutput = generateOutput;
 window.populateBatchDropdown = populateBatchDropdown;
@@ -625,7 +622,6 @@ document.addEventListener("DOMContentLoaded", function () {
   btn.addEventListener("click", () => {
     dropdown.classList.toggle("active");
   });
-
 
   // Handle item click
   menuItems.forEach((item) => {

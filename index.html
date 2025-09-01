@@ -9,13 +9,6 @@
   <link href="https://raw.githubusercontent.com/SidharthT-TechExpert/attendance-tracker/refs/heads/main/Img/logo.webp"
     rel="icon">
   <link rel="stylesheet" href="style.css">
-    <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const currentDate = document.getElementById("currentDate");
-      currentDate.textContent = new Date().toDateString();
-      loadBatchDataFromFirestore();
-    });
-  </script>
 </head>
 
 <body>
@@ -78,13 +71,16 @@
               <label for="time" class="form-labelH">⏰ Select Time</label>
               <button id="Time" class="dropdown-btnH">⏰ Select Time <span class="arrow">⌄</span></button>
               <ul class="dropdown-menuH">
-                <li>11:30 AM - 12:30 PM</li>
-                <li>11:00 AM - 12:00 PM</li>
-                <li>10:30 AM - 11:30 AM</li>
                 <li>10:00 AM - 11:00 AM</li>
+                <li>11:30 AM - 12:30 PM</li>
+                <li>02:00 PM - 03:00 PM</li>
+                <li>03:00 PM - 04:00 PM</li>
+                <li>04:00 PM - 05:00 PM</li>
+                <li>04:30 PM - 05:30 PM</li>
               </ul>
               <input type="hidden" id="timeH">
             </div>
+
 
             <!-- TLDV Link -->
             <div class="col-md-4 time-selection">
@@ -126,15 +122,28 @@
           <button class="btn btn-custom w-100 mt-3" onclick="generateOutput()">Generate Output</button>
           <hr>
 
-          <!-- Output -->
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <span><strong id="outputtext" style="display: none;">Output</strong></span>
-            <div id="outputToolbar" class="output-toolbar">
-              <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
-              <button class="download-btn" onclick="downloadReport()">📥 Download .txt</button>
-              <button id="editBtn" class="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
+          <div class="d-flex flex-wrap justify-content-between align-items-center mt-3">
+
+            <!-- Output label -->
+            <span id="none"><strong id="outputtext"
+                style="font-size: larger; font-weight: bolder;">Output</strong></span>
+
+            <!-- Toolbar -->
+            <div id="outputToolbar" style="display: none;" class="btn-group mt-2 mt-md-0 output-toolbar" role="group"
+              aria-label="Output Toolbar">
+              <button class="btn btn-outline-primary btn-sm copy-btn" onclick="copyOutput()">
+                📋 Copy
+              </button>
+              <button class="btn btn-outline-success btn-sm download-btn" onclick="downloadReport()">
+                📥 Download .txt
+              </button>
+              <button id="editBtn" class="btn btn-outline-warning btn-sm edit-btn" onclick="toggleEdit()">
+                ✏️ Edit
+              </button>
             </div>
           </div>
+
+
           <hr>
           <!-- View Mode -->
           <pre id="outputView" class="form-control" style="padding-top: 35px; white-space: pre-dark;"></pre>
@@ -158,6 +167,14 @@
   <script type="module" src="batch-manager.js"></script>
   <script type="module" src="script.js"></script>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const currentDate = document.getElementById("currentDate");
+      currentDate.textContent = new Date().toDateString();
+      loadBatchDataFromFirestore();
+      document.getElementById('none').style.display = 'none'
+    });
+  </script>
 
   <!-- Button that opens the protected manager area -->
   <script type="module">

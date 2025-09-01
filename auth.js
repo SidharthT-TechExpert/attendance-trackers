@@ -188,7 +188,7 @@ export async function logoutUser() {
 // ====================== LISTEN FOR LOGIN STATE ======================
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    console.log("User logged in:", user.email);
+    console.log("User logged");
   } else {
     console.log("No user logged in");
   }

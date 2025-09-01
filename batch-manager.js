@@ -378,7 +378,7 @@ function renderBatchDetails() {
   document.getElementById("newParticipant1").value = null;
   document.getElementById("newParticipant2").value = null;
 
-  if (batch?.Trainer) document.getElementById("Trainer").innerHTML = "Reset !";
+ document.getElementById("Trainer").innerHTML = batch?.Trainer ? "Reset !" : "Set !";
 
   renderParticipantList("Group_1", batch.groups?.Group_1 ?? []);
 
