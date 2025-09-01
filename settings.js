@@ -1,32 +1,49 @@
-// ====================== SETTINGS MANAGEMENT ======================
+/* ====================== FIREBASE IMPORTS ====================== */
+import { db } from "./firebase.js";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  setDoc,
+  getDoc,
+  serverTimestamp,
+  onSnapshot,
+  query,
+  orderBy,
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-// Settings object
+/* ====================== DEFAULT SETTINGS ====================== */
 let settings = {
   autoBackup: true,
-  backupFrequency: "Daily",
+  backupFrequency: "daily", // daily | weekly | monthly
   confirmDeletions: true,
   autoSave: true,
   showNotifications: false,
 };
 
-// ====================== INITIALIZATION ======================
-document.addEventListener("DOMContentLoaded", function () {
-  loadSettings();
-  displayCurrentDate();
-  updateStatistics();
-  loadBackupHistory();
-  renderSettings();
-});
+/* ====================== STATE ====================== */
+let backupTimer = null;
 
-// ====================== SETTINGS PERSISTENCE ======================
-function saveSettings() {
-  localStorage.setItem("attendanceSettings", JSON.stringify(settings));
+/* ====================== SETTINGS LOAD/SAVE ====================== */
+async function loadSettings() {
+  try {
+    const snap = await getDoc(doc(db, "settings", "general"));
+    if (snap.exists()) settings = { ...settings, ...snap.data() };
+    renderSettings();
+    if (settings.autoBackup) scheduleNextBackup();
+  } catch (err) {
+    console.error("❌ Error loading settings:", err);
+  }
 }
 
-function loadSettings() {
-  const saved = localStorage.getItem("attendanceSettings");
-  if (saved) {
-    settings = { ...settings, ...JSON.parse(saved) };
+async function saveSettings() {
+  try {
+    await setDoc(doc(db, "settings", "general"), settings);
+    console.log("✅ Settings saved");
+  } catch (err) {
+    console.error("❌ Error saving settings:", err);
   }
 }
 
@@ -40,546 +57,412 @@ function renderSettings() {
     settings.showNotifications;
 }
 
-// ====================== SETTINGS TOGGLES ======================
-function toggleAutoBackup() {
+/* ====================== SETTINGS TOGGLES ====================== */
+window.toggleAutoBackup = async function () {
   settings.autoBackup = document.getElementById("autoBackup").checked;
-  saveSettings();
+  await saveSettings();
+  if (settings.autoBackup) scheduleNextBackup();
+  else clearTimeout(backupTimer);
+};
 
-  if (settings.autoBackup) {
-    Swal.fire({
-      icon: "success",
-      title: "Auto Backup Enabled",
-      text: "Your data will be automatically backed up based on the selected frequency.",
-    });
-  }
-}
-
-function updateBackupFrequency() {
+window.updateBackupFrequency = async function () {
   settings.backupFrequency = document.getElementById("backupFrequency").value;
-  saveSettings();
-}
+  await saveSettings();
+  if (settings.autoBackup) scheduleNextBackup();
+};
 
-// ====================== BACKUP & RESTORE ======================
-function createBackup() {
-  const batches = loadBatchDataFromStorage();
-  if (!batches || Object.keys(batches).length === 0) {
-    Swal.fire({
-      icon: "warning",
-      title: "No Data",
-      text: "No batch data found to backup.",
-    });
-    return;
-  }
-
-  const backup = {
-    batches: batches,
-    settings: settings,
-    timestamp: new Date().toISOString(),
-    version: "1.0",
-    type: "manual",
-  };
-
-  const dataStr = JSON.stringify(backup, null, 2);
-  const dataBlob = new Blob([dataStr], { type: "application/json" });
-
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(dataBlob);
-  link.download = `attendance_backup_${
-    new Date().toISOString().split("T")[0]
-  }_${new Date().getTime()}.json`;
-  link.click();
-
-  // Add to backup history
-  addToBackupHistory(backup);
-
+window.clearAllData = async function () {
   Swal.fire({
-    icon: "success",
-    title: "Backup Created",
-    text: "Your data has been backed up successfully!",
-  });
-}
-
-function restoreFromBackup() {
-  document.getElementById("restoreFile").click();
-}
-
-function handleRestoreFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    try {
-      const backup = JSON.parse(e.target.result);
-
-      Swal.fire({
-        title: "Restore Data",
-        text: "This will replace all existing data. Are you sure?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, restore",
-        cancelButtonText: "Cancel",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Restore batches
-          if (backup.batches) {
-            localStorage.setItem(
-              "attendanceBatches",
-              JSON.stringify(backup.batches)
-            );
-          }
-
-          // Restore settings if available
-          if (backup.settings) {
-            settings = { ...settings, ...backup.settings };
-            saveSettings();
-            renderSettings();
-          }
-
-          updateStatistics();
-
-          Swal.fire({
-            icon: "success",
-            title: "Restored!",
-            text: "Data has been restored successfully!",
-          });
-        }
-      });
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Restore Failed",
-        text: "Invalid backup file format.",
-      });
-    }
-  };
-  reader.readAsText(file);
-}
-
-// ====================== DATA EXPORT ======================
-function exportAllData() {
-  const format = document.getElementById("exportFormat").value;
-  const batches = loadBatchDataFromStorage();
-
-  if (!batches || Object.keys(batches).length === 0) {
-    Swal.fire({
-      icon: "warning",
-      title: "No Data",
-      text: "No data found to export.",
-    });
-    return;
-  }
-
-  let dataStr, filename, mimeType;
-
-  if (format === "json") {
-    const exportData = {
-      batches: batches,
-      settings: settings,
-      exportDate: new Date().toISOString(),
-    };
-    dataStr = JSON.stringify(exportData, null, 2);
-    filename = `attendance_export_${
-      new Date().toISOString().split("T")[0]
-    }.json`;
-    mimeType = "application/json";
-  } else if (format === "csv") {
-    dataStr = convertToCSV(batches);
-    filename = `attendance_export_${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
-    mimeType = "text/csv";
-  } else if (format === "txt") {
-    dataStr = convertToText(batches);
-    filename = `attendance_export_${
-      new Date().toISOString().split("T")[0]
-    }.txt`;
-    mimeType = "text/plain";
-  }
-
-  const dataBlob = new Blob([dataStr], { type: mimeType });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(dataBlob);
-  link.download = filename;
-  link.click();
-
-  Swal.fire({
-    icon: "success",
-    title: "Export Complete",
-    text: `Data exported as ${format.toUpperCase()} successfully!`,
-  });
-}
-
-function exportBatchesOnly() {
-  const batches = loadBatchDataFromStorage();
-
-  if (!batches || Object.keys(batches).length === 0) {
-    Swal.fire({
-      icon: "warning",
-      title: "No Data",
-      text: "No batch data found to export.",
-    });
-    return;
-  }
-
-  const dataStr = JSON.stringify(batches, null, 2);
-  const dataBlob = new Blob([dataStr], { type: "application/json" });
-
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(dataBlob);
-  link.download = `batches_only_${new Date().toISOString().split("T")[0]}.json`;
-  link.click();
-
-  Swal.fire({
-    icon: "success",
-    title: "Export Complete",
-    text: "Batch data exported successfully!",
-  });
-}
-
-// ====================== DATA CONVERSION ======================
-function convertToCSV(batches) {
-  let csv = "Batch,Group,Name,Type\n";
-
-  Object.keys(batches).forEach((batchName) => {
-    const batch = batches[batchName];
-
-    // Group 1
-    batch.groups.Group_1.forEach((participant) => {
-      const cleanName = participant.replace(/\(RP\)|\(C\)/g, "").trim();
-      const type = participant.includes("(RP)")
-        ? "RP"
-        : participant.includes("(C)")
-        ? "Coordinator"
-        : "Regular";
-      csv += `${batchName},Group 1,${cleanName},${type}\n`;
-    });
-
-    // Group 2
-    if (batch.hasGroup2 && batch.groups.Group_2) {
-      batch.groups.Group_2.forEach((participant) => {
-        const cleanName = participant.replace(/\(RP\)|\(C\)/g, "").trim();
-        const type = participant.includes("(RP)")
-          ? "RP"
-          : participant.includes("(C)")
-          ? "Coordinator"
-          : "Regular";
-        csv += `${batchName},Group 2,${cleanName},${type}\n`;
-      });
-    }
-  });
-
-  return csv;
-}
-
-function convertToText(batches) {
-  let text = "ATTENDANCE TRACKER - BATCH DATA EXPORT\n";
-  text += "==========================================\n\n";
-
-  Object.keys(batches).forEach((batchName) => {
-    const batch = batches[batchName];
-    text += `BATCH: ${batchName}\n`;
-    text += `Groups: ${batch.hasGroup2 ? "2" : "1"}\n\n`;
-
-    text += "GROUP 1:\n";
-    batch.groups.Group_1.forEach((participant) => {
-      text += `  - ${participant}\n`;
-    });
-
-    if (batch.hasGroup2 && batch.groups.Group_2) {
-      text += "\nGROUP 2:\n";
-      batch.groups.Group_2.forEach((participant) => {
-        text += `  - ${participant}\n`;
-      });
-    }
-
-    text += "\n" + "=".repeat(40) + "\n\n";
-  });
-
-  return text;
-}
-
-// ====================== STATISTICS ======================
-function updateStatistics() {
-  const batches = loadBatchDataFromStorage();
-
-  if (!batches) {
-    document.getElementById("totalBatches").textContent = "0";
-    document.getElementById("totalParticipants").textContent = "0";
-    document.getElementById("totalCoordinators").textContent = "0";
-    document.getElementById("totalRP").textContent = "0";
-    return;
-  }
-
-  let totalParticipants = 0;
-  let totalCoordinators = 0;
-  let totalRP = 0;
-
-  Object.keys(batches).forEach((batchName) => {
-    const batch = batches[batchName];
-
-    // Count Group 1
-    batch.groups.Group_1.forEach((participant) => {
-      totalParticipants++;
-      if (participant.includes("(C)")) totalCoordinators++;
-      if (participant.includes("(RP)")) totalRP++;
-    });
-
-    // Count Group 2
-    if (batch.hasGroup2 && batch.groups.Group_2) {
-      batch.groups.Group_2.forEach((participant) => {
-        totalParticipants++;
-        if (participant.includes("(C)")) totalCoordinators++;
-        if (participant.includes("(RP)")) totalRP++;
-      });
-    }
-  });
-
-  document.getElementById("totalBatches").textContent =
-    Object.keys(batches).length;
-  document.getElementById("totalParticipants").textContent = totalParticipants;
-  document.getElementById("totalCoordinators").textContent = totalCoordinators;
-  document.getElementById("totalRP").textContent = totalRP;
-}
-
-// ====================== BACKUP HISTORY ======================
-function addToBackupHistory(backup) {
-  const history = getBackupHistory();
-  history.unshift({
-    date: new Date().toISOString(),
-    type: backup.type,
-    size: JSON.stringify(backup).length,
-    filename: `attendance_backup_${
-      new Date().toISOString().split("T")[0]
-    }_${new Date().getTime()}.json`,
-  });
-
-  // Keep only last 10 backups
-  if (history.length > 10) {
-    history.splice(10);
-  }
-
-  localStorage.setItem("backupHistory", JSON.stringify(history));
-  loadBackupHistory();
-}
-
-function getBackupHistory() {
-  const saved = localStorage.getItem("backupHistory");
-  return saved ? JSON.parse(saved) : [];
-}
-
-function loadBackupHistory() {
-  const history = getBackupHistory();
-  const tbody = document.getElementById("backupHistoryBody");
-  tbody.innerHTML = "";
-
-  if (history.length === 0) {
-    tbody.innerHTML =
-      '<tr><td colspan="4" class="text-center text-muted">No backups found</td></tr>';
-    return;
-  }
-
-  history.forEach((backup, index) => {
-    const row = document.createElement("tr");
-    const date = new Date(backup.date);
-
-    row.innerHTML = `
-      <td>${date.toLocaleDateString()} ${date.toLocaleTimeString()}</td>
-      <td><span class="badge bg-primary">${backup.type}</span></td>
-      <td>${formatFileSize(backup.size)}</td>
-      <td>
-        <button class="btn btn-sm btn-outline-primary" onclick="downloadBackup(${index})">📥</button>
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteBackup(${index})">🗑️</button>
-      </td>
-    `;
-
-    tbody.appendChild(row);
-  });
-}
-
-function formatFileSize(bytes) {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-}
-
-function downloadBackup(index) {
-  const history = getBackupHistory();
-  if (index >= history.length) return;
-
-  // This would need the actual backup data to download
-  Swal.fire({
-    icon: "info",
-    title: "Download Backup",
-    text: "Backup download functionality would be implemented here.",
-  });
-}
-
-function deleteBackup(index) {
-  const history = getBackupHistory();
-  if (index >= history.length) return;
-
-  Swal.fire({
-    title: "Delete Backup",
-    text: "Are you sure you want to delete this backup?",
+    title: "Clear All Data?",
+    text: "This will delete all settings and batch data.",
     icon: "warning",
     showCancelButton: true,
-    confirmButtonText: "Yes, delete",
-    cancelButtonText: "Cancel",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      history.splice(index, 1);
-      localStorage.setItem("backupHistory", JSON.stringify(history));
-      loadBackupHistory();
-    }
-  });
-}
-
-// ====================== DATA MANAGEMENT ======================
-function clearAllData() {
-  Swal.fire({
-    title: "Clear All Data",
-    text: "This will permanently delete all batches and settings. This action cannot be undone!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, clear all",
-    cancelButtonText: "Cancel",
-    confirmButtonColor: "#d33",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      localStorage.removeItem("attendanceBatches");
-      localStorage.removeItem("attendanceSettings");
-      localStorage.removeItem("backupHistory");
-
+    confirmButtonText: "Yes, clear",
+  }).then(async (res) => {
+    if (res.isConfirmed) {
+      await setDoc(doc(db, "settings", "general"), {}); // wipe
+      await setDoc(doc(db, "batches", "allBatches"), {}); // wipe
+      Swal.fire("Cleared", "All data removed.", "success");
       updateStatistics();
-      loadBackupHistory();
-
-      Swal.fire({
-        icon: "success",
-        title: "Data Cleared",
-        text: "All data has been cleared successfully!",
-      });
     }
   });
+};
+
+/* ====================== AUTO BACKUP ====================== */
+function scheduleNextBackup() {
+  clearTimeout(backupTimer);
+
+  let interval = 24 * 60 * 60 * 1000; // daily
+  if (settings.backupFrequency === "weekly") interval = 7 * interval;
+  if (settings.backupFrequency === "monthly") interval = 30 * interval;
+
+  backupTimer = setTimeout(async () => {
+    await createBackup("auto");
+    scheduleNextBackup();
+  }, interval);
+
+  console.log(`⏳ Next ${settings.backupFrequency} backup scheduled.`);
 }
 
-function resetToDefaults() {
-  Swal.fire({
-    title: "Reset to Defaults",
-    text: "This will reset all settings to default values. Continue?",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, reset",
-    cancelButtonText: "Cancel",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      settings = {
-        autoBackup: false,
-        backupFrequency: "weekly",
-        confirmDeletions: true,
-        autoSave: true,
-        showNotifications: false,
-      };
-
-      saveSettings();
-      renderSettings();
-
-      Swal.fire({
-        icon: "success",
-        title: "Reset Complete",
-        text: "Settings have been reset to defaults!",
-      });
+async function createBackup(type = "manual") {
+  try {
+    const snap = await getDoc(doc(db, "batches", "allBatches"));
+    if (!snap.exists()) {
+      console.warn("⚠️ No batches found to back up.");
+      return;
     }
-  });
-}
 
-function checkForUpdates() {
-  Swal.fire({
-    icon: "info",
-    title: "Check for Updates",
-    text: "You are using the latest version of the Attendance Tracker!",
-  });
-}
+    const backupData = {
+      data: snap.data(),
+      type,
+      createdAt: serverTimestamp(),
+    };
 
-// ====================== UTILITIES ======================
-function loadBatchDataFromStorage() {
-  const saved = localStorage.getItem("attendanceBatches");
-  if (saved) {
-    return JSON.parse(saved);
+    await addDoc(collection(db, "backups"), backupData);
+    console.log(`💾 Backup (${type}) created successfully!`);
+
+    await cleanupOldBackups(); // 🗑️ auto-delete old backups
+    loadBackupHistory();
+  } catch (err) {
+    console.error("❌ Backup failed:", err);
   }
-  return null;
 }
 
-function displayCurrentDate() {
-  const currentDate = document.getElementById("currentDate");
-  const date = new Date();
-  const options = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  };
-  currentDate.textContent = date.toLocaleDateString("en-US", options);
-}
+window.createBackup = () => createBackup("manual");
 
-function loadStatistics() {
-  const saved = localStorage.getItem("attendanceBatches");
-  if (!saved) return;
+/* ====================== CLEANUP OLD BACKUPS ====================== */
+async function cleanupOldBackups() {
+  try {
+    const snaps = await getDocs(collection(db, "backups"));
+    const now = Date.now();
+    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
 
-  const batches = JSON.parse(saved);
+    snaps.forEach(async (docSnap) => {
+      const backup = docSnap.data();
+      if (!backup.createdAt) return;
 
-  let totalBatches = Object.keys(batches).length;
-  let totalParticipants = 0, totalCoordinators = 0, totalRP = 0;
-
-  const tbody = document.getElementById("batchStatsBody");
-  if (tbody) tbody.innerHTML = ""; // Clear old rows
-
-  // Find newest batch (last added key)
-  const batchKeys = Object.keys(batches);
-  const newestBatch = batchKeys[batchKeys.length - 1];
-
-  Object.values(batches).forEach(batch => {
-    const group1 = batch.groups.Group_1 || [];
-    const group2 = batch.hasGroup2 ? batch.groups.Group_2 || [] : [];
-    const all = [...group1, ...group2];
-
-    const batchParticipants = all.length;
-    const batchCoordinators = all.filter(n => n.includes("(C)")).length;
-    const batchRP = all.filter(n => n.includes("(RP)")).length;
-
-    totalParticipants += batchParticipants;
-    totalCoordinators += batchCoordinators;
-    totalRP += batchRP;
-
-    // Percentages
-    const rpPercent = batchParticipants ? ((batchRP / batchParticipants) * 100).toFixed(1) + "%" : "0%";
-
-    // Add row
-    if (tbody) {
-      const row = document.createElement("tr");
-
-      // Highlight newest batch row
-      if (batch.name === newestBatch) {
-        row.classList.add("table-success"); // Bootstrap highlight
+      const createdAt = backup.createdAt.toDate().getTime();
+      if (now - createdAt > THIRTY_DAYS) {
+        await deleteDoc(doc(db, "backups", docSnap.id));
+        console.log(`🗑️ Deleted old backup: ${docSnap.id}`);
       }
+    });
+  } catch (err) {
+    console.error("❌ Error cleaning old backups:", err);
+  }
+}
 
+/* ====================== BACKUP HISTORY ====================== */
+async function loadBackupHistory() {
+  const historyTable = document.getElementById("backupHistoryBody");
+  historyTable.innerHTML = "";
+
+  // 🔥 Create a query ordered by createdAt DESC
+  const q = query(collection(db, "backups"), orderBy("createdAt", "desc"));
+
+  const snaps = await getDocs(q);
+
+  snaps.forEach((docSnap) => {
+    const backup = docSnap.data();
+    const date = backup.createdAt?.toDate().toLocaleString() || "Pending...";
+    const type = backup?.type || "manual";
+    const size = JSON.stringify(backup.data).length;
+
+    const row = `
+      <tr>
+        <td>${date}</td>
+        <td>${type}</td>
+        <td>${(size / 1024).toFixed(2)} KB</td>
+        <td>
+          <button class="btn btn-sm btn-success" onclick="restoreBackup('${
+            docSnap.id
+          }')">Restore</button>
+        </td>
+      </tr>`;
+    historyTable.insertAdjacentHTML("beforeend", row);
+  });
+}
+
+/* ====================== RESTORE ====================== */
+window.restoreBackup = async function (id) {
+  try {
+    const snap = await getDoc(doc(db, "backups", id));
+    if (!snap.exists()) {
+      Swal.fire("⚠️ Error", "Backup not found.", "error");
+      return;
+    }
+
+    await setDoc(doc(db, "batches", "allBatches"), snap.data().data);
+    Swal.fire("✅ Restored", "Backup data restored successfully.", "success");
+    updateStatistics();
+  } catch (err) {
+    console.error("❌ Restore failed:", err);
+  }
+};
+
+/* ====================== STATISTICS ====================== */
+async function updateStatistics() {
+  const batchStatsBody = document.getElementById("batchStatsBody");
+  batchStatsBody.innerHTML = "";
+
+  try {
+    const snap = await getDoc(doc(db, "batches", "allBatches"));
+    if (!snap.exists()) return;
+
+    const batches = Object.fromEntries(
+      Object.entries(snap.data()).sort(([a], [b]) => a.localeCompare(b))
+    );
+
+    let totalParticipants = 0,
+      totalCoordinators = 0,
+      totalRP = 0;
+    let FullParticipants = 0;
+    Object.keys(batches).forEach((batchName) => {
+      const batch = batches[batchName];
+      const g1 = batch.groups?.Group_1 || [];
+      const g2 = batch.hasGroup2 ? batch.groups?.Group_2 || [] : [];
+      const all = [...g1, ...g2];
+
+      const batchC = all.filter((p) => p.includes("(C)")).length;
+      const batchRP = all.filter((p) => p.includes("(RP)")).length;
+      const rpPercent = all.length
+        ? ((batchRP / all.length) * 100).toFixed(1) + "%"
+        : "0%";
+
+      totalParticipants += all.length;
+      totalCoordinators += batchC;
+      totalRP += batchRP;
+
+      const row = document.createElement("tr");
       row.innerHTML = `
-        <td><strong>${batch.name}</strong></td>
-        <td>${batchParticipants}</td>
-        <td>${batchCoordinators}</td>
+        <td>${batchName}</td>
+        <td>${all.length}</td>
+        <td>${batchC}</td>
         <td>${batchRP}</td>
         <td>${rpPercent}</td>
       `;
-      tbody.appendChild(row);
+      batchStatsBody.appendChild(row);
+    });
+
+    document.getElementById("totalBatches").textContent =
+      Object.keys(batches).length;
+    document.getElementById("totalParticipants").textContent =
+      totalParticipants;
+    document.getElementById("totalCoordinators").textContent =
+      totalCoordinators;
+    document.getElementById("totalRP").textContent = totalRP;
+  } catch (err) {
+    console.error("❌ Stats error:", err);
+  }
+}
+
+/* ====================== EXPORT ====================== */
+window.exportAllData = async function () {
+  const snap = await getDoc(doc(db, "batches", "allBatches"));
+  if (!snap.exists()) {
+    Swal.fire("⚠️ No data", "No batches found.", "warning");
+    return;
+  }
+
+  const format = document.getElementById("exportFormat").value;
+  const data = {
+    batches: snap.data(),
+    settings,
+    exportDate: new Date().toISOString(),
+  };
+
+  let blob, filename;
+  if (format === "json") {
+    blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    filename = `export_${Date.now()}.json`;
+  } else if (format === "csv") {
+    let csv = "Batch,Group,Name,Type\n";
+    Object.keys(data.batches).forEach((batchName) => {
+      const b = data.batches[batchName];
+      const g1 = b.groups?.Group_1 || [];
+      const g2 = b.hasGroup2 ? b.groups?.Group_2 || [] : [];
+      [...g1, ...g2].forEach((name) => {
+        const type = name.includes("(RP)")
+          ? "RP"
+          : name.includes("(C)")
+          ? "Coordinator"
+          : "Regular";
+        csv += `${batchName},${
+          g1.includes(name) ? "Group 1" : "Group 2"
+        },${name},${type}\n`;
+      });
+    });
+    blob = new Blob([csv], { type: "text/csv" });
+    filename = `export_${Date.now()}.csv`;
+  } else {
+    let text = "ATTENDANCE DATA EXPORT\n\n";
+    Object.keys(data.batches).forEach((batchName) => {
+      const b = data.batches[batchName];
+      text += `BATCH: ${batchName}\nGroup 1:\n${b.groups?.Group_1.join(
+        "\n"
+      )}\n`;
+      if (b.hasGroup2) text += `Group 2:\n${b.groups?.Group_2.join("\n")}\n`;
+      text += "\n";
+    });
+    blob = new Blob([text], { type: "text/plain" });
+    filename = `export_${Date.now()}.txt`;
+  }
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+};
+
+/* ====================== EXPORT BATCHES ONLY ====================== */
+window.exportBatchesOnly = async function () {
+  const snap = await getDoc(doc(db, "batches", "allBatches"));
+  if (!snap.exists()) {
+    Swal.fire("⚠️ No data", "No batches found.", "warning");
+    return;
+  }
+  const blob = new Blob([JSON.stringify(snap.data(), null, 2)], {
+    type: "application/json",
+  });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `batches_${Date.now()}.json`;
+  link.click();
+};
+
+window.checkForUpdates = async function () {
+  try {
+    Swal.fire({
+      title: "🔄 Checking for Updates...",
+      text: "Fetching latest data from Firestore",
+      didOpen: () => Swal.showLoading(),
+      allowOutsideClick: false,
+    });
+
+    // Reload settings
+    await loadSettings();
+
+    // Reload batch statistics
+    await updateStatistics();
+
+    // Reload backup history
+    await loadBackupHistory();
+
+    Swal.fire({
+      icon: "success",
+      title: "✅ Updated",
+      text: "Latest data loaded from Firestore.",
+    });
+  } catch (err) {
+    console.error("❌ Update failed:", err);
+    Swal.fire({
+      icon: "error",
+      title: "Update Failed",
+      text: err.message,
+    });
+  }
+};
+
+window.resetToDefaults = async function () {
+  settings = {
+    autoBackup: true,
+    backupFrequency: "daily",
+    confirmDeletions: true,
+    autoSave: true,
+    showNotifications: true,
+  };
+  await saveSettings();
+  renderSettings();
+  Swal.fire("✅ Reset", "Settings reset to defaults.", "success");
+};
+
+// Send notification (auto or manual)
+export async function sendNotification(message, role = "admin") {
+  try {
+    await addDoc(collection(db, "notifications"), {
+      message,
+      role, // "admin" or "manager"
+      createdAt: serverTimestamp(),
+    });
+    console.log("📢 Notification sent:", message);
+  } catch (err) {
+    console.error("❌ Error sending notification:", err);
+  }
+}
+
+async function loadNotifications() {
+  const notifList = document.getElementById("notificationList");
+  const notifCount = document.getElementById("notifCount");
+  const notifDropdown = document.getElementById("notifDropdown");
+
+  const q = query(
+    collection(db, "notifications"),
+    orderBy("createdAt", "desc")
+  );
+  onSnapshot(q, (snapshot) => {
+    notifList.innerHTML = "";
+    let count = 0;
+
+    snapshot.forEach((docSnap) => {
+      const notif = docSnap.data();
+      const id = docSnap.id;
+      const date = notif.createdAt?.toDate().toLocaleString() || "Just now";
+
+      count++;
+      const li = document.createElement("li");
+      li.className =
+        "list-group-item d-flex justify-content-between align-items-center";
+      li.innerHTML = `
+        <div>
+          <div><strong>${notif.message}</strong></div>
+          <small class="text-muted">${date}</small>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="deleteNotification('${id}')">×</button>
+      `;
+      notifList.appendChild(li);
+    });
+
+    // Update badge
+    if (count > 0) {
+      notifCount.textContent = count;
+      notifCount.style.display = "inline-block";
+    } else {
+      notifCount.style.display = "none";
     }
   });
 
-  // Update top cards
-  document.getElementById("totalBatches").textContent = totalBatches;
-  document.getElementById("totalParticipants").textContent = totalParticipants;
-  document.getElementById("totalCoordinators").textContent = totalCoordinators;
-  document.getElementById("totalRP").textContent = totalRP;
+  // Bell toggle
+  document.getElementById("notifBell").addEventListener("click", () => {
+    notifDropdown.style.display =
+      notifDropdown.style.display === "none" ? "block" : "none";
+  });
 }
 
-// Reload stats when page loads
-document.addEventListener("DOMContentLoaded", loadStatistics);
+// Delete notification after admin marks as read
+window.deleteNotification = async function (id) {
+  try {
+    await deleteDoc(doc(db, "notifications", id));
+    console.log("🗑️ Notification deleted:", id);
+  } catch (err) {
+    console.error("❌ Error deleting notification:", err);
+  }
+};
+
+// Init notifications on page load
+document.addEventListener("DOMContentLoaded", () => {
+  loadNotifications();
+});
+
+/* ====================== INIT ====================== */
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("⚙️ Settings page ready");
+  document.getElementById("currentDate").textContent =
+    new Date().toDateString();
+  await loadSettings();
+  await updateStatistics();
+  await loadBackupHistory();
+  await cleanupOldBackups();
+  await loadNotifications();
+});
