@@ -112,11 +112,20 @@ async function createBackup(type = "manual") {
       return;
     }
 
-    const backupData = {
-      data: snap.data(),
-      type,
-      createdAt: serverTimestamp(),
-    };
+const backupData = {
+  data: snap.data(),
+  type,
+  createdAt: serverTimestamp(),
+  createdAtReadable: new Date().toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "2-digit",
+    hour12: true,
+  }),
+};
 
     await addDoc(collection(db, "backups"), backupData);
     console.log(`💾 Backup (${type}) created successfully!`);
@@ -159,12 +168,25 @@ async function loadBackupHistory() {
 
   // 🔥 Create a query ordered by createdAt DESC
   const q = query(collection(db, "backups"), orderBy("createdAt", "desc"));
-
   const snaps = await getDocs(q);
 
   snaps.forEach((docSnap) => {
     const backup = docSnap.data();
-    const date = backup.createdAt?.toDate().toLocaleString() || "Pending...";
+
+    // ✅ Prefer readable date if saved, otherwise fallback to Firestore timestamp
+    const date =
+      backup.createdAtReadable ||
+      (backup.createdAt?.toDate().toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "2-digit",
+        hour12: true,
+      })) ||
+      "Pending...";
+
     const type = backup?.type || "manual";
     const size = JSON.stringify(backup.data).length;
 
@@ -174,11 +196,10 @@ async function loadBackupHistory() {
         <td>${type}</td>
         <td>${(size / 1024).toFixed(2)} KB</td>
         <td>
-          <button class="btn btn-sm btn-success" onclick="restoreBackup('${
-            docSnap.id
-          }')">Restore</button>
+          <button class="btn btn-sm btn-success" onclick="restoreBackup('${docSnap.id}')">Restore</button>
         </td>
       </tr>`;
+
     historyTable.insertAdjacentHTML("beforeend", row);
   });
 }

@@ -1,8 +1,11 @@
+// vite.config.js
 import { resolve } from "path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  base: "./", // important for Vercel static hosting
   build: {
+    outDir: "dist",
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
