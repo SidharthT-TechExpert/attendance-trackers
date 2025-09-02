@@ -72,7 +72,7 @@ export async function authenticateAndRedirect() {
 
           <div style="margin-top:15px;text-align:center;">
             <small style="color:#555;font-size:14px;">
-              💡 <a href="#" onclick="showCredentials?.()" style="color:#007bff;text-decoration:none;">Click here for help</a>
+              💡 <a href="#" onclick="showCredentials" style="color:#007bff;text-decoration:none;">Click here for help</a>
             </small>
           </div>
         </div>
