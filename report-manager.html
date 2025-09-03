@@ -19,9 +19,23 @@
     <!-- Header -->
     <header class="header-section">
       <div class="row align-items-center">
-        <div class="col">
+        <div class="col ">
           <h1>Report Manager</h1>
-          <p>Left: batches. Right: reports + filters. Click a batch to view reports for it.</p>
+          <hr>
+          <div class="mt-2 text-center text-white">
+          </div>
+          <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='index.html'">← Back to
+            Attendance</button>
+          <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn"
+            onclick="window.location.href='settings.html'">⚙️ Settings</button>
+          <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch
+            Manager</button>
+          <button class="btn btn-outline-danger btn-sm" onclick="logout()">🚪 Logout</button>
+        </div>
+        <div id="authStatus">
+          <!-- Authentication Status Display -->
+          <strong>🔓 Authenticated:</strong> <span id="currentUser">Loading...</span>
+          <span id="userRole" class="badge bg-primary ms-2"></span>
         </div>
       </div>
     </header>
@@ -165,8 +179,8 @@
           </div>
 
           <div class="mb-3">
-            <p><i class="bi bi-person-badge me-2"></i><strong >Trainer:</strong> <span  id="Trainer">-</span></p>
-            <p><i class="bi bi-people-fill me-2" ></i><strong >Coordinators:</strong> <span id="coordinator">-</span>
+            <p><i class="bi bi-person-badge me-2"></i><strong>Trainer:</strong> <span id="Trainer">-</span></p>
+            <p><i class="bi bi-people-fill me-2"></i><strong>Coordinators:</strong> <span id="coordinator">-</span>
             </p>
           </div>
 
@@ -195,7 +209,99 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
   <!-- Firebase first -->
   <script type="module" src="src/firebase.js"></script>
+  <script type="module" src="src/auth.js"></script>
   <script type="module" src="src/reports.js"></script>
+
+  <script type="module">
+    import { auth, db } from "./src/firebase.js";
+    import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+    import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
+
+    const authStatusEl = document.getElementById("authStatus");
+    const currentUserEl = document.getElementById("currentUser");
+    const roleBadgeEl = document.getElementById("userRole");
+
+    // 🔥 Listen for login/logout
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        authStatusEl.className = "alert alert-danger mb-4";
+        currentUserEl.textContent = "Not logged in";
+        roleBadgeEl.textContent = "";
+        Swal.fire({
+          icon: "warning",
+          title: "🔒 Access Denied",
+          text: "Please login first!",
+          confirmButtonText: "Go Back",
+        }).then(() => {
+          window.location.href = "./index.html";
+        });
+        return;
+      }
+
+      // ✅ Show email
+      authStatusEl.className = "mb";
+      currentUserEl.textContent = user.email;
+
+      // ✅ Fetch role from Firestore
+      let role = "coordinator"; // default
+      try {
+        const snap = await getDoc(doc(db, "roles", user.uid));
+        if (snap.exists() && snap.data().role) {
+          role = snap.data().role;
+        }
+      } catch (err) {
+        console.error("Error fetching role:", err);
+      }
+
+      // ✅ Update badge
+      roleBadgeEl.textContent = role.toUpperCase();
+      switch (role) {
+        case "admin":
+          roleBadgeEl.className = "badge bg-danger ms-2";
+          document.getElementById("settingsBtn").style.display = "inline-block";
+          document.getElementById("export").style.display = "inline-block"
+          document.getElementById('ReportBtn').style.display = 'inline-block'
+          break;
+        case "manager":
+          roleBadgeEl.className = "badge bg-warning ms-2";
+          break;
+        case "coordinator":
+          roleBadgeEl.className = "badge bg-info ms-2";
+          break;
+        default:
+          roleBadgeEl.className = "badge bg-secondary ms-2";
+      }
+
+      // ✅ Make globally accessible
+      window.currentUser = { email: user.email, role };
+    });
+
+    // ====================== LOGOUT ======================
+    window.logout = async function () {
+      Swal.fire({
+        title: "🚪 Logout",
+        text: "Are you sure you want to logout?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes, logout",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#004d61",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          await auth.signOut();
+          Swal.fire({
+            icon: "success",
+            title: "👋 Logged Out",
+            text: "You have been logged out successfully",
+            showConfirmButton: false,
+            timer: 1500,
+          }).then(() => {
+            window.location.href = "index.html";
+          });
+        }
+      });
+    };
+  </script>
 </body>
 
 </html>

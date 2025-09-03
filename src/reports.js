@@ -168,7 +168,7 @@ async function renderReports() {
   });
 
   console.log(filtered);
-  
+
   filtered.forEach((r) => {
     const col = document.createElement("div");
     col.className = "col-12 col-md-6 col-lg-4";

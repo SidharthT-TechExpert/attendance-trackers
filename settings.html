@@ -22,6 +22,8 @@
         Attendance</button>
       <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch
         Manager</button>
+      <button class="btn btn-outline-light btn-sm me-2" id="ReportBtn"
+        onclick="window.location.href='report-manager.html'">📘Report Manager</button>
       <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn" onclick="window.location.href='settings.html'"
         style="display: none;">⚙️ Settings</button>
       <button class="btn btn-outline-danger btn-sm" id="logoutBtn">🚪 Logout</button>
@@ -263,7 +265,7 @@
       const dropdown = document.getElementById("notifDropdown");
       dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
     });
-  </script> 
+  </script>
   <script type="module">
     // auth.js (or wherever you’re checking roles)
     import { onAuthStateChanged } from "firebase/auth";

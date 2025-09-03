@@ -21,6 +21,8 @@
         Attendance</button>
       <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn" onclick="window.location.href='settings.html'"
         style="display: none;">⚙️ Settings</button>
+      <button class="btn btn-outline-light btn-sm me-2" id="ReportBtn"
+        onclick="window.location.href='report-manager.html'" style="display: none;">📘Report Manager</button>
       <button class="btn btn-outline-danger btn-sm" onclick="logout()">🚪 Logout</button>
     </div>
   </header>
@@ -103,7 +105,9 @@
 
 
               <!-- Batch List -->
-              <div id="batchList" class="list-group"></div>
+              <div id="batchList" class="list-group"
+                style="max-height:400px; overflow-y:auto; overflow-x:hidden; border:1px solid #ddd; border-radius:6px;">
+              </div>
             </div>
 
             <div class="col-md-8">
@@ -236,6 +240,7 @@
                   roleBadgeEl.className = "badge bg-danger ms-2";
                   document.getElementById("settingsBtn").style.display = "inline-block";
                   document.getElementById("export").style.display = "inline-block"
+                  document.getElementById('ReportBtn').style.display = 'inline-block'
                   break;
                 case "manager":
                   roleBadgeEl.className = "badge bg-warning ms-2";
