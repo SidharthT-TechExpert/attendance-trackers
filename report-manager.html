@@ -21,17 +21,19 @@
       <div class="row align-items-center">
         <div class="col ">
           <h1>Report Manager</h1>
-          <hr>
           <div class="mt-2 text-center text-white">
+
+            <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='index.html'">← Back to
+              Attendance</button>
+            <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn"
+              onclick="window.location.href='settings.html'">⚙️ Settings</button>
+            <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch
+              Manager</button>
+            <button class="btn btn-outline-danger btn-sm" onclick="logout()">🚪 Logout</button>
           </div>
-          <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='index.html'">← Back to
-            Attendance</button>
-          <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn"
-            onclick="window.location.href='settings.html'">⚙️ Settings</button>
-          <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch
-            Manager</button>
-          <button class="btn btn-outline-danger btn-sm" onclick="logout()">🚪 Logout</button>
         </div>
+        <br>
+         <hr>
         <div id="authStatus">
           <!-- Authentication Status Display -->
           <strong>🔓 Authenticated:</strong> <span id="currentUser">Loading...</span>
