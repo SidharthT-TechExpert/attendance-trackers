@@ -1,5 +1,6 @@
 // vite.config.js
 import { resolve } from "path";
+import { report } from "process";
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -11,6 +12,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         batch: resolve(__dirname, "batch-manager.html"),
         settings: resolve(__dirname, "settings.html"),
+        reports: resolve(__dirname, "report-manager.html"),
       },
     },
   },

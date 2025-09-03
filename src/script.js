@@ -4,14 +4,20 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
+  Timestamp,
   collection,
-  getDocs
+  getDocs,
+  where,
+  serverTimestamp,
+  query,
+  addDoc,
 } from "firebase/firestore";
 
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 
 // Load batch data from Firestore
-async function loadBatchDataFromFirestore() {
+export async function loadBatchDataFromFirestore() {
   try {
     const snap = await getDoc(doc(db, "batches", "allBatches"));
     if (snap.exists()) {
@@ -309,7 +315,7 @@ function generateOutput() {
   } else if (Coordinators.length === 2) {
     Coordinators = Coordinators[0] + ` & ` + Coordinators[1];
   } else if (Coordinators.length === 4) {
-    let Names = Coordinators;
+   let Names = Coordinators;
     Coordinators = "";
     Names.forEach((n, i) => {
       if (i === Names.length - 2) {
@@ -442,6 +448,85 @@ function generateOutput() {
   // Update both view and edit modes
   document.getElementById("outputView").textContent = finalText;
   document.getElementById("outputEdit").value = finalText;
+console.log(Coordinators)
+  saveReport(finalText, Batch, GroupName , Trainer , Coordinators);
+}
+
+// ====================== SAVE MULTIPLE REPORTS ======================
+async function saveReport(finalText, batchId, groupName , Trainer , Names) {
+  try {
+    const dateKey = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+    const reportsCol = collection(
+      db,
+      "reports",
+      "allBatches",
+      "batches",
+      batchId,
+      "groups",
+      groupName,
+      "reportsByDate",
+      dateKey,
+      "allReports"
+    );
+
+    // Expiry timestamp = now + 2 days
+    const expireAt = Timestamp.fromDate(
+      new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+    );
+
+    const counter = (state, check = attendanceStatus) => {
+      return Object.keys(check).filter(
+        (n) =>
+          attendanceStatus[n] === state ||
+          (attendanceStatus[n] === "C" && state === CoordinatorsA[n])
+      ).length;
+    };
+
+    let attendees1 = counter("present") + counter("other");
+
+    await addDoc(reportsCol, {
+      report: finalText,
+      createdAt: serverTimestamp(),
+      expireAt: expireAt, // 🔥 Firestore TTL uses this field
+      batch: batchId,
+      group: groupName,
+      date: dateKey,
+      title: "Session Report",
+      attendees: attendees1,
+      trainer:Trainer,
+      coordinators:Names
+    });
+
+    console.log(
+      `✅ Report saved with expiry for ${batchId} - ${groupName}` +
+        getReports(batchId, groupName, dateKey)
+    );
+  } catch (error) {
+    console.error("❌ Error saving report:", error);
+  }
+}
+async function getReports(batchId, groupName, dateKey) {
+  const reportsCol = collection(
+    db,
+    "reports",
+    "allBatches",
+    "batches",
+    batchId,
+    "groups",
+    groupName,
+    "reportsByDate",
+    dateKey,
+    "allReports"
+  );
+
+  const snapshot = await getDocs(reportsCol);
+  const reports = snapshot.docs.map((doc) => ({
+    id: doc.id, // autoId
+    ...doc.data(),
+  }));
+
+  return reports;
 }
 
 /* ====================== DATE HELPERS ====================== */

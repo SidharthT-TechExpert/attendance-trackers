@@ -1,0 +1,303 @@
+/* ===== Theme & root vars (keeps visual continuity with your app) ===== */
+:root {
+  --bg-1: #061215; /* deep */
+  --bg-2: #0b2a30; /* teal-ish */
+  --card: #0f1b1d;
+  --muted: #9aa6a9;
+  --accent: #00b7c2;
+  --accent-2: #004d61;
+  --white: #ffffff;
+  --radius: 12px;
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-2: rgba(255, 255, 255, 0.03);
+  --shadow: 0 8px 28px rgba(2, 8, 10, 0.6);
+  font-family: "Segoe UI", Roboto, system-ui, Arial, sans-serif;
+}
+
+/* ===== Base ===== */
+body {
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  color: var(--white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* ===== Header ===== */
+.header-section {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.header-section h1 {
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.header-section p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+/* ===== Left Panel (Batches) ===== */
+.batches-panel {
+  background: linear-gradient(180deg, var(--glass), var(--glass-2));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  min-height: 520px;
+}
+
+.batch-search .form-control {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border-radius: 26px;
+}
+
+.batch-search .form-control::placeholder {
+  color: var(--muted);
+}
+
+.batch-search .form-control:focus {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.2rem rgba(0, 183, 194, 0.25);
+  color: var(--white);
+}
+
+.btn-add-batch {
+  background: #52c41a;
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+.btn-add-batch:hover {
+  background: #73d13d;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
+}
+
+.batches-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.batch-item {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  color: var(--white);
+}
+
+.batch-item:hover {
+  transform: translateX(6px);
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.batch-item.active {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #012;
+  font-weight: 700;
+  border: none;
+}
+
+.batch-meta {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.batch-item.active .batch-meta {
+  color: rgba(1, 2, 2, 0.7);
+}
+
+/* ===== Right Panel (Reports) ===== */
+.reports-panel {
+  background: #fff;
+  color: #0b2a2e;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  min-height: 520px;
+}
+
+/* Custom date input styling */
+.date-wrapper {
+  position: relative;
+  background: #0f1b1b;
+  color: var(--white);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.date-wrapper input[type="date"] {
+  background: transparent;
+  border: none;
+  color: var(--white);
+  outline: none;
+}
+
+.date-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  font-size: 12px;
+  border: none;
+  color: var(--white);
+}
+
+.btn-export {
+  background: var(--accent);
+  border: none;
+  color: #012;
+  font-weight: 600;
+}
+
+.btn-export:hover {
+  background: #00a3ad;
+  color: #012;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #666;
+}
+
+.btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Reports cards */
+.report-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(12, 30, 30, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(12, 30, 30, 0.08);
+}
+
+.report-title {
+  font-weight: 700;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.report-meta {
+  font-size: 0.8125rem;
+  color: #666;
+  margin-top: 0.375rem;
+}
+
+.badge-published {
+  background: #e6f8f4;
+  color: #00635b;
+}
+
+.badge-draft {
+  background: #fff8e6;
+  color: #8a5b00;
+}
+
+.badge-archived {
+  background: #f5f5f5;
+  color: #666;
+}
+
+/* Modal styling */
+.modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Custom scrollbar for batches list */
+.batches-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.batches-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.batches-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.batches-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .batches-panel {
+    margin-bottom: 1.5rem;
+  }
+
+  .filters-row .col-auto {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .filters-row .col-auto:last-child {
+    margin-bottom: 0;
+  }
+}
+
+
+.report-modal .modal-content {
+  background-color: #121212;
+  border-radius: 1rem;
+  border: 1px solid #333;
+  color: #f1f1f1;
+}
+
+.report-box {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: .75rem;
+  padding: 1rem;
+}
+
+.report-text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: monospace;
+  font-size: .95rem;
+  line-height: 1.45;
+  color: #f8f8f8;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.btn {
+  border-radius: .5rem;
+  padding: 0.4rem 0.8rem;
+  font-weight: 500;
+}

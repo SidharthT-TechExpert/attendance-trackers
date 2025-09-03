@@ -161,20 +161,24 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <!-- Firebase first -->
-  <script type="module" src="/src/firebase.js"></script>
+  <script type="module" src="src/firebase.js"></script>
+  <script type="module" src="src/script.js"></script>
+  <script type="module" src="src/batch-manager.js"></script>
 
-  <!-- Feature modules -->
-  <script type="module" src="/src/script.js"></script>
-  <script type="module" src="/src/batch-manager.js"></script>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
+  <script type="module">
+    import { loadBatchDataFromFirestore } from "./src/script.js";
+    document.addEventListener("DOMContentLoaded",async () => {
       const currentDate = document.getElementById("currentDate");
       currentDate.textContent = new Date().toDateString();
-      loadBatchDataFromFirestore();
-      document.getElementById('none').style.display = 'none'
+
+      // Call your Firestore function
+     await loadBatchDataFromFirestore();
+
+      // Hide the "none" element if it exists
+      document.getElementById("none").style.display = "none";
     });
   </script>
+
 
   <!-- Button that opens the protected manager area -->
   <script type="module">
