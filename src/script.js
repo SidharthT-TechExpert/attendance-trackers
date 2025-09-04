@@ -14,7 +14,7 @@ import {
   addDoc,
 } from "firebase/firestore";
 
-import {createBackup} from './settings.js'
+import {createBackup , cleanupOldBackups} from './settings.js'
 
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 
@@ -734,6 +734,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (currentDate) currentDate.textContent = formatDate(new Date());
     // Run backup automatically when homepage opens
   await createBackup("auto");
+  await cleanupOldBackups();
 });
 
 // ====================== CUSTOM DROPDOWN ======================

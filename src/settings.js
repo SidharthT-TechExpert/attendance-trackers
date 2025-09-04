@@ -145,7 +145,7 @@ export async function createBackup(type = "manual") {
         : 0;
 
       const now = Date.now();
-      let minInterval = 24 * 60 * 60 * 1000; // daily
+      let minInterval =  60 * 1000; // daily
       if (settings.backupFrequency === "weekly") minInterval = 7 * minInterval;
       if (settings.backupFrequency === "monthly") minInterval = 30 * minInterval;
 
@@ -191,7 +191,7 @@ export async function createBackup(type = "manual") {
 window.createBackupNow = () => createBackup("manual");
 
 /* ====================== CLEANUP OLD BACKUPS ====================== */
-async function cleanupOldBackups() {
+export async function cleanupOldBackups() {
   try {
     const snaps = await getDocs(collection(db, "backups"));
     const now = Date.now();
