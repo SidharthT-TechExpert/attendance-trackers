@@ -14,7 +14,7 @@ import {
   addDoc,
 } from "firebase/firestore";
 
-import {createBackup , cleanupOldBackups} from './settings.js'
+import { createBackup, cleanupOldBackups } from "./settings.js";
 
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 
@@ -451,41 +451,41 @@ async function generateOutput() {
   document.getElementById("outputView").textContent = finalText;
   document.getElementById("outputEdit").value = finalText;
 
-// await Swal.fire({
-//   icon: "question",
-//   title: "Submission Request",
-//   html: `
-//     <div style="text-align:center; padding:15px; font-family: Arial, sans-serif;">
-//       <h2 style="margin-bottom:10px; font-weight:bold; font-size:24px; color:#222;">
-//         Do you want to submit this report?
-//       </h2>
-//       <p style="font-size:16px; color:#555; margin:0;">
-//         Once submitted, you may not be able to edit it later.
-//       </p>
-//     </div>
-//   `,
-//   showCancelButton: true,
-//   confirmButtonText: "🚀 Yes, Submit",
-//   cancelButtonText: "❌ No, Cancel",
-//   confirmButtonColor: "#28a745",   // success green
-//   cancelButtonColor: "#dc3545",    // danger red
-//   width: "450px",
-//   backdrop: `rgba(0,0,0,0.6)`,
-//   focusConfirm: false,
-//   allowOutsideClick: false,
-//   allowEscapeKey: true,
-//   customClass: {
-//     popup: "animated fadeInDown faster", // optional animate.css
-//   },
-// }).then((result) => {
-//   if (result.isConfirmed) {
+  // await Swal.fire({
+  //   icon: "question",
+  //   title: "Submission Request",
+  //   html: `
+  //     <div style="text-align:center; padding:15px; font-family: Arial, sans-serif;">
+  //       <h2 style="margin-bottom:10px; font-weight:bold; font-size:24px; color:#222;">
+  //         Do you want to submit this report?
+  //       </h2>
+  //       <p style="font-size:16px; color:#555; margin:0;">
+  //         Once submitted, you may not be able to edit it later.
+  //       </p>
+  //     </div>
+  //   `,
+  //   showCancelButton: true,
+  //   confirmButtonText: "🚀 Yes, Submit",
+  //   cancelButtonText: "❌ No, Cancel",
+  //   confirmButtonColor: "#28a745",   // success green
+  //   cancelButtonColor: "#dc3545",    // danger red
+  //   width: "450px",
+  //   backdrop: `rgba(0,0,0,0.6)`,
+  //   focusConfirm: false,
+  //   allowOutsideClick: false,
+  //   allowEscapeKey: true,
+  //   customClass: {
+  //     popup: "animated fadeInDown faster", // optional animate.css
+  //   },
+  // }).then((result) => {
+  //   if (result.isConfirmed) {
 
-//     console.log("Report submitted!");
-//   saveReport(finalText, Batch, GroupName, Trainer, Coordinators);
-//   } else {
-//     console.log("Submission cancelled.");
-//   }
-// });
+  //     console.log("Report submitted!");
+  //   saveReport(finalText, Batch, GroupName, Trainer, Coordinators);
+  //   } else {
+  //     console.log("Submission cancelled.");
+  //   }
+  // });
 }
 
 // ====================== SAVE MULTIPLE REPORTS ======================
@@ -732,9 +732,13 @@ document.addEventListener("DOMContentLoaded", async function () {
   // await populateBatchDropdown();
   const currentDate = document.getElementById("currentDate");
   if (currentDate) currentDate.textContent = formatDate(new Date());
-    // Run backup automatically when homepage opens
+
+  // Auto backup & cleanup
   await createBackup("auto");
   await cleanupOldBackups();
+
+  // Load batches
+  await loadBatchDataFromFirestore();
 });
 
 // ====================== CUSTOM DROPDOWN ======================

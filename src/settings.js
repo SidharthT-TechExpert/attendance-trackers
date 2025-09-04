@@ -62,9 +62,15 @@ function setIfExists(id, setter) {
 function renderSettings() {
   setIfExists("autoBackup", (el) => (el.checked = settings.autoBackup));
   setIfExists("backupFrequency", (el) => (el.value = settings.backupFrequency));
-  setIfExists("confirmDeletions", (el) => (el.checked = settings.confirmDeletions));
+  setIfExists(
+    "confirmDeletions",
+    (el) => (el.checked = settings.confirmDeletions)
+  );
   setIfExists("autoSave", (el) => (el.checked = settings.autoSave));
-  setIfExists("showNotifications", (el) => (el.checked = settings.showNotifications));
+  setIfExists(
+    "showNotifications",
+    (el) => (el.checked = settings.showNotifications)
+  );
 }
 
 /* ====================== SETTINGS TOGGLES ====================== */
@@ -145,9 +151,10 @@ export async function createBackup(type = "manual") {
         : 0;
 
       const now = Date.now();
-      let minInterval =  60 * 1000; // daily
+      let minInterval = 24 * 60 * 60 * 1000; // daily
       if (settings.backupFrequency === "weekly") minInterval = 7 * minInterval;
-      if (settings.backupFrequency === "monthly") minInterval = 30 * minInterval;
+      if (settings.backupFrequency === "monthly")
+        minInterval = 30 * minInterval;
 
       if (now - lastBackup < minInterval) {
         console.log("⏳ Skipping backup: not due yet");
@@ -195,7 +202,7 @@ export async function cleanupOldBackups() {
   try {
     const snaps = await getDocs(collection(db, "backups"));
     const now = Date.now();
-    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+    const Ten_DAYS = 10 * 24 * 60 * 60 * 1000;
     let deletedCount = 0;
 
     for (const docSnap of snaps.docs) {
@@ -203,19 +210,10 @@ export async function cleanupOldBackups() {
       if (!backup.createdAt) continue;
 
       const createdAt = backup.createdAt.toDate().getTime();
-      if (now - createdAt > THIRTY_DAYS) {
+      if (now - createdAt > Ten_DAYS) {
         await deleteDoc(doc(db, "backups", docSnap.id));
         deletedCount++;
       }
-    }
-
-    if (deletedCount > 0) {
-      addNotification(
-        `🗑️ ${deletedCount} old backup(s) cleared automatically.`,
-        "danger"
-      );
-    } else {
-      addNotification(`✅ No old backups found to clear.`, "success");
     }
   } catch (err) {
     console.error("❌ Error cleaning old backups:", err);
@@ -230,7 +228,10 @@ async function loadBackupHistory() {
     if (!historyTable) return; // page doesn't have the table
     historyTable.innerHTML = "";
 
-    const qBackups = query(collection(db, "backups"), orderBy("createdAt", "desc"));
+    const qBackups = query(
+      collection(db, "backups"),
+      orderBy("createdAt", "desc")
+    );
     const snaps = await getDocs(qBackups);
 
     snaps.forEach((docSnap) => {
@@ -238,7 +239,7 @@ async function loadBackupHistory() {
 
       const date =
         backup.createdAtReadable ||
-        (backup.createdAt?.toDate().toLocaleString("en-IN", {
+        backup.createdAt?.toDate().toLocaleString("en-IN", {
           day: "2-digit",
           month: "2-digit",
           year: "numeric",
@@ -246,7 +247,7 @@ async function loadBackupHistory() {
           minute: "numeric",
           second: "2-digit",
           hour12: true,
-        })) ||
+        }) ||
         "Pending...";
 
       const type = backup?.type || "manual";
@@ -258,7 +259,9 @@ async function loadBackupHistory() {
           <td>${type}</td>
           <td>${(size / 1024).toFixed(2)} KB</td>
           <td>
-            <button class="btn btn-sm btn-success" onclick="restoreBackup('${docSnap.id}')">Restore</button>
+            <button class="btn btn-sm btn-success" onclick="restoreBackup('${
+              docSnap.id
+            }')">Restore</button>
           </td>
         </tr>`;
 
@@ -331,9 +334,18 @@ async function updateStatistics() {
       batchStatsBody.appendChild(row);
     });
 
-    setIfExists("totalBatches", (el) => (el.textContent = Object.keys(batches).length));
-    setIfExists("totalParticipants", (el) => (el.textContent = totalParticipants));
-    setIfExists("totalCoordinators", (el) => (el.textContent = totalCoordinators));
+    setIfExists(
+      "totalBatches",
+      (el) => (el.textContent = Object.keys(batches).length)
+    );
+    setIfExists(
+      "totalParticipants",
+      (el) => (el.textContent = totalParticipants)
+    );
+    setIfExists(
+      "totalCoordinators",
+      (el) => (el.textContent = totalCoordinators)
+    );
     setIfExists("totalRP", (el) => (el.textContent = totalRP));
   } catch (err) {
     console.error("❌ Stats error:", err);
@@ -359,7 +371,9 @@ window.exportAllData = async function () {
 
   let blob, filename;
   if (format === "json") {
-    blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     filename = `export_${Date.now()}.json`;
   } else if (format === "csv") {
     let csv = "Batch,Group,Name,Type\n";
@@ -373,7 +387,9 @@ window.exportAllData = async function () {
           : name.includes("(C)")
           ? "Coordinator"
           : "Regular";
-        csv += `${batchName},${g1.includes(name) ? "Group 1" : "Group 2"},${name},${type}\n`;
+        csv += `${batchName},${
+          g1.includes(name) ? "Group 1" : "Group 2"
+        },${name},${type}\n`;
       });
     });
     blob = new Blob([csv], { type: "text/csv" });
@@ -382,8 +398,11 @@ window.exportAllData = async function () {
     let text = "ATTENDANCE DATA EXPORT\n\n";
     Object.keys(data.batches).forEach((batchName) => {
       const b = data.batches[batchName];
-      text += `BATCH: ${batchName}\nGroup 1:\n${(b.groups?.Group_1 || []).join("\n")}\n`;
-      if (b.hasGroup2) text += `Group 2:\n${(b.groups?.Group_2 || []).join("\n")}\n`;
+      text += `BATCH: ${batchName}\nGroup 1:\n${(b.groups?.Group_1 || []).join(
+        "\n"
+      )}\n`;
+      if (b.hasGroup2)
+        text += `Group 2:\n${(b.groups?.Group_2 || []).join("\n")}\n`;
       text += "\n";
     });
     blob = new Blob([text], { type: "text/plain" });
@@ -475,7 +494,10 @@ async function loadNotifications() {
   // If page doesn't have notification UI, skip setting up listener
   if (!notifList || !notifCount) return;
 
-  const qNotifs = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
+  const qNotifs = query(
+    collection(db, "notifications"),
+    orderBy("createdAt", "desc")
+  );
   onSnapshot(qNotifs, (snapshot) => {
     // Guard again in case user navigated
     if (!notifList || !notifCount) return;
@@ -490,7 +512,8 @@ async function loadNotifications() {
 
       count++;
       const li = document.createElement("li");
-      li.className = "list-group-item d-flex justify-content-between align-items-center";
+      li.className =
+        "list-group-item d-flex justify-content-between align-items-center";
       li.innerHTML = `
         <div>
           <div><strong>${notif.message}</strong></div>
@@ -549,11 +572,13 @@ window.deleteNotification = async function (id) {
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("⚙️ Settings page ready");
 
-  setIfExists("currentDate", (el) => (el.textContent = new Date().toDateString()));
+  setIfExists(
+    "currentDate",
+    (el) => (el.textContent = new Date().toDateString())
+  );
 
   await loadSettings();
   await updateStatistics();
   await loadBackupHistory();
   await cleanupOldBackups();
-  await loadNotifications();
 });

@@ -162,29 +162,15 @@
 
   <!-- Firebase first -->
   <script type="module" src="src/firebase.js"></script>
-  <script type="module" src="src/script.js"></script>
-  <script type="module" src="src/batch-manager.js"></script>
-
-  <script type="module">
-    import { loadBatchDataFromFirestore } from "./src/script.js";
-    document.addEventListener("DOMContentLoaded",async () => {
-      const currentDate = document.getElementById("currentDate");
-      currentDate.textContent = new Date().toDateString();
-
-      // Call your Firestore function
-     await loadBatchDataFromFirestore();
-
-      // Hide the "none" element if it exists
-      document.getElementById("none").style.display = "none";
-    });
-  </script>
-
+  <script  src="src/script.js"></script>
 
   <!-- Button that opens the protected manager area -->
   <script type="module">
     import { authenticateAndRedirect } from "./src/auth.js";
     const btn = document.getElementById("manageBtn");
     if (btn) btn.addEventListener("click", authenticateAndRedirect);
+
+     document.getElementById("none").style.display = "none";
   </script>
 
 </body>
