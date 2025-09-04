@@ -494,7 +494,7 @@ function filterParticipants(groupName, searchText) {
       .replace(/\(RP\)|\(C\)/g, "")
       .trim()
       .toLowerCase()
-      .includes(searchText.toLowerCase())
+      .includes(searchText.trim().toLowerCase())
   );
   renderParticipantList(groupName, filtered);
 }
