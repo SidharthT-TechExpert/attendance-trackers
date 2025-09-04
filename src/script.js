@@ -274,7 +274,7 @@ function updateNameColors() {
 }
 
 // ====================== REPORT GENERATION ======================
-function generateOutput() {
+async function generateOutput() {
   // --- Static report headers ---
   const Mean = "🔒 COMMUNICATION SESSION REPORT";
   const Batch = selectedBatchName;
@@ -315,7 +315,7 @@ function generateOutput() {
   } else if (Coordinators.length === 2) {
     Coordinators = Coordinators[0] + ` & ` + Coordinators[1];
   } else if (Coordinators.length === 4) {
-   let Names = Coordinators;
+    let Names = Coordinators;
     Coordinators = "";
     Names.forEach((n, i) => {
       if (i === Names.length - 2) {
@@ -448,12 +448,46 @@ function generateOutput() {
   // Update both view and edit modes
   document.getElementById("outputView").textContent = finalText;
   document.getElementById("outputEdit").value = finalText;
-console.log(Coordinators)
-  saveReport(finalText, Batch, GroupName , Trainer , Coordinators);
+
+// await Swal.fire({
+//   icon: "question",
+//   title: "Submission Request",
+//   html: `
+//     <div style="text-align:center; padding:15px; font-family: Arial, sans-serif;">
+//       <h2 style="margin-bottom:10px; font-weight:bold; font-size:24px; color:#222;">
+//         Do you want to submit this report?
+//       </h2>
+//       <p style="font-size:16px; color:#555; margin:0;">
+//         Once submitted, you may not be able to edit it later.
+//       </p>
+//     </div>
+//   `,
+//   showCancelButton: true,
+//   confirmButtonText: "🚀 Yes, Submit",
+//   cancelButtonText: "❌ No, Cancel",
+//   confirmButtonColor: "#28a745",   // success green
+//   cancelButtonColor: "#dc3545",    // danger red
+//   width: "450px",
+//   backdrop: `rgba(0,0,0,0.6)`,
+//   focusConfirm: false,
+//   allowOutsideClick: false,
+//   allowEscapeKey: true,
+//   customClass: {
+//     popup: "animated fadeInDown faster", // optional animate.css
+//   },
+// }).then((result) => {
+//   if (result.isConfirmed) {
+
+//     console.log("Report submitted!");
+//   saveReport(finalText, Batch, GroupName, Trainer, Coordinators);
+//   } else {
+//     console.log("Submission cancelled.");
+//   }
+// });
 }
 
 // ====================== SAVE MULTIPLE REPORTS ======================
-async function saveReport(finalText, batchId, groupName , Trainer , Names) {
+async function saveReport(finalText, batchId, groupName, Trainer, Names) {
   try {
     const dateKey = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
@@ -494,8 +528,8 @@ async function saveReport(finalText, batchId, groupName , Trainer , Names) {
       date: dateKey,
       title: "Session Report",
       attendees: attendees1,
-      trainer:Trainer,
-      coordinators:Names
+      trainer: Trainer,
+      coordinators: Names,
     });
 
     console.log(
