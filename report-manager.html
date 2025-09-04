@@ -33,7 +33,7 @@
           </div>
         </div>
         <br>
-         <hr>
+        <hr>
         <div id="authStatus">
           <!-- Authentication Status Display -->
           <strong>🔓 Authenticated:</strong> <span id="currentUser">Loading...</span>
@@ -216,8 +216,8 @@
 
   <script type="module">
     import { auth, db } from "./src/firebase.js";
-    import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-    import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
+    import { onAuthStateChanged, signOut } from "firebase/auth";
+    import { doc, getDoc } from "firebase/firestore";
 
     const authStatusEl = document.getElementById("authStatus");
     const currentUserEl = document.getElementById("currentUser");
@@ -241,7 +241,7 @@
       }
 
       // ✅ Show email
-      authStatusEl.className = "mb";
+      authStatusEl.className = "";
       currentUserEl.textContent = user.email;
 
       // ✅ Fetch role from Firestore
@@ -255,14 +255,13 @@
         console.error("Error fetching role:", err);
       }
 
-      // ✅ Update badge
+      // ✅ Update badge & show/hide buttons
       roleBadgeEl.textContent = role.toUpperCase();
       switch (role) {
         case "admin":
           roleBadgeEl.className = "badge bg-danger ms-2";
           document.getElementById("settingsBtn").style.display = "inline-block";
-          document.getElementById("export").style.display = "inline-block"
-          document.getElementById('ReportBtn').style.display = 'inline-block'
+          document.getElementById("btnExport").style.display = "inline-block";
           break;
         case "manager":
           roleBadgeEl.className = "badge bg-warning ms-2";
@@ -290,7 +289,7 @@
         confirmButtonColor: "#004d61",
       }).then(async (result) => {
         if (result.isConfirmed) {
-          await auth.signOut();
+          await signOut(auth);
           Swal.fire({
             icon: "success",
             title: "👋 Logged Out",
@@ -304,6 +303,7 @@
       });
     };
   </script>
+
 </body>
 
 </html>

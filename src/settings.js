@@ -32,7 +32,14 @@ async function loadSettings() {
     const snap = await getDoc(doc(db, "settings", "general"));
     if (snap.exists()) settings = { ...settings, ...snap.data() };
     renderSettings();
-    if (settings.autoBackup) scheduleNextBackup();
+
+    if (settings.autoBackup) {
+      // Run a backup immediately if due, then schedule the next
+      await createBackup("auto");
+      scheduleNextBackup();
+    } else {
+      clearTimeout(backupTimer);
+    }
   } catch (err) {
     console.error("❌ Error loading settings:", err);
   }
@@ -47,28 +54,41 @@ async function saveSettings() {
   }
 }
 
+function setIfExists(id, setter) {
+  const el = document.getElementById(id);
+  if (el) setter(el);
+}
+
 function renderSettings() {
-  document.getElementById("autoBackup").checked = settings.autoBackup;
-  document.getElementById("backupFrequency").value = settings.backupFrequency;
-  document.getElementById("confirmDeletions").checked =
-    settings.confirmDeletions;
-  document.getElementById("autoSave").checked = settings.autoSave;
-  document.getElementById("showNotifications").checked =
-    settings.showNotifications;
+  setIfExists("autoBackup", (el) => (el.checked = settings.autoBackup));
+  setIfExists("backupFrequency", (el) => (el.value = settings.backupFrequency));
+  setIfExists("confirmDeletions", (el) => (el.checked = settings.confirmDeletions));
+  setIfExists("autoSave", (el) => (el.checked = settings.autoSave));
+  setIfExists("showNotifications", (el) => (el.checked = settings.showNotifications));
 }
 
 /* ====================== SETTINGS TOGGLES ====================== */
 window.toggleAutoBackup = async function () {
-  settings.autoBackup = document.getElementById("autoBackup").checked;
+  const el = document.getElementById("autoBackup");
+  settings.autoBackup = !!(el && el.checked);
   await saveSettings();
-  if (settings.autoBackup) scheduleNextBackup();
-  else clearTimeout(backupTimer);
+  if (settings.autoBackup) {
+    await createBackup("auto");
+    scheduleNextBackup();
+  } else {
+    clearTimeout(backupTimer);
+  }
 };
 
 window.updateBackupFrequency = async function () {
-  settings.backupFrequency = document.getElementById("backupFrequency").value;
+  const el = document.getElementById("backupFrequency");
+  if (el) settings.backupFrequency = el.value;
   await saveSettings();
-  if (settings.autoBackup) scheduleNextBackup();
+  if (settings.autoBackup) {
+    // Optionally try one right away (will skip if not due)
+    await createBackup("auto");
+    scheduleNextBackup();
+  }
 };
 
 window.clearAllData = async function () {
@@ -92,7 +112,7 @@ window.clearAllData = async function () {
 function scheduleNextBackup() {
   clearTimeout(backupTimer);
 
-  let interval = 24 * 60 * 60 * 1000; // daily
+  let interval = 24 * 60 * 60 * 1000; // daily = 24h
   if (settings.backupFrequency === "weekly") interval = 7 * interval;
   if (settings.backupFrequency === "monthly") interval = 30 * interval;
 
@@ -101,10 +121,15 @@ function scheduleNextBackup() {
     scheduleNextBackup();
   }, interval);
 
-  console.log(`⏳ Next ${settings.backupFrequency} backup scheduled.`);
+  console.log(
+    `⏳ Next ${settings.backupFrequency} backup scheduled in ${
+      interval / (1000 * 60 * 60)
+    } hours.`
+  );
 }
 
-async function createBackup(type = "manual") {
+/* ====================== CREATE BACKUP ====================== */
+export async function createBackup(type = "manual") {
   try {
     const snap = await getDoc(doc(db, "batches", "allBatches"));
     if (!snap.exists()) {
@@ -112,71 +137,35 @@ async function createBackup(type = "manual") {
       return;
     }
 
-const backupData = {
-  data: snap.data(),
-  type,
-  createdAt: serverTimestamp(),
-  createdAtReadable: new Date().toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "2-digit",
-    hour12: true,
-  }),
-};
+    if (type === "auto") {
+      // Use a plain JS timestamp for reliable immediate comparisons
+      const lastBackupSnap = await getDoc(doc(db, "settings", "lastBackup"));
+      const lastBackup = lastBackupSnap.exists()
+        ? lastBackupSnap.data().timestamp || 0
+        : 0;
 
-    await addDoc(collection(db, "backups"), backupData);
-    console.log(`💾 Backup (${type}) created successfully!`);
+      const now = Date.now();
+      let minInterval = 24 * 60 * 60 * 1000; // daily
+      if (settings.backupFrequency === "weekly") minInterval = 7 * minInterval;
+      if (settings.backupFrequency === "monthly") minInterval = 30 * minInterval;
 
-    await cleanupOldBackups(); // 🗑️ auto-delete old backups
-    loadBackupHistory();
-  } catch (err) {
-    console.error("❌ Backup failed:", err);
-  }
-}
-
-window.createBackup = () => createBackup("manual");
-
-/* ====================== CLEANUP OLD BACKUPS ====================== */
-async function cleanupOldBackups() {
-  try {
-    const snaps = await getDocs(collection(db, "backups"));
-    const now = Date.now();
-    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-
-    snaps.forEach(async (docSnap) => {
-      const backup = docSnap.data();
-      if (!backup.createdAt) return;
-
-      const createdAt = backup.createdAt.toDate().getTime();
-      if (now - createdAt > THIRTY_DAYS) {
-        await deleteDoc(doc(db, "backups", docSnap.id));
-        console.log(`🗑️ Deleted old backup: ${docSnap.id}`);
+      if (now - lastBackup < minInterval) {
+        console.log("⏳ Skipping backup: not due yet");
+        return;
       }
-    });
-  } catch (err) {
-    console.error("❌ Error cleaning old backups:", err);
-  }
-}
 
-/* ====================== BACKUP HISTORY ====================== */
-async function loadBackupHistory() {
-  const historyTable = document.getElementById("backupHistoryBody");
-  historyTable.innerHTML = "";
+      // Save last backup time (both server & local timestamps)
+      await setDoc(doc(db, "settings", "lastBackup"), {
+        serverTime: serverTimestamp(),
+        timestamp: now,
+      });
+    }
 
-  // 🔥 Create a query ordered by createdAt DESC
-  const q = query(collection(db, "backups"), orderBy("createdAt", "desc"));
-  const snaps = await getDocs(q);
-
-  snaps.forEach((docSnap) => {
-    const backup = docSnap.data();
-
-    // ✅ Prefer readable date if saved, otherwise fallback to Firestore timestamp
-    const date =
-      backup.createdAtReadable ||
-      (backup.createdAt?.toDate().toLocaleString("en-IN", {
+    const backupData = {
+      data: snap.data(),
+      type,
+      createdAt: serverTimestamp(),
+      createdAtReadable: new Date().toLocaleString("en-IN", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -184,24 +173,100 @@ async function loadBackupHistory() {
         minute: "numeric",
         second: "2-digit",
         hour12: true,
-      })) ||
-      "Pending...";
+      }),
+    };
 
-    const type = backup?.type || "manual";
-    const size = JSON.stringify(backup.data).length;
+    await addDoc(collection(db, "backups"), backupData);
+    console.log(`💾 Backup (${type}) created successfully!`);
 
-    const row = `
-      <tr>
-        <td>${date}</td>
-        <td>${type}</td>
-        <td>${(size / 1024).toFixed(2)} KB</td>
-        <td>
-          <button class="btn btn-sm btn-success" onclick="restoreBackup('${docSnap.id}')">Restore</button>
-        </td>
-      </tr>`;
+    // Housekeeping
+    await cleanupOldBackups();
+    await loadBackupHistory(); // safe if history table missing
+  } catch (err) {
+    console.error("❌ Backup failed:", err);
+  }
+}
 
-    historyTable.insertAdjacentHTML("beforeend", row);
-  });
+// Expose a clean manual trigger for buttons
+window.createBackupNow = () => createBackup("manual");
+
+/* ====================== CLEANUP OLD BACKUPS ====================== */
+async function cleanupOldBackups() {
+  try {
+    const snaps = await getDocs(collection(db, "backups"));
+    const now = Date.now();
+    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+    let deletedCount = 0;
+
+    for (const docSnap of snaps.docs) {
+      const backup = docSnap.data();
+      if (!backup.createdAt) continue;
+
+      const createdAt = backup.createdAt.toDate().getTime();
+      if (now - createdAt > THIRTY_DAYS) {
+        await deleteDoc(doc(db, "backups", docSnap.id));
+        deletedCount++;
+      }
+    }
+
+    if (deletedCount > 0) {
+      addNotification(
+        `🗑️ ${deletedCount} old backup(s) cleared automatically.`,
+        "danger"
+      );
+    } else {
+      addNotification(`✅ No old backups found to clear.`, "success");
+    }
+  } catch (err) {
+    console.error("❌ Error cleaning old backups:", err);
+    addNotification(`⚠️ Cleanup failed: ${err.message}`, "warning");
+  }
+}
+
+/* ====================== BACKUP HISTORY ====================== */
+async function loadBackupHistory() {
+  try {
+    const historyTable = document.getElementById("backupHistoryBody");
+    if (!historyTable) return; // page doesn't have the table
+    historyTable.innerHTML = "";
+
+    const qBackups = query(collection(db, "backups"), orderBy("createdAt", "desc"));
+    const snaps = await getDocs(qBackups);
+
+    snaps.forEach((docSnap) => {
+      const backup = docSnap.data();
+
+      const date =
+        backup.createdAtReadable ||
+        (backup.createdAt?.toDate().toLocaleString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          second: "2-digit",
+          hour12: true,
+        })) ||
+        "Pending...";
+
+      const type = backup?.type || "manual";
+      const size = JSON.stringify(backup.data).length;
+
+      const row = `
+        <tr>
+          <td>${date}</td>
+          <td>${type}</td>
+          <td>${(size / 1024).toFixed(2)} KB</td>
+          <td>
+            <button class="btn btn-sm btn-success" onclick="restoreBackup('${docSnap.id}')">Restore</button>
+          </td>
+        </tr>`;
+
+      historyTable.insertAdjacentHTML("beforeend", row);
+    });
+  } catch (err) {
+    console.error("❌ Error loading backup history:", err);
+  }
 }
 
 /* ====================== RESTORE ====================== */
@@ -224,6 +289,7 @@ window.restoreBackup = async function (id) {
 /* ====================== STATISTICS ====================== */
 async function updateStatistics() {
   const batchStatsBody = document.getElementById("batchStatsBody");
+  if (!batchStatsBody) return; // page doesn't have the stats table
   batchStatsBody.innerHTML = "";
 
   try {
@@ -237,7 +303,7 @@ async function updateStatistics() {
     let totalParticipants = 0,
       totalCoordinators = 0,
       totalRP = 0;
-    let FullParticipants = 0;
+
     Object.keys(batches).forEach((batchName) => {
       const batch = batches[batchName];
       const g1 = batch.groups?.Group_1 || [];
@@ -265,13 +331,10 @@ async function updateStatistics() {
       batchStatsBody.appendChild(row);
     });
 
-    document.getElementById("totalBatches").textContent =
-      Object.keys(batches).length;
-    document.getElementById("totalParticipants").textContent =
-      totalParticipants;
-    document.getElementById("totalCoordinators").textContent =
-      totalCoordinators;
-    document.getElementById("totalRP").textContent = totalRP;
+    setIfExists("totalBatches", (el) => (el.textContent = Object.keys(batches).length));
+    setIfExists("totalParticipants", (el) => (el.textContent = totalParticipants));
+    setIfExists("totalCoordinators", (el) => (el.textContent = totalCoordinators));
+    setIfExists("totalRP", (el) => (el.textContent = totalRP));
   } catch (err) {
     console.error("❌ Stats error:", err);
   }
@@ -285,7 +348,9 @@ window.exportAllData = async function () {
     return;
   }
 
-  const format = document.getElementById("exportFormat").value;
+  const fmtEl = document.getElementById("exportFormat");
+  const format = fmtEl ? fmtEl.value : "json";
+
   const data = {
     batches: snap.data(),
     settings,
@@ -294,9 +359,7 @@ window.exportAllData = async function () {
 
   let blob, filename;
   if (format === "json") {
-    blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
+    blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     filename = `export_${Date.now()}.json`;
   } else if (format === "csv") {
     let csv = "Batch,Group,Name,Type\n";
@@ -310,9 +373,7 @@ window.exportAllData = async function () {
           : name.includes("(C)")
           ? "Coordinator"
           : "Regular";
-        csv += `${batchName},${
-          g1.includes(name) ? "Group 1" : "Group 2"
-        },${name},${type}\n`;
+        csv += `${batchName},${g1.includes(name) ? "Group 1" : "Group 2"},${name},${type}\n`;
       });
     });
     blob = new Blob([csv], { type: "text/csv" });
@@ -321,10 +382,8 @@ window.exportAllData = async function () {
     let text = "ATTENDANCE DATA EXPORT\n\n";
     Object.keys(data.batches).forEach((batchName) => {
       const b = data.batches[batchName];
-      text += `BATCH: ${batchName}\nGroup 1:\n${b.groups?.Group_1.join(
-        "\n"
-      )}\n`;
-      if (b.hasGroup2) text += `Group 2:\n${b.groups?.Group_2.join("\n")}\n`;
+      text += `BATCH: ${batchName}\nGroup 1:\n${(b.groups?.Group_1 || []).join("\n")}\n`;
+      if (b.hasGroup2) text += `Group 2:\n${(b.groups?.Group_2 || []).join("\n")}\n`;
       text += "\n";
     });
     blob = new Blob([text], { type: "text/plain" });
@@ -362,13 +421,8 @@ window.checkForUpdates = async function () {
       allowOutsideClick: false,
     });
 
-    // Reload settings
     await loadSettings();
-
-    // Reload batch statistics
     await updateStatistics();
-
-    // Reload backup history
     await loadBackupHistory();
 
     Swal.fire({
@@ -399,12 +453,12 @@ window.resetToDefaults = async function () {
   Swal.fire("✅ Reset", "Settings reset to defaults.", "success");
 };
 
-// Send notification (auto or manual)
+/* ====================== NOTIFICATIONS ====================== */
 export async function sendNotification(message, role = "admin") {
   try {
     await addDoc(collection(db, "notifications"), {
       message,
-      role, // "admin" or "manager"
+      role,
       createdAt: serverTimestamp(),
     });
     console.log("📢 Notification sent:", message);
@@ -418,11 +472,14 @@ async function loadNotifications() {
   const notifCount = document.getElementById("notifCount");
   const notifDropdown = document.getElementById("notifDropdown");
 
-  const q = query(
-    collection(db, "notifications"),
-    orderBy("createdAt", "desc")
-  );
-  onSnapshot(q, (snapshot) => {
+  // If page doesn't have notification UI, skip setting up listener
+  if (!notifList || !notifCount) return;
+
+  const qNotifs = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
+  onSnapshot(qNotifs, (snapshot) => {
+    // Guard again in case user navigated
+    if (!notifList || !notifCount) return;
+
     notifList.innerHTML = "";
     let count = 0;
 
@@ -433,8 +490,7 @@ async function loadNotifications() {
 
       count++;
       const li = document.createElement("li");
-      li.className =
-        "list-group-item d-flex justify-content-between align-items-center";
+      li.className = "list-group-item d-flex justify-content-between align-items-center";
       li.innerHTML = `
         <div>
           <div><strong>${notif.message}</strong></div>
@@ -445,23 +501,41 @@ async function loadNotifications() {
       notifList.appendChild(li);
     });
 
-    // Update badge
     if (count > 0) {
-      notifCount.textContent = count;
+      notifCount.textContent = String(count);
       notifCount.style.display = "inline-block";
     } else {
       notifCount.style.display = "none";
     }
   });
 
-  // Bell toggle
-  document.getElementById("notifBell").addEventListener("click", () => {
-    notifDropdown.style.display =
-      notifDropdown.style.display === "none" ? "block" : "none";
-  });
+  const bell = document.getElementById("notifBell");
+  if (bell && notifDropdown) {
+    bell.addEventListener("click", () => {
+      notifDropdown.style.display =
+        notifDropdown.style.display === "none" ? "block" : "none";
+    });
+  }
 }
 
-// Delete notification after admin marks as read
+// Helper: Add notification (pushes to UI list)
+function addNotification(message, type = "info") {
+  const container = document.getElementById("notificationsList");
+  if (!container) {
+    console.warn("⚠️ Notification container not found!");
+    return;
+  }
+
+  const li = document.createElement("li");
+  li.className = `list-group-item d-flex justify-content-between align-items-center`;
+  li.innerHTML = `
+    <span>${message}</span>
+    <span class="badge bg-${type}">NEW</span>
+  `;
+
+  container.prepend(li); // newest on top
+}
+
 window.deleteNotification = async function (id) {
   try {
     await deleteDoc(doc(db, "notifications", id));
@@ -471,16 +545,12 @@ window.deleteNotification = async function (id) {
   }
 };
 
-// Init notifications on page load
-document.addEventListener("DOMContentLoaded", () => {
-  loadNotifications();
-});
-
 /* ====================== INIT ====================== */
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("⚙️ Settings page ready");
-  document.getElementById("currentDate").textContent =
-    new Date().toDateString();
+
+  setIfExists("currentDate", (el) => (el.textContent = new Date().toDateString()));
+
   await loadSettings();
   await updateStatistics();
   await loadBackupHistory();

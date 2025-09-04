@@ -14,6 +14,8 @@ import {
   addDoc,
 } from "firebase/firestore";
 
+import {createBackup} from './settings.js'
+
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 
 // Load batch data from Firestore
@@ -730,6 +732,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   // await populateBatchDropdown();
   const currentDate = document.getElementById("currentDate");
   if (currentDate) currentDate.textContent = formatDate(new Date());
+    // Run backup automatically when homepage opens
+  await createBackup("auto");
 });
 
 // ====================== CUSTOM DROPDOWN ======================
