@@ -193,19 +193,9 @@ function showCredentials() {
     html: `
       <div style="text-align: left; padding: 0 20px;">
         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-          <h6 style="color: #004d61; margin-bottom: 8px;">👑 Admin Access:</h6>
-          <p><strong>Email:</strong> admin@gmail.com</p>
-          <p><strong>Password:</strong> admin123</p>
-        </div>
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
           <h6 style="color: #004d61; margin-bottom: 8px;">🏢 Manager Access:</h6>
-          <p><strong>Email:</strong> manager@attendance.com</p>
-          <p><strong>Password:</strong> manager123</p>
-        </div>
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-          <h6 style="color: #004d61; margin-bottom: 8px;">🤝 Coordinator Access:</h6>
-          <p><strong>Email:</strong> coordinator@attendance.com</p>
-          <p><strong>Password:</strong> coord123</p>
+          <p><strong>Email:</strong> test@gmail.com</p>
+          <p><strong>Password:</strong> test123</p>
         </div>
         <div style="text-align: center; margin-top: 15px;">
           <small style="color: #666; font-style: italic;">
