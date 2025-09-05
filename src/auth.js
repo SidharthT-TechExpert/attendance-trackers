@@ -193,7 +193,7 @@ function showCredentials() {
     html: `
       <div style="text-align: left; padding: 0 20px;">
         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-          <h6 style="color: #004d61; margin-bottom: 8px;">🏢 Manager Access:</h6>
+          <h6 style="color: #004d61; margin-bottom: 8px;">🤝 Coordinator Access:</h6>
           <p><strong>Email:</strong> test@gmail.com</p>
           <p><strong>Password:</strong> test123</p>
         </div>

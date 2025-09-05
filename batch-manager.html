@@ -48,7 +48,7 @@
     </div>
   </header>
 
-  <div class="container py-4">
+  <div id="mainContent" style="display: none;" class="container py-4">
     <div class="row justify-content-center">
       <div class="col-lg-12 col-md-10">
         <div class="container-box">
@@ -198,132 +198,131 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔴 Error popup -->
+  <div id="errorPopup" class="error-popup">
+    <span class="error-icon">⚠</span>
+    <span id="errorMessage"></span>
+  </div>
 
 
-          <!-- 🔴 Error popup -->
-          <div id="errorPopup" class="error-popup">
-            <span class="error-icon">⚠</span>
-            <span id="errorMessage"></span>
-          </div>
+  <!-- JavaScript files -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="/src/firebase.js"></script>
+  <script type="module" src="/src/batch-manager.js"></script>
+  <script type="module" src="/src/auth.js"></script>
 
+  <script>
+    const loader = document.getElementById("loader");
+    const main = document.getElementById("mainContent");
+    const percentEl = document.querySelector(".percent");
+    let p = 0;
 
-          <!-- JavaScript files -->
-          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-          <script type="module" src="/src/firebase.js"></script>
-          <script type="module" src="/src/batch-manager.js"></script>
-          <script type="module" src="/src/auth.js"></script>
+    const interval = setInterval(() => {
+      p += Math.random() * 8;
+      if (p >= 100) {
+        p = 100;
+        clearInterval(interval);
+        loader.classList.add("fade-out");
+        setTimeout(() => {
+          loader.style.display = "none";
+          main.style.display = "block";
+        }, 900);
+      }
+      percentEl.textContent = Math.floor(p) + "%";
+    }, 120);
+  </script>
 
-          <script>
-            const loader = document.getElementById("loader");
-            const main = document.getElementById("mainContent");
-            const percentEl = document.querySelector(".percent");
-            let p = 0;
+  <script type="module">
+    import { auth, db } from "./src/firebase.js";
+    import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+    import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 
-            const interval = setInterval(() => {
-              p += Math.random() * 8;
-              if (p >= 100) {
-                p = 100;
-                clearInterval(interval);
-                loader.classList.add("fade-out");
-                setTimeout(() => {
-                  loader.style.display = "none";
-                  main.style.display = "block";
-                }, 900);
-              }
-              percentEl.textContent = Math.floor(p) + "%";
-            }, 120);
-          </script>
+    const authStatusEl = document.getElementById("authStatus");
+    const currentUserEl = document.getElementById("currentUser");
+    const roleBadgeEl = document.getElementById("userRole");
+    let User ;
+    // 🔥 Listen for login/logout
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        authStatusEl.className = "alert alert-danger mb-4";
+        currentUserEl.textContent = "Not logged in";
+        roleBadgeEl.textContent = "";
+        Swal.fire({
+          icon: "warning",
+          title: "🔒 Access Denied",
+          text: "Please login first!",
+          confirmButtonText: "Go Back",
+        }).then(() => {
+          window.location.href = "../index.html";
+        });
+        return;
+      }
 
-          <script type="module">
-            import { auth, db } from "./src/firebase.js";
-            import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-            import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
+      // ✅ Show email
+      authStatusEl.className = "alert alert-success mb-4";
+      currentUserEl.textContent = user.email;
 
-            const authStatusEl = document.getElementById("authStatus");
-            const currentUserEl = document.getElementById("currentUser");
-            const roleBadgeEl = document.getElementById("userRole");
+      // ✅ Fetch role from Firestore
+      try {
+        const snap = await getDoc(doc(db, "roles", user.uid));
+        if (snap.exists() && snap.data().role) {
+          user = snap.data();
+        }
+      } catch (err) {
+        console.error("Error fetching role:", err);
+      }
 
-            // 🔥 Listen for login/logout
-            onAuthStateChanged(auth, async (user) => {
-              if (!user) {
-                authStatusEl.className = "alert alert-danger mb-4";
-                currentUserEl.textContent = "Not logged in";
-                roleBadgeEl.textContent = "";
-                Swal.fire({
-                  icon: "warning",
-                  title: "🔒 Access Denied",
-                  text: "Please login first!",
-                  confirmButtonText: "Go Back",
-                }).then(() => {
-                  window.location.href = "../index.html";
-                });
-                return;
-              }
+      // ✅ Update badge
+      user.role = user.role ? user.role : "coordinator"; 
+      roleBadgeEl.textContent = user.role.toUpperCase();
+      if (user.role === "admin" && currentUserEl.textContent == "sidhartht900@gmail.com") {
+        roleBadgeEl.className = "badge bg-danger ms-2";
+        document.getElementById("settingsBtn").style.display = "inline-block";
+        document.getElementById("export").style.display = "inline-block";
+        document.getElementById("ReportBtn").style.display = "inline-block";
+      } else if (user.role === "manager") {
+        roleBadgeEl.className = "badge bg-warning ms-2";
+      } else if (user.role === "coordinator") {
+        roleBadgeEl.className = "badge bg-info ms-2";
+      } else {
+        roleBadgeEl.className = "badge bg-secondary ms-2";
+      }
 
-              // ✅ Show email
-              authStatusEl.className = "alert alert-success mb-4";
-              currentUserEl.textContent = user.email;
+      // ✅ Make globally accessible
+      window.currentUser = { email: user.email, role: user.role };
+    });
 
-              // ✅ Fetch role from Firestore
-              let role = "coordinator"; // default
-              try {
-                const snap = await getDoc(doc(db, "roles", user.uid));
-                if (snap.exists() && snap.data().role) {
-                  role = snap.data().role;
-                }
-              } catch (err) {
-                console.error("Error fetching role:", err);
-              }
-
-              // ✅ Update badge
-              roleBadgeEl.textContent = role.toUpperCase();
-              switch (role) {
-                case "admin":
-                  roleBadgeEl.className = "badge bg-danger ms-2";
-                  document.getElementById("settingsBtn").style.display = "inline-block";
-                  document.getElementById("export").style.display = "inline-block"
-                  document.getElementById('ReportBtn').style.display = 'inline-block'
-                  break;
-                case "manager":
-                  roleBadgeEl.className = "badge bg-warning ms-2";
-                  break;
-                case "coordinator":
-                  roleBadgeEl.className = "badge bg-info ms-2";
-                  break;
-                default:
-                  roleBadgeEl.className = "badge bg-secondary ms-2";
-              }
-
-              // ✅ Make globally accessible
-              window.currentUser = { email: user.email, role };
-            });
-
-            // ====================== LOGOUT ======================
-            window.logout = async function () {
-              Swal.fire({
-                title: "🚪 Logout",
-                text: "Are you sure you want to logout?",
-                icon: "question",
-                showCancelButton: true,
-                confirmButtonText: "Yes, logout",
-                cancelButtonText: "Cancel",
-                confirmButtonColor: "#004d61",
-              }).then(async (result) => {
-                if (result.isConfirmed) {
-                  await auth.signOut();
-                  Swal.fire({
-                    icon: "success",
-                    title: "👋 Logged Out",
-                    text: "You have been logged out successfully",
-                    showConfirmButton: false,
-                    timer: 1500,
-                  }).then(() => {
-                    window.location.href = "index.html";
-                  });
-                }
-              });
-            };
-          </script>
+    // ====================== LOGOUT ======================
+    window.logout = async function () {
+      Swal.fire({
+        title: "🚪 Logout",
+        text: "Are you sure you want to logout?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes, logout",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#004d61",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          await auth.signOut();
+          Swal.fire({
+            icon: "success",
+            title: "👋 Logged Out",
+            text: "You have been logged out successfully",
+            showConfirmButton: false,
+            timer: 1500,
+          }).then(() => {
+            window.location.href = "index.html";
+          });
+        }
+      });
+    };
+  </script>
 
 </body>
 
