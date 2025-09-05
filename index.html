@@ -32,9 +32,7 @@
           <div class="p-3 bg-light border rounded mb-3 text-dark fw-bold">
             <div class="row">
               <div class="col-md-6">
-                <select id="batchSelect" class="form-select mb-2" onclick="loadBatchDataFromFirestore()"
-                  onchange="loadBatch()">
-                  <option value="">Select a batch...</option>
+                <select id="batchSelect" class="form-select mb-2" onchange="loadBatch()">
                 </select>
                 <span id="selectedBatchTitle"></span>
               </div>
@@ -171,7 +169,7 @@
     const btn = document.getElementById("manageBtn");
     if (btn) btn.addEventListener("click", authenticateAndRedirect);
 
-     document.getElementById("none").style.display = "none";
+    document.getElementById("none").style.display = "none";
   </script>
 
 </body>

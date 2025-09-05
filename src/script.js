@@ -17,21 +17,21 @@ import {
 import { createBackup, cleanupOldBackups } from "./settings.js";
 
 /* ====================== BATCH DATA MANAGEMENT ====================== */
-
+let batches;
 // Load batch data from Firestore
 export async function loadBatchDataFromFirestore() {
   try {
     const snap = await getDoc(doc(db, "batches", "allBatches"));
     if (snap.exists()) {
-      const data = snap.data(); // object of batches
-      console.log("📥 Loaded batches from Firestore");
+      batches = snap.data(); // object of batches
+      console.log("📥 Loaded batches from Firestore", batches);
 
       // Get <select> element
       const batchSelect = document.getElementById("batchSelect");
       batchSelect.innerHTML = `<option value="">Select a batch...</option>`;
 
       // Extract & sort batch names (numeric-aware if possible)
-      const batchNames = Object.keys(data).sort((a, b) => {
+      const batchNames = Object.keys(batches).sort((a, b) => {
         const numA = parseInt(a.match(/\d+/));
         const numB = parseInt(b.match(/\d+/));
 
@@ -49,7 +49,7 @@ export async function loadBatchDataFromFirestore() {
         batchSelect.appendChild(option);
       });
       resetGroupData();
-      return data; // still return the raw batches object
+      return batches; // still return the raw batches object
     } else {
       console.log("⚠️ No batches found in Firestore, starting empty.");
       return {};
@@ -82,6 +82,7 @@ let Group = "";
 let editingMode = false;
 
 /* ====================== BATCH SELECTION ====================== */
+/* ====================== BATCH SELECTION ====================== */
 async function loadBatch() {
   const batchSelect = document.getElementById("batchSelect");
   const selectedBatch = batchSelect.value;
@@ -92,18 +93,18 @@ async function loadBatch() {
     return;
   }
 
-  const batches = await loadBatchDataFromFirestore();
-
   if (batches && batches[selectedBatch]) {
     currentBatchData = batches[selectedBatch];
     selectedBatchName = selectedBatch;
     updateGroupSwitches();
 
-    // ✅ Show selected batch to users
+    // ✅ show batch name in separate span, not inside <select>
     const text = document.getElementById("selectedBatchTitle");
     text.textContent = `Selected Batch: ${selectedBatch}`;
     text.style.color = "red";
     text.style.fontWeight = "bold";
+
+    // ✅ update time button
     document.getElementById("Time").innerHTML =
       currentBatchData?.Time ?? "⏰ Select Time";
   }
@@ -137,7 +138,7 @@ function resetGroupData() {
   Group = "";
 }
 
-// Populate batch dropdown
+/* ====================== POPULATE DROPDOWN ====================== */
 async function populateBatchDropdown() {
   const batchSelect = document.getElementById("batchSelect");
 
@@ -145,16 +146,16 @@ async function populateBatchDropdown() {
     batchSelect.removeChild(batchSelect.lastChild);
   }
 
-  const batches = await loadBatchDataFromFirestore();
-  if (batches && Object.keys(batches).length > 0) {
-    Object.keys(batches).forEach((batchName) => {
+  const fetchedBatches = await loadBatchDataFromFirestore();
+  if (fetchedBatches && Object.keys(fetchedBatches).length > 0) {
+    Object.keys(fetchedBatches).forEach((batchName) => {
       const option = document.createElement("option");
       option.value = batchName;
       option.textContent = batchName;
       batchSelect.appendChild(option);
     });
     console.log(
-      `✅ Populated dropdown with ${Object.keys(batches).length} batches`
+      `✅ Populated dropdown with ${Object.keys(fetchedBatches).length} batches`
     );
   } else {
     console.log("⚠️ No batches found in Firestore");
@@ -414,23 +415,25 @@ async function generateOutput() {
   };
   // --- Build sections ---
   let count = counter("present");
-  let presentees = textMaker("Presentees", "🟩", "present", "✅");
+  let presentees = textMaker("Presentees", "🟩", "present", "✅") + "\n";
   presentees = count === 0 ? "" : presentees;
 
   count = counter("other");
-  let alternative = textMaker("Alternative Session", "🟨", "other", "☑️");
+  let alternative =
+    textMaker("Alternative Session", "🟨", "other", "☑️") + "\n";
   alternative = count === 0 ? "" : alternative;
 
   count = OtherBatch.length;
-  let OtherBatches = textMaker("Other Batches", "🤩", "", "✨", OtherBatch);
+  let OtherBatches =
+    textMaker("Other Batches", "🤩", "", "✨", OtherBatch) + "\n";
   OtherBatches = OtherBatch[0] === "" ? "" : OtherBatches;
 
   count = counter("absent");
-  let absentees = textMaker("Absentees", "❌", "absent", "🚫");
+  let absentees = textMaker("Absentees", "❌", "absent", "🚫") + "\n";
   absentees = count === 0 ? "" : absentees;
 
   count = counter("RP");
-  let RP = textMaker("Refresh Period", "🔃", "RP", "🔄");
+  let RP = textMaker("Refresh Period", "🔃", "RP", "🔄") + "\n";
   RP = count === 0 ? "" : RP;
 
   // --- Links and footer ---
