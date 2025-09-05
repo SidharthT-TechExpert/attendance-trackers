@@ -12,6 +12,23 @@
 </head>
 
 <body>
+  <!-- Loader -->
+  <div id="loader">
+    <div class="circle">
+      <div class="circleBig circleLine">
+        <div class="twoQuarterBig circleLine">
+          <div class="lineSmallLeft line"></div>
+          <div class="lineSmallRight line"></div>
+          <div class="twoQuarterSmall circleLine">
+            <div class="lineBigUp line"></div>
+            <div class="lineBigDown line"></div>
+            <div class="circleSmall circleLine"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= MAIN APP ================= -->
   <!-- Header section -->
   <header class="text-center text-white p-3 y">
@@ -24,6 +41,7 @@
   </header>
 
   <!-- Main Content -->
+<div id="mainContent" style="display: none;">
   <div class="container py-4">
     <div class="row justify-content-center">
       <div class="col-lg-12 col-md-10">
@@ -166,10 +184,18 @@
   <!-- Button that opens the protected manager area -->
   <script type="module">
     import { authenticateAndRedirect } from "./src/auth.js";
-    const btn = document.getElementById("manageBtn");
+    const $ = (id) => document.getElementById(id);
+    const btn = $("manageBtn");
     if (btn) btn.addEventListener("click", authenticateAndRedirect);
 
-    document.getElementById("none").style.display = "none";
+    $("none").style.display = "none";
+
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        $("loader").style.display = "none";
+        $("mainContent").style.display = 'block';
+      }, 4000); 
+    });
   </script>
 
 </body>

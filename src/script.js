@@ -24,7 +24,7 @@ export async function loadBatchDataFromFirestore() {
     const snap = await getDoc(doc(db, "batches", "allBatches"));
     if (snap.exists()) {
       batches = snap.data(); // object of batches
-      console.log("📥 Loaded batches from Firestore", batches);
+      console.log("📥 Loaded batches from Firestore");
 
       // Get <select> element
       const batchSelect = document.getElementById("batchSelect");
@@ -81,7 +81,6 @@ let CoordinatorsA = {};
 let Group = "";
 let editingMode = false;
 
-/* ====================== BATCH SELECTION ====================== */
 /* ====================== BATCH SELECTION ====================== */
 async function loadBatch() {
   const batchSelect = document.getElementById("batchSelect");
