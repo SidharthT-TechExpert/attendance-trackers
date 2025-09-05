@@ -35,48 +35,44 @@ export async function authenticateAndRedirect() {
       icon: "question",
       title: "Login Required",
       html: `
-        <div style="text-align:left;padding:10px 20px;overflow:hidden">
-          <!-- Email -->
-          <div style="margin-bottom:18px;">
-            <label for="auth-email"
-              style="display:block;margin-bottom:6px;font-weight:600;font-size:15px;color:#333;">
-              📧 Email Address:
-            </label>
-            <input type="email" id="auth-email" class="swal2-input"
-              placeholder="Enter your email"
-              style="width:100%;padding:12px;border:2px solid #ccc;border-radius:10px;font-size:15px;outline:none;"
-              autocomplete="email"
-            >
-          </div>
+      <div class="container py-3">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
 
-          <!-- Password -->
-          <div style="margin-bottom:18px;">
-            <label for="auth-password"
-              style="display:block;margin-bottom:6px;font-weight:600;font-size:15px;color:#333;">
-              🔑 Password:
-            </label>
-            <div style="position:relative;">
-              <input type="password" id="auth-password" class="swal2-input"
-                placeholder="Enter your password"
-                style="width:100%;padding:12px;border:2px solid #ccc;border-radius:10px;font-size:15px;padding-right:46px;outline:none;"
-                autocomplete="current-password"
-              >
-              <button type="button" id="toggle-password"
-                aria-label="Show password"
-                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
-                       background:none;border:none;cursor:pointer;padding:6px;line-height:0;">
-                <span id="toggle-icon" aria-hidden="true"></span>
-              </button>
-            </div>
-          </div>
+      <!-- Email -->
+      <div class="mb-3">
+        <label for="auth-email" class="form-label fw-semibold">
+          📧 Email Address:
+        </label>
+        <input type="email" id="auth-email" class="form-control"
+          placeholder="Enter your email" autocomplete="email">
+      </div>
 
-          <div style="margin-top:15px;text-align:center;">
-            <small style="color:#555;font-size:14px;">
-              💡 <a href="#" onclick="showCredentials" style="color:#007bff;text-decoration:none;">Click here for help</a>
-            </small>
-          </div>
+      <!-- Password -->
+      <div class="mb-3">
+        <label for="auth-password" class="form-label fw-semibold">
+          🔑 Password:
+        </label>
+        <div class="input-group">
+          <input type="password" id="auth-password" class="form-control"
+            placeholder="Enter your password" autocomplete="current-password">
+          <button class="btn btn-outline-secondary" type="button" id="toggle-password" aria-label="Show password">
+            <span id="toggle-icon"></span>
+          </button>
         </div>
-      `,
+      </div>
+
+      <!-- Help -->
+      <div class="text-center mt-3">
+        <small class="text-muted">
+          💡 <a href="#" onclick="showCredentials()" class="text-decoration-none">Click here for help</a>
+        </small>
+      </div>
+
+    </div>
+  </div>
+</div>
+`,
       showCancelButton: true,
       confirmButtonText: "🚀 Access Batch Manager",
       cancelButtonText: "❌ Cancel",
