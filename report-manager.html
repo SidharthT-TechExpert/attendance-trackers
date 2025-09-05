@@ -15,6 +15,27 @@
 </head>
 
 <body>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="orbit orbit-outer">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="orbit orbit-inner">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="circle">
+      <div class="twoQuarterBig"></div>
+      <div class="twoQuarterSmall"></div>
+      <div class="circleSmall"></div>
+    </div>
+    <div class="loading-text">Loading<span class="percent">0%</span></div>
+  </div>
+
   <div class="container-fluid px-3 px-md-4">
     <!-- Header -->
     <header class="header-section">
@@ -213,6 +234,27 @@
   <script type="module" src="src/firebase.js"></script>
   <script type="module" src="src/auth.js"></script>
   <script type="module" src="src/reports.js"></script>
+
+  <script>
+    const loader = document.getElementById("loader");
+    const main = document.getElementById("mainContent");
+    const percentEl = document.querySelector(".percent");
+    let p = 0;
+
+    const interval = setInterval(() => {
+      p += Math.random() * 8;
+      if (p >= 100) {
+        p = 100;
+        clearInterval(interval);
+        loader.classList.add("fade-out");
+        setTimeout(() => {
+          loader.style.display = "none";
+          main.style.display = "block";
+        }, 900);
+      }
+      percentEl.textContent = Math.floor(p) + "%";
+    }, 120);
+  </script>
 
   <script type="module">
     import { auth, db } from "./src/firebase.js";
