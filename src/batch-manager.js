@@ -184,7 +184,7 @@ export async function toggleGroup2() {
 export async function deleteBatch() {
   if (!selectedBatch) return;
   const batchName = selectedBatch;
-  const userIsAdmin = ["admin"].includes(window.currentUser?.role);
+  const userIsAdmin = ["admin","admins"].includes(window.currentUser?.role);
   if (!userIsAdmin) {
     Swal.fire({
       icon: "error",
@@ -474,7 +474,7 @@ function renderParticipantList(groupName, participants) {
               ${buttonText}
             </button>
             ${
-              ["admin", "manager"].includes(window.currentUser?.role)
+              ["admin", "manager","admins"].includes(window.currentUser?.role)
                 ? `<button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', -1, '${cleanName}')">🗑️</button>`
                 : ""
             }

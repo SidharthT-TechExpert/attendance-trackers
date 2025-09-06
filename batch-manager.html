@@ -280,7 +280,7 @@
       // ✅ Update badge
       user.role = user.role ? user.role : "coordinator"; 
       roleBadgeEl.textContent = user.role.toUpperCase();
-      if (user.role === "admin" && currentUserEl.textContent == "sidhartht900@gmail.com") {
+      if (user.role === "admins") {
         roleBadgeEl.className = "badge bg-danger ms-2";
         document.getElementById("settingsBtn").style.display = "inline-block";
         document.getElementById("export").style.display = "inline-block";
