@@ -280,6 +280,19 @@
           window.location.href = "./index.html";
         });
         return;
+      }else if( user.role != 'admin'){
+        authStatusEl.className = "alert alert-danger mb-4";
+        currentUserEl.textContent = "Not authorized";
+        roleBadgeEl.textContent = "";
+        Swal.fire({
+          icon: "warning",
+          title: "🔒 Access Denied",
+          text: "You are not authorized to access this page!",
+          confirmButtonText: "Go Back",
+        }).then(() => {
+          window.location.href = "./index.html";
+        });
+        return;
       }
 
       // ✅ Show email
@@ -300,7 +313,7 @@
       // ✅ Update badge & show/hide buttons
       roleBadgeEl.textContent = role.toUpperCase();
       switch (role) {
-        case "admin":
+        case "admins":
           roleBadgeEl.className = "badge bg-danger ms-2";
           document.getElementById("settingsBtn").style.display = "inline-block";
           document.getElementById("btnExport").style.display = "inline-block";

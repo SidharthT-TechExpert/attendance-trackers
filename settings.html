@@ -343,7 +343,7 @@
         const role = userSnap.data().role;
 
         // ✅ Only admins allowed here
-        if (role !== "admin") {
+        if (role !== "admins") {
           await Swal.fire({
             icon: "error",
             title: "Access Restricted",
