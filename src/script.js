@@ -16,6 +16,9 @@ import {
 
 import { createBackup, cleanupOldBackups } from "./settings.js";
 
+// Helper to get element by ID
+const $ = (id) => document.getElementById(id);
+
 /* ====================== BATCH DATA MANAGEMENT ====================== */
 let batches;
 // Load batch data from Firestore
@@ -27,7 +30,7 @@ export async function loadBatchDataFromFirestore() {
       console.log("📥 Loaded batches from Firestore");
 
       // Get <select> element
-      const batchSelect = document.getElementById("batchSelect");
+      const batchSelect = $("batchSelect");
       batchSelect.innerHTML = `<option value="">Select a batch...</option>`;
 
       // Extract & sort batch names (numeric-aware if possible)
@@ -83,9 +86,9 @@ let editingMode = false;
 
 /* ====================== BATCH SELECTION ====================== */
 async function loadBatch() {
-  const batchSelect = document.getElementById("batchSelect");
+  const batchSelect = $("batchSelect");
   const selectedBatch = batchSelect.value;
-  document.getElementById("outputView").textContent = "";
+  $("outputView").textContent = "";
 
   if (!selectedBatch) {
     resetGroupData();
@@ -98,20 +101,19 @@ async function loadBatch() {
     updateGroupSwitches();
 
     // ✅ show batch name in separate span, not inside <select>
-    const text = document.getElementById("selectedBatchTitle");
+    const text = $("selectedBatchTitle");
     text.textContent = `Selected Batch: ${selectedBatch}`;
     text.style.color = "red";
     text.style.fontWeight = "bold";
 
     // ✅ update time button
-    document.getElementById("Time").innerHTML =
-      currentBatchData?.Time ?? "⏰ Select Time";
+    $("Time").innerHTML = currentBatchData?.Time ?? "⏰ Select Time";
   }
 }
 
 function updateGroupSwitches() {
-  document.getElementById("groups").style.display = "block";
-  const group2Switch = document.getElementById("group2");
+  $("groups").style.display = "block";
+  const group2Switch = $("group2");
   const group2Label = group2Switch?.nextElementSibling;
 
   if (currentBatchData && currentBatchData.hasGroup2) {
@@ -128,7 +130,7 @@ function resetGroupData() {
   document
     .querySelectorAll('input[name="group"]')
     .forEach((cb) => (cb.checked = false));
-  document.getElementById("list").innerHTML = "";
+  $("list").innerHTML = "";
   rawNames = [];
   displayNames = [];
   attendanceStatus = {};
@@ -139,7 +141,7 @@ function resetGroupData() {
 
 /* ====================== POPULATE DROPDOWN ====================== */
 async function populateBatchDropdown() {
-  const batchSelect = document.getElementById("batchSelect");
+  const batchSelect = $("batchSelect");
 
   while (batchSelect.children.length > 1) {
     batchSelect.removeChild(batchSelect.lastChild);
@@ -213,12 +215,12 @@ checkboxes.forEach((cb) => {
       });
 
       renderList();
-      document.getElementById("outputtext").style.display = "block";
+      $("outputtext").style.display = "block";
       checkboxes.forEach((other) => {
         if (other !== this) other.checked = false;
       });
     } else {
-      document.getElementById("importData").style.display = "none";
+      $("importData").style.display = "none";
       resetGroupData();
       renderList();
     }
@@ -227,8 +229,8 @@ checkboxes.forEach((cb) => {
 
 /* ====================== RENDER PARTICIPANT LIST ====================== */
 function renderList() {
-  document.getElementById("notifications").style.display = "block";
-  const listDiv = document.getElementById("list");
+  $("notifications").style.display = "block";
+  const listDiv = $("list");
   listDiv.innerHTML = "";
   displayNames
     .sort((a, b) => a.localeCompare(b))
@@ -302,7 +304,7 @@ async function generateOutput() {
       text: "Please Select The Group !",
     });
 
-  document.getElementById("none").style.display = "flex";
+  $("none").style.display = "flex";
   document.querySelector(".btn-group").style.display = "flex";
 
   // --- Get Coordinators per group ---
@@ -347,8 +349,8 @@ async function generateOutput() {
   }
 
   // --- Collect extra details ---
-  const tldv = document.getElementById("tldv").value.trim();
-  const meetList = document.getElementById("meetlist").value.trim();
+  const tldv = $("tldv").value.trim();
+  const meetList = $("meetlist").value.trim();
   const tldvLink = tldv ? `Tldv: ${tldv}` : "Tldv: Not provided";
   const meetListLink = meetList
     ? `Meet list: ${meetList}`
@@ -360,8 +362,8 @@ async function generateOutput() {
     .split(" ")
     .map((word) => `${word.charAt(0).toUpperCase() + word.slice(1)}`)
     .join(" ");
-  const reportByText = document.getElementById("over").value.trim();
-  let OtherBatch = document.getElementById("Batch").value.trim().split(",");
+  const reportByText = $("over").value.trim();
+  let OtherBatch = $("Batch").value.trim().split(",");
 
   // --- Details block ---
   const Detalis = `${Duck}\n${Mean} \n🎓 Batch : ${Batch} ${GroupName} \n📅 Date : ${date}\n⏰ Time : ${Time} \n👨🏻‍🏫 Trainer :${Trainer}\n👫 Coordinators : ${Coordinators}\n${Duck}\n\n`;
@@ -450,8 +452,8 @@ async function generateOutput() {
     link;
 
   // Update both view and edit modes
-  document.getElementById("outputView").textContent = finalText;
-  document.getElementById("outputEdit").value = finalText;
+  $("outputView").textContent = finalText;
+  $("outputEdit").value = finalText;
 
   // await Swal.fire({
   //   icon: "question",
@@ -602,8 +604,8 @@ function getSelectedTime() {
 
 // ====================== COPY TO CLIPBOARD ======================
 function copyOutput() {
-  const viewMode = document.getElementById("outputView");
-  const editMode = document.getElementById("outputEdit");
+  const viewMode = $("outputView");
+  const editMode = $("outputEdit");
   const copyBtn = document.querySelector(".copy-btn");
 
   // Pick content from active mode
@@ -624,8 +626,8 @@ function copyOutput() {
 
 // ====================== DOWNLOAD REPORT ======================
 function downloadReport() {
-  const viewMode = document.getElementById("outputView");
-  const editMode = document.getElementById("outputEdit");
+  const viewMode = $("outputView");
+  const editMode = $("outputEdit");
 
   if (viewMode.textContent === "")
     return Swal.fire({
@@ -660,10 +662,10 @@ function downloadReport() {
 // ====================== TOGGLE EDIT MODE ======================
 
 function toggleEdit() {
-  const outputView = document.getElementById("outputView");
-  const outputEdit = document.getElementById("outputEdit");
-  const editBtn = document.getElementById("editBtn");
-  const toolbar = document.getElementById("outputToolbar");
+  const outputView = $("outputView");
+  const outputEdit = $("outputEdit");
+  const editBtn = $("editBtn");
+  const toolbar = $("outputToolbar");
 
   // Place toolbar below header
   toolbar.style.top = "40px";
@@ -732,7 +734,7 @@ window.toggleEdit = toggleEdit;
 document.addEventListener("DOMContentLoaded", async function () {
   console.log("✅ DOM Ready");
   // await populateBatchDropdown();
-  const currentDate = document.getElementById("currentDate");
+  const currentDate = $("currentDate");
   if (currentDate) currentDate.textContent = formatDate(new Date());
 
   // Auto backup & cleanup
@@ -748,7 +750,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const dropdown = document.querySelector(".custom-dropdownH");
   const btn = dropdown.querySelector(".dropdown-btnH");
   const menuItems = dropdown.querySelectorAll(".dropdown-menuH li");
-  const hiddenInput = document.getElementById("timeH");
+  const hiddenInput = $("timeH");
 
   // Toggle dropdown
   btn.addEventListener("click", () => {

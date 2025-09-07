@@ -20,6 +20,9 @@ function escapeHTML(str) {
     .replace(/'/g, "&#39;");
 }
 
+// Helper to get element by ID
+const $ = (id) => document.getElementById(id);
+
 // ====================== STATE ======================
 
 let batches = {};
@@ -27,8 +30,7 @@ let selectedBatch = null;
 
 // ====================== CREATE ======================
 export async function addNewBatch() {
-  let batchName = document
-    .getElementById("newBatchName")
+  let batchName = $("newBatchName")
     ?.value.trim()
     .replace(/\s+/g, "")
     .toUpperCase();
@@ -59,7 +61,7 @@ export async function addNewBatch() {
 
   batches[batchName] = newBatch;
   await saveBatches();
-  const input = document.getElementById("newBatchName");
+  const input = $("newBatchName");
   if (input) input.value = "";
   Swal.fire({
     icon: "success",
@@ -96,7 +98,7 @@ export async function addParticipant(groupName) {
   if (!selectedBatch) return;
   const inputId =
     groupName === "Group_1" ? "newParticipant1" : "newParticipant2";
-  const inputEl = document.getElementById(inputId);
+  const inputEl = $(inputId);
   const name = inputEl?.value.trim();
   if (!name) {
     Swal.fire({
@@ -140,7 +142,7 @@ export async function addParticipant(groupName) {
 }
 
 export async function addTrainer() {
-  let Trainer = document.getElementById("TrainerName")?.value.trim();
+  let Trainer = $("TrainerName")?.value.trim();
   if (!Trainer) {
     Swal.fire({
       icon: "warning",
@@ -150,8 +152,7 @@ export async function addTrainer() {
     return;
   }
 
-  let Batch = document
-    .getElementById("selectedBatchTitle")
+  let Batch = $("selectedBatchTitle")
     .textContent.replace("Details", "")
     .trim();
 
@@ -171,7 +172,7 @@ export async function addTrainer() {
 
 export async function toggleGroup2() {
   if (!selectedBatch) return;
-  const hasGroup2 = document.getElementById("hasGroup2").checked;
+  const hasGroup2 = $("hasGroup2").checked;
   batches[selectedBatch].hasGroup2 = hasGroup2;
   if (hasGroup2 && !batches[selectedBatch].groups.Group_2) {
     batches[selectedBatch].groups.Group_2 = [];
@@ -208,7 +209,7 @@ export async function deleteBatch() {
       });
 
       selectedBatch = null;
-      document.getElementById("batchDetails").style.display = "none";
+      $("batchDetails").style.display = "none";
       renderBatchList();
 
       Swal.fire({
@@ -323,11 +324,11 @@ export async function toggleParticipantType(groupName, _index, cleanName) {
 
 // ====================== UI HELPERS ======================
 function renderBatchList() {
-  const batchList = document.getElementById("batchList");
+  const batchList = $("batchList");
   if (!batchList) return;
 
   const searchQuery =
-    document.getElementById("batchSearch")?.value.toLowerCase() || "";
+    $("batchSearch")?.value.toLowerCase() || "";
   batchList.innerHTML = "";
 
   Object.keys(batches)
@@ -377,32 +378,32 @@ function renderBatchDetails() {
   if (!selectedBatch || !batches[selectedBatch]) return;
   const batch = batches[selectedBatch];
 
-  document.getElementById(
+  $(
     "selectedBatchTitle"
   ).textContent = `${selectedBatch} Details`;
-  document.getElementById("hasGroup2").checked = !!batch.hasGroup2;
-  document.getElementById("group2Section").style.display = batch.hasGroup2
+  $("hasGroup2").checked = !!batch.hasGroup2;
+  $("group2Section").style.display = batch.hasGroup2
     ? "block"
     : "none";
-  document.getElementById("TrainerName").value = batch?.Trainer || "";
-  document.getElementById("TimeB").innerHTML = batch?.Time || "⏰ Select Time";
+  $("TrainerName").value = batch?.Trainer || "";
+  $("TimeB").innerHTML = batch?.Time || "⏰ Select Time";
 
-  document.getElementById("newParticipant1").value = null;
-  document.getElementById("newParticipant2").value = null;
+  $("newParticipant1").value = null;
+  $("newParticipant2").value = null;
 
- document.getElementById("Trainer").innerHTML = batch?.Trainer ? "Reset !" : "Set !";
+ $("Trainer").innerHTML = batch?.Trainer ? "Reset !" : "Set !";
 
   renderParticipantList("Group_1", batch.groups?.Group_1 ?? []);
 
   if (batch.hasGroup2)
     renderParticipantList("Group_2", batch.groups?.Group_2 ?? []);
 
-  document.getElementById("batchDetails").style.display = "block";
+  $("batchDetails").style.display = "block";
 }
 
 function renderParticipantList(groupName, participants) {
   const listId = groupName === "Group_1" ? "group1List" : "group2List";
-  const list = document.getElementById(listId);
+  const list = $(listId);
   list.innerHTML = "";
 
   // Counters are based on the full group (not the filtered view)
@@ -506,7 +507,7 @@ function selectBatch(batchName) {
   document.querySelectorAll("#batchList .list-group-item").forEach((el) => {
     el.classList.remove("active-batch");
   });
-  const activeEl = document.getElementById(`batch-${batchName}`);
+  const activeEl = $(`batch-${batchName}`);
   if (activeEl) activeEl.classList.add("active-batch");
 }
 
@@ -573,15 +574,15 @@ export async function importData() {
   }
 
   function showError(message, line, col) {
-    const popup = document.getElementById("errorPopup");
-    const msg = document.getElementById("errorMessage");
+    const popup = $("errorPopup");
+    const msg = $("errorMessage");
     msg.textContent = message;
     popup.style.display = "flex";
     popup.style.animation = "none";
     popup.offsetHeight;
     popup.style.animation = "slideIn 0.5s forwards";
 
-    const textarea = document.getElementById("settingsInput");
+    const textarea = $("settingsInput");
     const lines = textarea.value.split("\n");
 
     if (line > 0 && line <= lines.length) {
@@ -596,7 +597,7 @@ export async function importData() {
     setTimeout(hideError, 8000);
   }
   function hideError() {
-    document.getElementById("errorPopup").style.display = "none";
+    $("errorPopup").style.display = "none";
   }
 
   Swal.fire({
@@ -651,9 +652,9 @@ export async function importData() {
     cancelButtonText: "❌ Cancel",
     focusConfirm: false,
     didOpen: () => {
-      const textarea = document.getElementById("settingsInput");
-      const lineNumbers = document.getElementById("lineNumbers");
-      const shortcutBtn = document.getElementById("shortcutHeroBtn");
+      const textarea = $("settingsInput");
+      const lineNumbers = $("lineNumbers");
+      const shortcutBtn = $("shortcutHeroBtn");
       let fontSize = 13;
 
       function updateLineNumbers() {
@@ -774,7 +775,7 @@ export async function importData() {
       });
     },
     preConfirm: async () => {
-      const textarea = document.getElementById("settingsInput");
+      const textarea = $("settingsInput");
       const input = textarea.value.trim();
       if (!input) {
         showError("⚠ Please paste JSON data!", 1, 1);
@@ -892,11 +893,11 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ Batch Manager Ready");
   listenToBatches();
 
-  const searchInput = document.getElementById("batchSearch");
+  const searchInput = $("batchSearch");
   if (searchInput) searchInput.addEventListener("input", renderBatchList);
 
-  const newParticipant1 = document.getElementById("newParticipant1");
-  const newParticipant2 = document.getElementById("newParticipant2");
+  const newParticipant1 = $("newParticipant1");
+  const newParticipant2 = $("newParticipant2");
 
   if (newParticipant1) {
     newParticipant1.addEventListener("input", function () {
@@ -948,7 +949,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const current = selectedBatch && batches[selectedBatch]?.Time;
     const defaultTime = current || "11:00 AM - 12:00 PM";
     btn.innerHTML = `⏰ ${escapeHTML(defaultTime)} <span class="arrow">⌄</span>`;
-    const hiddenInput = document.getElementById("time");
+    const hiddenInput = $("time");
     if (hiddenInput && !hiddenInput.value) hiddenInput.value = defaultTime;
   }
 });

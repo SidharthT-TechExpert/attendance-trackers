@@ -6,6 +6,9 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 
+// Helper to get element by ID
+const $ = (id) => document.getElementById(id);
+
 // ====================== LOGIN FUNCTION ======================
 export async function authenticateAndRedirect() {
   if (auth.currentUser) {
@@ -116,8 +119,8 @@ export async function authenticateAndRedirect() {
       },
 
       preConfirm: () => {
-        const email = document.getElementById("auth-email").value.trim();
-        const password = document.getElementById("auth-password").value.trim();
+        const email = $("auth-email").value.trim();
+        const password = $("auth-password").value.trim();
         if (!email || !password) {
           Swal.showValidationMessage("❌ Please enter both email and password");
           return false;

@@ -14,6 +14,10 @@ import {
   orderBy,
 } from "firebase/firestore";
 
+// Helper to get element by ID
+const $ = (id) => document.getElementById(id);
+
+
 /* ====================== DEFAULT SETTINGS ====================== */
 let settings = {
   autoBackup: true,
@@ -55,7 +59,7 @@ async function saveSettings() {
 }
 
 function setIfExists(id, setter) {
-  const el = document.getElementById(id);
+  const el = $(id);
   if (el) setter(el);
 }
 
@@ -75,7 +79,7 @@ function renderSettings() {
 
 /* ====================== SETTINGS TOGGLES ====================== */
 window.toggleAutoBackup = async function () {
-  const el = document.getElementById("autoBackup");
+  const el = $("autoBackup");
   settings.autoBackup = !!(el && el.checked);
   await saveSettings();
   if (settings.autoBackup) {
@@ -87,7 +91,7 @@ window.toggleAutoBackup = async function () {
 };
 
 window.updateBackupFrequency = async function () {
-  const el = document.getElementById("backupFrequency");
+  const el = $("backupFrequency");
   if (el) settings.backupFrequency = el.value;
   await saveSettings();
   if (settings.autoBackup) {
@@ -224,7 +228,7 @@ export async function cleanupOldBackups() {
 /* ====================== BACKUP HISTORY ====================== */
 async function loadBackupHistory() {
   try {
-    const historyTable = document.getElementById("backupHistoryBody");
+    const historyTable = $("backupHistoryBody");
     if (!historyTable) return; // page doesn't have the table
     historyTable.innerHTML = "";
 
@@ -291,7 +295,7 @@ window.restoreBackup = async function (id) {
 
 /* ====================== STATISTICS ====================== */
 async function updateStatistics() {
-  const batchStatsBody = document.getElementById("batchStatsBody");
+  const batchStatsBody = $("batchStatsBody");
   if (!batchStatsBody) return; // page doesn't have the stats table
   batchStatsBody.innerHTML = "";
 
@@ -360,7 +364,7 @@ window.exportAllData = async function () {
     return;
   }
 
-  const fmtEl = document.getElementById("exportFormat");
+  const fmtEl = $("exportFormat");
   const format = fmtEl ? fmtEl.value : "json";
 
   const data = {
@@ -487,9 +491,9 @@ export async function sendNotification(message, role = "admin") {
 }
 
 async function loadNotifications() {
-  const notifList = document.getElementById("notificationList");
-  const notifCount = document.getElementById("notifCount");
-  const notifDropdown = document.getElementById("notifDropdown");
+  const notifList = $("notificationList");
+  const notifCount = $("notifCount");
+  const notifDropdown = $("notifDropdown");
 
   // If page doesn't have notification UI, skip setting up listener
   if (!notifList || !notifCount) return;
@@ -532,7 +536,7 @@ async function loadNotifications() {
     }
   });
 
-  const bell = document.getElementById("notifBell");
+  const bell = $("notifBell");
   if (bell && notifDropdown) {
     bell.addEventListener("click", () => {
       notifDropdown.style.display =
@@ -543,7 +547,7 @@ async function loadNotifications() {
 
 // Helper: Add notification (pushes to UI list)
 function addNotification(message, type = "info") {
-  const container = document.getElementById("notificationsList");
+  const container = $("notificationsList");
   if (!container) {
     console.warn("⚠️ Notification container not found!");
     return;

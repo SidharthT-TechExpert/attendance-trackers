@@ -2,6 +2,9 @@
 import { db } from "./firebase.js";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 
+//Helper to get element by ID
+ const $ = (id) => document.getElementById(id);
+
 // ====================== STATE ======================
 let batches = [];
 let reports = []; // all fetched reports
@@ -10,7 +13,6 @@ let selectedBatch = null; // batch id or null -> all
 let lastRenderedReports = []; // set this inside renderReports(...)
 
 // ====================== Utility ======================
-const $ = (id) => document.getElementById(id);
 
 function formatDisplayDate(iso) {
   if (!iso) return "";
@@ -223,27 +225,27 @@ window.previewReport = function (id) {
   }
   console.log(lastRenderedReports);
   // Title + chips
-  document.getElementById("previewModalLabel").textContent =
+  $("previewModalLabel").textContent =
     r.title || "Session Report";
-  document.getElementById("pmBatch").textContent = `Batch: ${
+  $("pmBatch").textContent = `Batch: ${
     r.batch || r.batchId || "-"
   }`;
-  document.getElementById("pmDate").textContent = formatDisplayDate(
+  $("pmDate").textContent = formatDisplayDate(
     r.date || ""
   );
-  document.getElementById("pmAttendees").textContent = `${
+  $("pmAttendees").textContent = `${
     r.attendees || 0
   } attendees`;
-  document.getElementById("pmId").textContent = r.id ? `ID: ${r.id}` : "";
-  document.getElementById("Trainer").textContent = r.trainer
+  $("pmId").textContent = r.id ? `ID: ${r.id}` : "";
+  $("Trainer").textContent = r.trainer
     ? `Trainer : ${r.trainer}`
     : "";
-  document.getElementById("coordinator").textContent = r.coordinators
+  $("coordinator").textContent = r.coordinators
     ? `Coordinators : ${r.coordinators}`
     : "";
   console.log(r.coordinators);
   // Group pill (color-coded)
-  const pmGroup = document.getElementById("pmGroup");
+  const pmGroup = $("pmGroup");
   const g = (r.group || "").toLowerCase();
   pmGroup.textContent = `Group: ${r.group || "-"}`;
   pmGroup.className = "badge rounded-pill"; // reset
@@ -253,12 +255,12 @@ window.previewReport = function (id) {
   else pmGroup.classList.add("text-bg-secondary");
 
   // Report text (high-contrast, scrollable)
-  document.getElementById("pmReportText").textContent =
+  $("pmReportText").textContent =
     r.report || "(No report text)";
 
   // Hook footer buttons
-  const copyBtn = document.getElementById("pmCopyBtn");
-  const dlBtn = document.getElementById("pmDownloadBtn");
+  const copyBtn = $("pmCopyBtn");
+  const dlBtn = $("pmDownloadBtn");
 
   copyBtn.onclick = () => {
     navigator.clipboard.writeText(r.report || "").then(() => {
@@ -281,7 +283,7 @@ window.previewReport = function (id) {
   };
 
   // Show modal
-  new bootstrap.Modal(document.getElementById("previewModal")).show();
+  new bootstrap.Modal($("previewModal")).show();
 };
 
 window.downloadReport = function (id) {
@@ -308,8 +310,8 @@ window.downloadReport = function (id) {
 };
 
 // Print report
-document.getElementById("pmPrintBtn").addEventListener("click", () => {
-  const content = document.getElementById("pmReportText").innerText;
+$("pmPrintBtn").addEventListener("click", () => {
+  const content = $("pmReportText").innerText;
   const printWindow = window.open("", "_blank");
   printWindow.document.write("<pre>" + content + "</pre>");
   printWindow.document.close();

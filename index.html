@@ -177,8 +177,10 @@
   </div>
 
   <script>
-    const loader = document.getElementById("loader");
-    const main = document.getElementById("mainContent");
+      $ = (id) => document.getElementById(id);
+    
+    const loader = $("loader");
+    const main = $("mainContent");
     const percentEl = document.querySelector(".percent");
     let p = 0;
 
