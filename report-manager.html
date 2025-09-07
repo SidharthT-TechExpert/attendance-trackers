@@ -280,19 +280,6 @@
           window.location.href = "./index.html";
         });
         return;
-      }else if( user.role != 'admin'){
-        authStatusEl.className = "alert alert-danger mb-4";
-        currentUserEl.textContent = "Not authorized";
-        roleBadgeEl.textContent = "";
-        Swal.fire({
-          icon: "warning",
-          title: "🔒 Access Denied",
-          text: "You are not authorized to access this page!",
-          confirmButtonText: "Go Back",
-        }).then(() => {
-          window.location.href = "./index.html";
-        });
-        return;
       }
 
       // ✅ Show email
@@ -308,6 +295,21 @@
         }
       } catch (err) {
         console.error("Error fetching role:", err);
+      }
+
+      if (role != 'admins') {
+        authStatusEl.className = "alert alert-danger mb-4";
+        currentUserEl.textContent = "Not authorized";
+        roleBadgeEl.textContent = "";
+        Swal.fire({
+          icon: "warning",
+          title: "🔒 Access Denied",
+          text: "You are not authorized to access this page!",
+          confirmButtonText: "Go Back",
+        }).then(() => {
+          window.location.href = "./index.html";
+        });
+        return;
       }
 
       // ✅ Update badge & show/hide buttons
