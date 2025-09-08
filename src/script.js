@@ -105,7 +105,8 @@ async function loadBatch() {
     text.textContent = `Selected Batch: ${selectedBatch}`;
     text.style.color = "red";
     text.style.fontWeight = "bold";
-
+    //renderList();
+    resetGroupData();
     // ✅ update time button
     $("Time").innerHTML = currentBatchData?.Time ?? "⏰ Select Time";
   }
@@ -750,11 +751,22 @@ document.addEventListener("DOMContentLoaded", function () {
   const dropdown = document.querySelector(".custom-dropdownH");
   const btn = dropdown.querySelector(".dropdown-btnH");
   const menuItems = dropdown.querySelectorAll(".dropdown-menuH li");
-  const hiddenInput = $("timeH");
+  const hiddenInput = $("timeH"); // assumes you use jQuery's $()
 
   // Toggle dropdown
   btn.addEventListener("click", () => {
     dropdown.classList.toggle("active");
+
+    // Check available space below
+    const rect = dropdown.getBoundingClientRect();
+    const menu = dropdown.querySelector(".dropdown-menuH");
+    const spaceBelow = window.innerHeight - rect.bottom;
+
+    if (menu && spaceBelow < menu.offsetHeight) {
+      dropdown.classList.add("dropup");   // open upward
+    } else {
+      dropdown.classList.remove("dropup"); // open downward
+    }
   });
 
   // Handle item click
@@ -764,6 +776,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "⏰ " + item.textContent + ' <span class="arrow">⌄</span>';
       hiddenInput.value = item.textContent;
       dropdown.classList.remove("active");
+      dropdown.classList.remove("dropup");
     });
   });
 
@@ -771,6 +784,7 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("click", (e) => {
     if (!dropdown.contains(e.target)) {
       dropdown.classList.remove("active");
+      dropdown.classList.remove("dropup");
     }
   });
 

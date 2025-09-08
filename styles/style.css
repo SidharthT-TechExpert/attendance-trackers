@@ -487,7 +487,6 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* min-width: 240px; */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -501,29 +500,32 @@ header {
 }
 
 /* rotate arrow when active */
-.custom-dropdownH.active .dropdown-btn .arrow {
+.custom-dropdownH.active .dropdown-btnH .arrow {
   transform: rotate(180deg);
 }
 
 /* dropdown menu hidden by default */
 .dropdown-menuH {
-  display: none;
-  position: absolute;
-  top: 110%;
-  left: 0;
-  background: #fff;
-  border: 1px solid #ddd;
+  max-height: 200px;    /* keeps list compact */
+  overflow-y: auto;     /* scrollbar only if needed */
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #ccc;
   border-radius: 8px;
-  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.15);
+  background: #fff;
+  position: absolute;
+  top: 100%;            /* default: below */
+  left: 0;
   z-index: 1000;
-  min-width: 240px;
-  padding: 6px 0;
-  animation: fadeIn 0.25s ease-in-out;
+  display: none;
 }
 
 /* show when active */
 .custom-dropdownH.active .dropdown-menuH {
   display: block;
+  animation: fadeIn 0.2s ease;
 }
 
 /* menu items */
@@ -538,6 +540,12 @@ header {
   background: #f1f5ff;
   color: #007bff;
   font-weight: 600;
+}
+
+/* dropup support */
+.custom-dropdownH.dropup .dropdown-menuH {
+  top: auto;
+  bottom: 100%;
 }
 
 /* little animation */

@@ -921,6 +921,17 @@ document.addEventListener("DOMContentLoaded", function () {
   // Toggle dropdown
   btn.addEventListener("click", () => {
     dropdown.classList.toggle("active");
+
+    // ✅ Check space for dropup
+    const rect = dropdown.getBoundingClientRect();
+    const menu = dropdown.querySelector(".dropdown-menu");
+    const spaceBelow = window.innerHeight - rect.bottom;
+
+    if (menu && spaceBelow < menu.offsetHeight) {
+      dropdown.classList.add("dropup");   // open upward
+    } else {
+      dropdown.classList.remove("dropup"); // open downward
+    }
   });
 
   // Handle item click
@@ -937,6 +948,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       dropdown.classList.remove("active");
+      dropdown.classList.remove("dropup");
     });
   });
 
@@ -944,6 +956,7 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("click", (e) => {
     if (!dropdown.contains(e.target)) {
       dropdown.classList.remove("active");
+      dropdown.classList.remove("dropup");
     }
   });
 
@@ -953,3 +966,4 @@ document.addEventListener("DOMContentLoaded", function () {
   btn.innerHTML = `⏰ ${escapeHTML(defaultTime)} <span class="arrow">⌄</span>`;
   if (hiddenInput && !hiddenInput.value) hiddenInput.value = defaultTime;
 });
+
