@@ -913,43 +913,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ====================== CUSTOM DROPDOWN (Time) ======================
 document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll(".custom-dropdown").forEach((drop) => {
-    const btn = drop.querySelector(".dropdown-btn");
-    if (btn) {
-      btn.addEventListener("click", () => {
-        drop.classList.toggle("active");
-      });
-    }
+  const dropdown = document.querySelector(".custom-dropdown");
+  const btn = dropdown.querySelector(".dropdown-btn");
+  const menuItems = dropdown.querySelectorAll(".dropdown-menu li");
+  const hiddenInput = $("time");
 
-    drop.querySelectorAll(".dropdown-menu li").forEach((item) => {
-      item.addEventListener("click", async () => {
-        if (btn) {
-          btn.innerHTML =
-            "⏰ " + escapeHTML(item.textContent) + ' <span class="arrow">⌄</span>';
-        }
-        if (selectedBatch) {
-          batches[selectedBatch].Time = item.textContent;
-          await saveBatches();
-        }
-        drop.classList.remove("active");
-      });
+  // Toggle dropdown
+  btn.addEventListener("click", () => {
+    dropdown.classList.toggle("active");
+  });
+
+  // Handle item click
+  menuItems.forEach((item) => {
+    item.addEventListener("click", async () => {
+      btn.innerHTML =
+        "⏰ " + escapeHTML(item.textContent) + ' <span class="arrow">⌄</span>';
+      hiddenInput.value = item.textContent;
+
+      // Keep sensitive logic
+      if (selectedBatch) {
+        batches[selectedBatch].Time = item.textContent;
+        await saveBatches();
+      }
+
+      dropdown.classList.remove("active");
     });
   });
 
   // Close if clicked outside
   window.addEventListener("click", (e) => {
-    document.querySelectorAll(".custom-dropdown").forEach((drop) => {
-      if (!drop.contains(e.target)) drop.classList.remove("active");
-    });
+    if (!dropdown.contains(e.target)) {
+      dropdown.classList.remove("active");
+    }
   });
 
-  // Set default time only if current batch has none
-  const btn = document.querySelector(".custom-dropdown .dropdown-btn");
-  if (btn) {
-    const current = selectedBatch && batches[selectedBatch]?.Time;
-    const defaultTime = current || "11:00 AM - 12:00 PM";
-    btn.innerHTML = `⏰ ${escapeHTML(defaultTime)} <span class="arrow">⌄</span>`;
-    const hiddenInput = $("time");
-    if (hiddenInput && !hiddenInput.value) hiddenInput.value = defaultTime;
-  }
+  // Set default time
+  const current = selectedBatch && batches[selectedBatch]?.Time;
+  const defaultTime = current || "11:00 AM - 12:00 PM";
+  btn.innerHTML = `⏰ ${escapeHTML(defaultTime)} <span class="arrow">⌄</span>`;
+  if (hiddenInput && !hiddenInput.value) hiddenInput.value = defaultTime;
 });

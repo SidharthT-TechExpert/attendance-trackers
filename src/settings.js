@@ -237,8 +237,9 @@ async function loadBackupHistory() {
       orderBy("createdAt", "desc")
     );
     const snaps = await getDocs(qBackups);
-
+    let count = 0;
     snaps.forEach((docSnap) => {
+      count++;
       const backup = docSnap.data();
 
       const date =
@@ -259,6 +260,7 @@ async function loadBackupHistory() {
 
       const row = `
         <tr>
+          <td>${count}</td>
           <td>${date}</td>
           <td>${type}</td>
           <td>${(size / 1024).toFixed(2)} KB</td>
