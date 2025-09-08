@@ -13,6 +13,7 @@ export default defineConfig({
         batch: resolve(__dirname, "batch-manager.html"),
         settings: resolve(__dirname, "settings.html"),
         reports: resolve(__dirname, "report-manager.html"),
+        admins: resolve(__dirname, "admin-manager.html"),
       },
     },
   },

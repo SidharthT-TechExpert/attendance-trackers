@@ -105,7 +105,6 @@ async function loadBatch() {
     text.textContent = `Selected Batch: ${selectedBatch}`;
     text.style.color = "red";
     text.style.fontWeight = "bold";
-    //renderList();
     resetGroupData();
     // ✅ update time button
     $("Time").innerHTML = currentBatchData?.Time ?? "⏰ Select Time";
