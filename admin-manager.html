@@ -21,11 +21,13 @@
     <div class="mt-2">
       <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='index.html'">← Back to
         Attendance</button>
-      <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn" onclick="window.location.href='settings.html'"
-        style="display:none;">⚙️ Settings</button>
+      <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn"
+        onclick="window.location.href='settings.html'">⚙️ Settings</button>
+      <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch
+        Manager</button>
       <button class="btn btn-outline-light btn-sm me-2" id="ReportBtn"
-        onclick="window.location.href='report-manager.html'" style="display:none;">📘 Report Manager</button>
-      <button class="btn btn-outline-danger btn-sm" id="logoutBtn">🚪 Logout</button>
+        onclick="window.location.href='report-manager.html'">📘 Report Manager</button>
+      <button class="btn btn-outline-danger btn-sm" onclick="logout()" id="logoutBtn">🚪 Logout</button>
     </div>
   </header>
 
@@ -82,8 +84,108 @@
 
   <!-- Libs -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script type="module" src="/src/firebase.js"></script>
-  <script type="module" src="/src/admin-manager.js"></script>
+  <script type="module" src="src/firebase.js"></script>
+  <script type="module" src="src/admin-manager.js"></script>
+
+
+<script type="module">
+  import { db } from "./src/firebase.js";
+
+  // Helper
+  const $ = (id) => document.getElementById(id);
+
+  const authStatusEl = $("authStatus");
+  const currentUserEl = $("currentUser");
+  const roleBadgeEl = $("userRole");
+
+  let currentUser = null;
+  try {
+    const storedUser = sessionStorage.getItem("currentUser");
+    console.log("Raw session value:", storedUser);
+
+    currentUser = storedUser ? JSON.parse(storedUser) : null;
+  } catch (err) {
+    console.error("❌ Error parsing currentUser:", err);
+    currentUser = null;
+  }
+
+  console.log("Parsed currentUser:", currentUser);
+  console.log("Type of currentUser:", typeof currentUser);
+  console.log("Keys of currentUser:", currentUser ? Object.keys(currentUser) : null);
+  console.log("Boolean of currentUser:", Boolean(currentUser));
+
+  if (!currentUser) {
+    // ❌ Not logged in
+    console.log("User not logged in or session expired.")
+    Swal.fire({
+      icon: "warning",
+      title: "🔒 Access Denied",
+      text: "Please login first!",
+      confirmButtonText: "Go Back",
+    }).then(() => {
+      window.location.href = "./index.html";
+    });
+  } else {
+    // Normalize role
+    const role = (currentUser.role || "coordinator").toLowerCase();
+    console.log("Current User Role:", role);
+
+    if ( role === "admins") {
+      // ✅ Admin UI
+      authStatusEl.className = "alert alert-success mb-4";
+      currentUserEl.textContent = currentUser.name || currentUser.email;
+
+      roleBadgeEl.textContent = role.toUpperCase();
+      roleBadgeEl.className = "badge bg-danger ms-2";
+
+      $("settingsBtn").style.display = "inline-block";
+      $("ReportBtn").style.display = "inline-block";
+
+      window.currentUser = currentUser; // make global
+    } else {
+      // ❌ Non-admin
+      authStatusEl.className = "alert alert-danger mb-4";
+      currentUserEl.textContent = "Insufficient permissions";
+      roleBadgeEl.textContent = "";
+
+      Swal.fire({
+        icon: "warning",
+        title: "🔒 Access Denied",
+        text: "You do not have permission to access this page.",
+        confirmButtonText: "Go Back",
+      }).then(() => {
+        window.location.href = "./index.html";
+      });
+    }
+  }
+
+  // ====================== LOGOUT ======================
+  window.logout = async function () {
+    Swal.fire({
+      title: "🚪 Logout",
+      text: "Are you sure you want to logout?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, logout",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#004d61",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        sessionStorage.removeItem("currentUser");
+        Swal.fire({
+          icon: "success",
+          title: "👋 Logged Out",
+          text: "You have been logged out successfully",
+          showConfirmButton: false,
+          timer: 1500,
+        }).then(() => {
+          window.location.href = "index.html";
+        });
+      }
+    });
+  };
+</script>
+
 </body>
 
 </html>

@@ -9,7 +9,6 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  getDoc,
 } from "firebase/firestore";
 
 const $ = (id) => document.getElementById(id);
@@ -18,7 +17,6 @@ const addAdminBtn = $("addAdminBtn");
 const adminSearch = $("adminSearch");
 const roleFilter = $("roleFilter");
 
-let CURRENT_ROLE = "coordinator";
 let ADMINS = [];
 
 /* -------- Password hashing -------- */
@@ -32,40 +30,32 @@ async function hashPassword(plain) {
     .join("");
 }
 
-/* -------- Auth -------- */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    await Swal.fire("🔒 Access Denied", "Please login first!", "warning");
-    window.location.href = "index.html";
-    return;
-  }
-  $("currentUser").textContent = user.email;
-
-  try {
-    const snap = await getDoc(doc(db, "roles", user.uid));
-    if (snap.exists()) CURRENT_ROLE = snap.data().role || "coordinator";
-  } catch (e) {
-    console.error("Role fetch failed", e);
-  }
-
-  $("userRole").textContent = CURRENT_ROLE.toUpperCase();
-  addAdminBtn.style.display =
-    CURRENT_ROLE === "admins" ? "inline-block" : "none";
-
-  await loadAdmins();
-});
-
 /* -------- Load & Render -------- */
 async function loadAdmins() {
-  const q = query(collection(db, "admins"), orderBy("name"));
-  const snap = await getDocs(q);
-  ADMINS = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  renderAdmins();
+  try {
+    const q = query(collection(db, "admins"), orderBy("name"));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      console.warn("⚠️ No admins found in Firestore");
+      adminsGrid.innerHTML =
+        `<div class="col-12 text-muted text-center py-3">No admins found.</div>`;
+      return;
+    }
+
+    ADMINS = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    console.log("✅ Loaded admins:", ADMINS);
+    renderAdmins();
+  } catch (err) {
+    console.error("❌ Error loading admins:", err);
+    adminsGrid.innerHTML =
+      `<div class="col-12 text-danger">Error loading admins: ${err.message}</div>`;
+  }
 }
 
 function renderAdmins() {
-  const term = adminSearch.value.trim().toLowerCase();
-  const roleSel = roleFilter.value.toLowerCase();
+  const term = adminSearch?.value.trim().toLowerCase() || "";
+  const roleSel = roleFilter?.value.toLowerCase() || "";
 
   const list = ADMINS.filter((a) => {
     const textMatch =
@@ -73,7 +63,6 @@ function renderAdmins() {
       a.name?.toLowerCase().includes(term) ||
       a.email?.toLowerCase().includes(term);
 
-    // Handle admin/admins and other roles
     const roleMatch =
       !roleSel ||
       (roleSel === "admin" &&
@@ -86,32 +75,24 @@ function renderAdmins() {
   adminsGrid.innerHTML = list
     .map(
       (a) => `
-    <div class="col-md-4 col-sm-6">
-      <div class="admin-card h-100">
+    <div class="col-md-4 col-sm-6 mb-3">
+      <div class="admin-card h-100 p-3 shadow-sm rounded border">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="name">${escapeHTML(a.name || "")}</div>
-            <div class="email">${escapeHTML(a.email || "")}</div>
+            <div class="fw-bold">${escapeHTML(a.name || "")}</div>
+            <div class="text-muted small">${escapeHTML(a.email || "")}</div>
           </div>
           ${roleBadge(a.role)}
         </div>
         <div class="card-actions mt-3">
-          <button class="btn btn-edit" data-action="edit" data-id="${
-            a.id
-          }">✏️ Edit</button>
-          <button class="btn btn-delete" data-action="delete" data-id="${
-            a.id
-          }">🗑️ Delete</button>
+          <button class="btn btn-sm btn-outline-primary" data-action="edit" data-id="${a.id}">✏️ Edit</button>
+          <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${a.id}">🗑️ Delete</button>
         </div>
       </div>
-    </div>
-  `
+    </div>`
     )
     .join("");
 }
-
-adminSearch.addEventListener("input", renderAdmins);
-roleFilter.addEventListener("change", renderAdmins);
 
 /* -------- Role badge -------- */
 function roleBadge(role) {
@@ -119,46 +100,33 @@ function roleBadge(role) {
 
   switch (r) {
     case "admins":
-      return `<span class="role-badge role-admin" style="background:#d32f2f;color:#fff;">👑 ADMINS</span>`;
+      return `<span class="badge rounded-pill" style="background:#b71c1c;color:#fff;">👑 ADMINS</span>`;
     case "admin":
-      return `<span class="role-badge role-admin" style="background:#f57c00;color:#fff;">🛡️ ADMIN</span>`;
+      return `<span class="badge rounded-pill" style="background:#f57c00;color:#fff;">🛡️ ADMIN</span>`;
     case "manager":
-      return `<span class="role-badge role-manager" style="background:#1976d2;color:#fff;">📋 MANAGER</span>`;
+      return `<span class="badge rounded-pill" style="background:#1976d2;color:#fff;">📋 MANAGER</span>`;
     case "coordinator":
     default:
-      return `<span class="role-badge role-coordinator" style="background:#0288d1;color:#fff;">👨‍💼 COORDINATOR</span>`;
+      return `<span class="badge rounded-pill" style="background:#0288d1;color:#fff;">👨‍💼 COORDINATOR</span>`;
   }
 }
 
 /* -------- Add/Edit -------- */
-addAdminBtn.addEventListener("click", () => openAdminDialog());
-
-adminsGrid.addEventListener("click", async (e) => {
-  const btn = e.target.closest("[data-action]");
-  if (!btn) return;
-  const id = btn.dataset.id;
-  const admin = ADMINS.find((a) => a.id === id);
-  if (!admin) return;
-
-  if (btn.dataset.action === "edit") openAdminDialog(admin);
-  if (btn.dataset.action === "delete") deleteAdmin(admin);
-});
-
 const eyeSVG = `
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
        xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"
-          stroke="#000000ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="12" cy="12" r="3" stroke="#000000ff" stroke-width="2"/>
+          stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="12" cy="12" r="3" stroke="#000" stroke-width="2"/>
   </svg>`;
 
 const eyeOffSVG = `
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
        xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M17.94 17.94C16.16 19.23 14.17 20 12 20 5.5 20 2 12.99 2 12s3.5-8 10-8c2.17 0 4.16.77 5.94 2.06"
-          stroke="#ff0000ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M1 1l22 22" stroke="#000000ff" stroke-width="2" stroke-linecap="round"/>
-    <path d="M9.88 9.88A3 3 0 0012 15a3 3 0 002.12-.88" stroke="#000000ff" stroke-width="2"
+          stroke="#f00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1 1l22 22" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+    <path d="M9.88 9.88A3 3 0 0012 15a3 3 0 002.12-.88" stroke="#000" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round"/>
   </svg>`;
 
@@ -168,16 +136,10 @@ async function openAdminDialog(item = null) {
   const { value: data } = await Swal.fire({
     title: isEdit ? "Edit Admin" : "Add Admin",
     html: `
-      <input id="ad-name" class="form-control mb-2" placeholder="Name" value="${
-        item ? escapeHTML(item.name) : ""
-      }">
-      <input id="ad-email" class="form-control mb-2" type="email" placeholder="Email" value="${
-        item ? escapeHTML(item.email) : ""
-      }">
+      <input id="ad-name" class="form-control mb-2" placeholder="Name" value="${item ? escapeHTML(item.name) : ""}">
+      <input id="ad-email" class="form-control mb-2" type="email" placeholder="Email" value="${item ? escapeHTML(item.email) : ""}">
       <div class="input-group mb-2">
-        <input id="ad-password" class="form-control" type="password" placeholder="${
-          isEdit ? "Leave blank to keep current password" : "Password"
-        }">
+        <input id="ad-password" class="form-control" type="password" placeholder="${isEdit ? "Leave blank to keep current password" : "Password"}">
         <span id="togglePass" class="input-group-text" style="cursor:pointer">${eyeSVG}</span>
       </div>
       <select id="ad-role" class="form-select">
@@ -200,10 +162,7 @@ async function openAdminDialog(item = null) {
         toggleBtn.innerHTML = visible ? eyeOffSVG : eyeSVG;
       });
 
-      if (isEdit) {
-        // show masked placeholder
-        passInput.placeholder = "••••••••";
-      }
+     
     },
     preConfirm: async () => {
       const name = Swal.getPopup().querySelector("#ad-name").value.trim();
@@ -257,13 +216,30 @@ async function deleteAdmin(admin) {
   loadAdmins();
 }
 
+/* -------- Events -------- */
+adminSearch?.addEventListener("input", renderAdmins);
+roleFilter?.addEventListener("change", renderAdmins);
+addAdminBtn?.addEventListener("click", () => openAdminDialog());
+
+adminsGrid?.addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const admin = ADMINS.find((a) => a.id === id);
+  if (!admin) return;
+
+  if (btn.dataset.action === "edit") openAdminDialog(admin);
+  if (btn.dataset.action === "delete") deleteAdmin(admin);
+});
+
 /* -------- Utils -------- */
 function escapeHTML(s = "") {
   return s.replace(
     /[&<>"']/g,
     (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[
-        c
-      ])
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
   );
 }
+
+/* -------- Init -------- */
+window.addEventListener("DOMContentLoaded", loadAdmins);

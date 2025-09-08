@@ -42,6 +42,8 @@
         Attendance</button>
       <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn" onclick="window.location.href='settings.html'"
         style="display: none;">⚙️ Settings</button>
+      <button class="btn btn-outline-light btn-sm me-2" id="AdminBtn"
+        onclick="window.location.href='admin-manager.html'" style="display: none;">👑Admin Manager</button>
       <button class="btn btn-outline-light btn-sm me-2" id="ReportBtn"
         onclick="window.location.href='report-manager.html'" style="display: none;">📘Report Manager</button>
       <button class="btn btn-outline-danger btn-sm" onclick="logout()">🚪 Logout</button>
@@ -156,31 +158,31 @@
                   <label for="time" class="form-label">⏰ Select Time</label>
                   <button id="TimeB" class="dropdown-btn">⏰ Select Time <span class="arrow">⌄</span></button>
                   <ul class="dropdown-menu">
-                  <li>10:00 AM - 11:00 AM</li>
-                  <li>10:30 AM - 11:30 AM</li>
-                  <li>11:00 AM - 12:00 PM</li>
-                  <li>11:30 AM - 12:30 PM</li>
-                  <li>12:00 PM - 01:00 PM</li>
-                  <li>12:30 PM - 01:30 PM</li>
-                  <li>01:00 PM - 02:00 PM</li>
-                  <li>01:30 PM - 02:30 PM</li>
-                  <li>02:00 PM - 03:00 PM</li>
-                  <li>02:30 PM - 03:30 PM</li>
-                  <li>03:00 PM - 04:00 PM</li>
-                  <li>03:30 PM - 04:30 PM</li>
-                  <li>04:00 PM - 05:00 PM</li>
-                  <li>04:30 PM - 05:30 PM</li>
-                  <li>05:00 PM - 06:00 PM</li>
-                  <li>05:30 PM - 06:30 PM</li>
-                  <li>06:00 PM - 07:00 PM</li>
-                  <li>06:30 PM - 07:30 PM</li>
-                  <li>07:00 PM - 08:00 PM</li>
-                  <li>07:30 PM - 08:30 PM</li>
-                  <li>08:00 PM - 09:00 PM</li>
-                  <li>08:30 PM - 09:30 PM</li>
-                  <li>09:00 PM - 10:00 PM</li>
-                  <li>09:30 PM - 10:30 PM</li>
-                  <li>10:00 PM - 11:00 PM</li>
+                    <li>10:00 AM - 11:00 AM</li>
+                    <li>10:30 AM - 11:30 AM</li>
+                    <li>11:00 AM - 12:00 PM</li>
+                    <li>11:30 AM - 12:30 PM</li>
+                    <li>12:00 PM - 01:00 PM</li>
+                    <li>12:30 PM - 01:30 PM</li>
+                    <li>01:00 PM - 02:00 PM</li>
+                    <li>01:30 PM - 02:30 PM</li>
+                    <li>02:00 PM - 03:00 PM</li>
+                    <li>02:30 PM - 03:30 PM</li>
+                    <li>03:00 PM - 04:00 PM</li>
+                    <li>03:30 PM - 04:30 PM</li>
+                    <li>04:00 PM - 05:00 PM</li>
+                    <li>04:30 PM - 05:30 PM</li>
+                    <li>05:00 PM - 06:00 PM</li>
+                    <li>05:30 PM - 06:30 PM</li>
+                    <li>06:00 PM - 07:00 PM</li>
+                    <li>06:30 PM - 07:30 PM</li>
+                    <li>07:00 PM - 08:00 PM</li>
+                    <li>07:30 PM - 08:30 PM</li>
+                    <li>08:00 PM - 09:00 PM</li>
+                    <li>08:30 PM - 09:30 PM</li>
+                    <li>09:00 PM - 10:00 PM</li>
+                    <li>09:30 PM - 10:30 PM</li>
+                    <li>10:00 PM - 11:00 PM</li>
                   </ul>
                   <input type="hidden" id="time">
                 </div>
@@ -231,14 +233,14 @@
 
   <!-- JavaScript files -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script type="module" src="/src/firebase.js"></script>
-  <script type="module" src="/src/batch-manager.js"></script>
-  <script type="module" src="/src/auth.js"></script>
+  <script type="module" src="src/firebase.js"></script>
+  <script type="module" src="src/batch-manager.js"></script>
+  <script type="module" src="src/auth.js"></script>
 
   <script>
     // Helper to get element by ID
     const $ = (id) => document.getElementById(id);
-    
+
     const loader = $("loader");
     const main = $("mainContent");
     const percentEl = document.querySelector(".percent");
@@ -260,64 +262,71 @@
   </script>
 
   <script type="module">
-    import { auth, db } from "./src/firebase.js";
-    import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-    import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
+    import { db } from "./src/firebase.js";
+    import { doc, getDoc } from "firebase/firestore";
 
     const authStatusEl = $("authStatus");
     const currentUserEl = $("currentUser");
     const roleBadgeEl = $("userRole");
-    let User ;
-    // 🔥 Listen for login/logout
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        authStatusEl.className = "alert alert-danger mb-4";
-        currentUserEl.textContent = "Not logged in";
-        roleBadgeEl.textContent = "";
+
+    // ✅ Safely load session user
+
+    let currentUser = null;
+    try {
+      const raw = sessionStorage.getItem("currentUser");
+      if (raw) currentUser = JSON.parse(raw);
+    } catch (e) {
+      console.error("Failed to parse session user:", e);
+    }
+
+    console.log("Session Current User:", currentUser);
+    console.log("Type of currentUser:", typeof currentUser);
+    console.log("Keys of currentUser:", currentUser ? Object.keys(currentUser) : null);
+    
+    if(!currentUser) {
+      // ❌ Not logged in
+      Swal.fire({
+        icon: "warning",
+        title: "🔒 Access Denied",
+        text: "Please login first!",
+        confirmButtonText: "Go Back",
+      }).then(() => {
+        window.location.href = "./index.html";
+      });
+    } else {
+      const role = currentUser.role.toLowerCase().trim(); // normalize
+      console.log("Current User Role:", role);
+
+      if (role === "admins") {
+        // ✅ Allow admins
+        $("authStatus").className = "alert alert-success mb-4";
+        $("currentUser").textContent = currentUser.name.toUpperCase() || currentUser.email;
+        $("userRole").textContent = role.toUpperCase();
+        $("userRole").className = "badge bg-danger ms-2";
+        $("settingsBtn").style.display = "inline-block";
+        $("ReportBtn").style.display = "inline-block";
+        $('AdminBtn').style.display = "inline-block";
+
+        window.currentUser = currentUser;
+      }else if(role == 'admin' || role == "coordinator" || role == "manager") {
+       // ✅ Allow admins
+        $("authStatus").className = "alert alert-success mb-4";
+        $("currentUser").textContent = currentUser.name.toUpperCase() || currentUser.email;
+        $("userRole").textContent = role.toUpperCase();
+        $("userRole").className = "badge bg-danger ms-2";
+      } else {
+        // ❌ Not admin
         Swal.fire({
           icon: "warning",
           title: "🔒 Access Denied",
-          text: "Please login first!",
+          text: "You do not have permission to access this page.",
           confirmButtonText: "Go Back",
         }).then(() => {
-          window.location.href = "../index.html";
+          window.location.href = "./index.html";
         });
-        return;
       }
+    }
 
-      // ✅ Show email
-      authStatusEl.className = "alert alert-success mb-4";
-      currentUserEl.textContent = user.email;
-
-      // ✅ Fetch role from Firestore
-      try {
-        const snap = await getDoc(doc(db, "roles", user.uid));
-        if (snap.exists() && snap.data().role) {
-          user = snap.data();
-        }
-      } catch (err) {
-        console.error("Error fetching role:", err);
-      }
-
-      // ✅ Update badge
-      user.role = user.role ? user.role : "coordinator"; 
-      roleBadgeEl.textContent = user.role.toUpperCase();
-      if (user.role === "admins") {
-        roleBadgeEl.className = "badge bg-danger ms-2";
-        $("settingsBtn").style.display = "inline-block";
-        $("export").style.display = "inline-block";
-        $("ReportBtn").style.display = "inline-block";
-      } else if (user.role === "manager") {
-        roleBadgeEl.className = "badge bg-warning ms-2";
-      } else if (user.role === "coordinator") {
-        roleBadgeEl.className = "badge bg-info ms-2";
-      } else {
-        roleBadgeEl.className = "badge bg-secondary ms-2";
-      }
-
-      // ✅ Make globally accessible
-      window.currentUser = { email: user.email, role: user.role };
-    });
 
     // ====================== LOGOUT ======================
     window.logout = async function () {
@@ -329,9 +338,9 @@
         confirmButtonText: "Yes, logout",
         cancelButtonText: "Cancel",
         confirmButtonColor: "#004d61",
-      }).then(async (result) => {
+      }).then((result) => {
         if (result.isConfirmed) {
-          await auth.signOut();
+          sessionStorage.removeItem("currentUser");
           Swal.fire({
             icon: "success",
             title: "👋 Logged Out",
@@ -345,6 +354,7 @@
       });
     };
   </script>
+
 
 </body>
 
