@@ -279,10 +279,6 @@
       console.error("Failed to parse session user:", e);
     }
 
-    console.log("Session Current User:", currentUser);
-    console.log("Type of currentUser:", typeof currentUser);
-    console.log("Keys of currentUser:", currentUser ? Object.keys(currentUser) : null);
-    
     if(!currentUser) {
       // ❌ Not logged in
       Swal.fire({
@@ -314,6 +310,7 @@
         $("currentUser").textContent = currentUser.name.toUpperCase() || currentUser.email;
         $("userRole").textContent = role.toUpperCase();
         $("userRole").className = "badge bg-danger ms-2";
+        window.currentUser = currentUser;
       } else {
         // ❌ Not admin
         Swal.fire({

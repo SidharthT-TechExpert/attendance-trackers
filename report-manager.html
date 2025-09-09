@@ -236,8 +236,11 @@
   <script type="module" src="src/reports.js"></script>
 
   <script>
-    const loader = document.getElementById("loader");
-    const main = document.getElementById("mainContent");
+    // Helper to get elements
+    const $ = (id) => document.getElementById(id);
+    // Simple loader animation
+    const loader = $("loader");
+    const main = $("mainContent");
     const percentEl = document.querySelector(".percent");
     let p = 0;
 
@@ -261,9 +264,9 @@
     import { onAuthStateChanged, signOut } from "firebase/auth";
     import { doc, getDoc } from "firebase/firestore";
 
-    const authStatusEl = document.getElementById("authStatus");
-    const currentUserEl = document.getElementById("currentUser");
-    const roleBadgeEl = document.getElementById("userRole");
+    const authStatusEl = $("authStatus");
+    const currentUserEl = $("currentUser");
+    const roleBadgeEl = $("userRole");
 
     // 🔥 Listen for login/logout
     onAuthStateChanged(auth, async (user) => {
@@ -317,8 +320,8 @@
       switch (role) {
         case "admins":
           roleBadgeEl.className = "badge bg-danger ms-2";
-          document.getElementById("settingsBtn").style.display = "inline-block";
-          document.getElementById("btnExport").style.display = "inline-block";
+          $("settingsBtn").style.display = "inline-block";
+          $("btnExport").style.display = "inline-block";
           break;
         case "manager":
           roleBadgeEl.className = "badge bg-warning ms-2";

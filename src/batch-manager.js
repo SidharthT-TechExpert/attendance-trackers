@@ -475,7 +475,7 @@ function renderParticipantList(groupName, participants) {
               ${buttonText}
             </button>
             ${
-              ["admin", "manager","admins"].includes(window.currentUser?.role)
+              ["admin", "manager","admins","coordinator"].includes(window.currentUser?.role)
                 ? `<button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', -1, '${cleanName}')">🗑️</button>`
                 : ""
             }

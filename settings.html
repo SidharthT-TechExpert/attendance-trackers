@@ -43,11 +43,14 @@
         Attendance</button>
       <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch
         Manager</button>
+      <button class="btn btn-outline-light btn-sm" id="AdminBtn" onclick="window.location.href='admin-manager.html'">👑
+        Admin
+        Manager</button>
       <button class="btn btn-outline-light btn-sm me-2" id="ReportBtn"
         onclick="window.location.href='report-manager.html'">📘Report Manager</button>
       <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn" onclick="window.location.href='settings.html'"
         style="display: none;">⚙️ Settings</button>
-      <button class="btn btn-outline-danger btn-sm" id="logoutBtn">🚪 Logout</button>
+      <button class="btn btn-outline-danger btn-sm" onclick="logout()" id="logoutBtn">🚪 Logout</button>
     </div>
     </div>
 
@@ -63,7 +66,7 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <span>Notifications</span>
         <button class="btn-close btn-close-white btn-sm"
-          onclick="document.getElementById('notifDropdown').style.display='none';"></button>
+          onclick="$('notifDropdown').style.display='none';"></button>
       </div>
       <ul id="notificationList" class="list-group list-group-flush"></ul>
     </div>
@@ -283,8 +286,10 @@
 
   <!-- Simple toggle JS -->
   <script>
-    const loader = document.getElementById("loader");
-    const main = document.getElementById("mainContent");
+    // Helper to get elements
+    const $ = (id) => document.getElementById(id);
+
+    const loader = $("loader");
     const percentEl = document.querySelector(".percent");
     let p = 0;
 
@@ -296,7 +301,6 @@
         loader.classList.add("fade-out");
         setTimeout(() => {
           loader.style.display = "none";
-          main.style.display = "block";
         }, 900);
       }
       percentEl.textContent = Math.floor(p) + "%";
@@ -304,69 +308,95 @@
   </script>
 
   <script>
-    document.getElementById("notifBell").addEventListener("click", () => {
-      const dropdown = document.getElementById("notifDropdown");
+
+    $("notifBell").addEventListener("click", () => {
+      const dropdown = $("notifDropdown");
       dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
     });
   </script>
   <script type="module">
-    // auth.js (or wherever you’re checking roles)
-    import { onAuthStateChanged } from "firebase/auth";
+    import { db } from "./src/firebase.js";
     import { doc, getDoc } from "firebase/firestore";
-    import { db, auth } from "./src/firebase.js";
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        await Swal.fire({
+
+    // ✅ Safely load session user
+
+    let currentUser = null;
+    try {
+      const raw = sessionStorage.getItem("currentUser");
+      if (raw) currentUser = JSON.parse(raw);
+    } catch (e) {
+      console.error("Failed to parse session user:", e);
+    }
+
+    console.log("Session Current User:", currentUser);
+    console.log("Type of currentUser:", typeof currentUser);
+    console.log("Keys of currentUser:", currentUser ? Object.keys(currentUser) : null);
+
+    if (!currentUser) {
+      // ❌ Not logged in
+      Swal.fire({
+        icon: "warning",
+        title: "🔒 Access Denied",
+        text: "Please login first!",
+        confirmButtonText: "Go Back",
+      }).then(() => {
+        window.location.href = "./index.html";
+      });
+    } else {
+      const role = currentUser.role.toLowerCase().trim(); // normalize
+      console.log("Current User Role:", role);
+
+      if (role === "admins") {
+        // ✅ Allow admins
+        $("settingsBtn").style.display = "inline-block";
+        $("ReportBtn").style.display = "inline-block";
+        $('AdminBtn').style.display = "inline-block";
+
+        window.currentUser = currentUser;
+      } else if (role == 'admin' || role == "coordinator" || role == "manager") {
+        console.log("Non-admin role, but allowed:", role);
+        
+
+      } else {
+        // ❌ Not admin
+        Swal.fire({
           icon: "warning",
-          title: "Access Denied",
-          text: "Please log in first.",
+          title: "🔒 Access Denied",
+          text: "You do not have permission to access this page.",
+          confirmButtonText: "Go Back",
+        }).then(() => {
+          window.location.href = "./index.html";
         });
-        window.location.href = "/";
-        return;
       }
+    }
 
-      try {
-        // 👇 roles collection
-        const userRef = doc(db, "roles", user.uid);
-        const userSnap = await getDoc(userRef);
 
-        if (!userSnap.exists()) {
-          await Swal.fire({
-            icon: "error",
-            title: "Role Not Found",
-            text: "Your account has no assigned role.",
+    // ====================== LOGOUT ======================
+    window.logout = async function () {
+      Swal.fire({
+        title: "🚪 Logout",
+        text: "Are you sure you want to logout?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes, logout",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#004d61",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          sessionStorage.removeItem("currentUser");
+          Swal.fire({
+            icon: "success",
+            title: "👋 Logged Out",
+            text: "You have been logged out successfully",
+            showConfirmButton: false,
+            timer: 1500,
+          }).then(() => {
+            window.location.href = "index.html";
           });
-          window.location.href = "login.html";
-          return;
         }
-
-        const role = userSnap.data().role;
-
-        // ✅ Only admins allowed here
-        if (role !== "admins") {
-          await Swal.fire({
-            icon: "error",
-            title: "Access Restricted",
-            text: "This page is for Admins only.",
-          });
-          window.location.href = "index.html";
-        }
-      } catch (err) {
-        console.error("Role check failed:", err);
-        await Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Failed to validate user role.",
-        });
-        window.location.href = "login.html";
-      }
-    });
-
-    // Logout click
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      logoutUser();
-    });
+      });
+    };
   </script>
 
 
