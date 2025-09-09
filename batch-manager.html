@@ -322,11 +322,13 @@
         roleBadgeEl.textContent = role.toUpperCase();
         roleBadgeEl.className = "badge bg-danger ms-2";
 
-        const allowed = ["admin", "admins", "manager", "coordinator"];
+        const allowed = ["admin", "admins"];
         if (allowed.includes(role)) {
           $("settingsBtn").style.display = "inline-block";
           $("ReportBtn").style.display = "inline-block";
           $("AdminBtn").style.display = "inline-block";
+        }else if(['manager'].includes(role)){
+          $("ReportBtn").style.display = "inline-block";
         }
 
 
