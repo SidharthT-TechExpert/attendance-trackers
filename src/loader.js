@@ -11,7 +11,7 @@ const interval = setInterval(() => {
   p += Math.random() * 8;
   if (p >= 100) {
     p = 100;
-    clearInterval(interval);
+    clearInterval(interval); 
     loader.classList.add("fade-out");
     setTimeout(() => {
       loader.style.display = "none";
