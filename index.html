@@ -195,40 +195,19 @@
     </div>
   </div>
 
-  <script>
-    // Helper function to get element by ID
-    const $ = (id) => document.getElementById(id);
-
-    // Loader Animation
-    const loader = $("loader");
-    const main = $("mainContent");
-    const percentEl = document.querySelector(".percent");
-    let p = 0;
-
-    const interval = setInterval(() => {
-      p += Math.random() * 8;
-      if (p >= 100) {
-        p = 100;
-        clearInterval(interval);
-        loader.classList.add("fade-out");
-        setTimeout(() => {
-          loader.style.display = "none";
-          main.style.display = "block";
-        }, 900);
-      }
-      percentEl.textContent = Math.floor(p) + "%";
-    }, 120);
-  </script>
-
+  <!-- Loader Script -->
+  <script src="src/loader.js"></script>
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
   <!-- Firebase first -->
   <script type="module" src="src/script.js"></script>
 
 
   <!-- Button that opens the protected manager area -->
   <script type="module">
+    //Helper to get element by ID
+    const $ = (id) => document.getElementById(id);
+    
     import { authenticateAndRedirect } from "./src/auth.js";
     const btn = $("manageBtn");
     if (btn) btn.addEventListener("click", authenticateAndRedirect);

@@ -232,39 +232,18 @@
 
 
   <!-- JavaScript files -->
-  <!-- JavaScript files -->
+  <script  src="src/loader.js"></script>
+  <script type="module" src="src/logout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script type="module" src="src/firebase.js"></script>
   <script type="module" src="src/batch-manager.js"></script>
-  <script type="module" src="src/auth.js"></script> -->
-
-  <script>
-    // Helper
-    const $ = (id) => document.getElementById(id);
-
-    // Loader animation
-    const loader = $("loader");
-    const main = $("mainContent");
-    const percentEl = document.querySelector(".percent");
-    let p = 0;
-    const interval = setInterval(() => {
-      p += Math.random() * 8;
-      if (p >= 100) {
-        p = 100;
-        clearInterval(interval);
-        loader.classList.add("fade-out");
-        setTimeout(() => {
-          loader.style.display = "none";
-          main.style.display = "block";
-        }, 900);
-      }
-      percentEl.textContent = Math.floor(p) + "%";
-    }, 120);
-  </script>
+  <script type="module" src="src/auth.js"></script>
 
   <script type="module">
     import { db } from "./src/firebase.js";
     import { doc, getDoc, onSnapshot } from "firebase/firestore";
+    
+    const $ = (id) => document.getElementById(id);
 
     const authStatusEl = $("authStatus");
     const currentUserEl = $("currentUser");
@@ -379,32 +358,6 @@
     }
 
     window.addEventListener("DOMContentLoaded", validateSession);
-
-    // ====================== LOGOUT ======================
-    window.logout = function () {
-      Swal.fire({
-        title: "🚪 Logout",
-        text: "Are you sure you want to logout?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Yes, logout",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#004d61",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          sessionStorage.removeItem("currentUser");
-          Swal.fire({
-            icon: "success",
-            title: "👋 Logged Out",
-            text: "You have been logged out successfully",
-            showConfirmButton: false,
-            timer: 1500,
-          }).then(() => {
-            window.location.href = "index.html";
-          });
-        }
-      });
-    };
   </script>
 
 

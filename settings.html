@@ -282,32 +282,14 @@
   <script type="module" src="/src/settings.js"></script>
   <script type="module" src="/src/auth.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="src/loader.js"></script>
+  <script src="src/logout.js"></script>
 
-  <!-- Loader animation -->
-  <script>
-    const $ = (id) => document.getElementById(id);
-    const loader = $("loader");
-    const percentEl = document.querySelector(".percent");
-    let p = 0;
-    const interval = setInterval(() => {
-      p += Math.random() * 8;
-      if (p >= 100) {
-        p = 100;
-        clearInterval(interval);
-        loader.classList.add("fade-out");
-        setTimeout(() => loader.style.display = "none", 900);
-      }
-      percentEl.textContent = Math.floor(p) + "%";
-    }, 120);
-
-    $("notifBell").addEventListener("click", () => {
-      const dropdown = $("notifDropdown");
-      dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
-    });
-  </script>
 
   <!-- Session Validation -->
   <script type="module">
+    //Helper to get element by ID
+    const $ = (id) => document.getElementById(id);
     import { db } from "./src/firebase.js";
     import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
@@ -383,29 +365,6 @@
 
     window.addEventListener("DOMContentLoaded", validateSession);
 
-    // ====================== LOGOUT ======================
-    window.logout = function () {
-      Swal.fire({
-        title: "🚪 Logout",
-        text: "Are you sure you want to logout?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Yes, logout",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#004d61",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          sessionStorage.removeItem("currentUser");
-          Swal.fire({
-            icon: "success",
-            title: "👋 Logged Out",
-            text: "You have been logged out successfully",
-            showConfirmButton: false,
-            timer: 1500,
-          }).then(() => window.location.href = "index.html");
-        }
-      });
-    };
   </script>
 
 

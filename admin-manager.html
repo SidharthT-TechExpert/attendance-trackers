@@ -13,6 +13,27 @@
 </head>
 
 <body>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="orbit orbit-outer">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="orbit orbit-inner">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="circle">
+      <div class="twoQuarterBig"></div>
+      <div class="twoQuarterSmall"></div>
+      <div class="circleSmall"></div>
+    </div>
+    <div class="loading-text">Loading<span class="percent">0%</span></div>
+  </div>
+  <!-- ================= MAIN APP ================= -->
   <!-- Top Header -->
   <header class="text-center text-white">
     <h4 class="m-0">Admin Manager</h4>
@@ -86,6 +107,8 @@
   <script type="module" src="src/firebase.js"></script>
   <script type="module" src="src/admin-manager.js"></script>
   <script type="module" src="src/auth.js"></script>
+  <script src="src/loader.js"></script>
+  <script src="src/logout.js"></script>
 
   <!-- Inline Auth/Session Logic -->
   <script type="module">
@@ -167,29 +190,6 @@
       }
     }
 
-    // ====================== LOGOUT ======================
-    window.logout = async function () {
-      Swal.fire({
-        title: "🚪 Logout",
-        text: "Are you sure you want to logout?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Yes, logout",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#004d61",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          sessionStorage.removeItem("currentUser");
-          Swal.fire({
-            icon: "success",
-            title: "👋 Logged Out",
-            text: "You have been logged out successfully",
-            showConfirmButton: false,
-            timer: 1500,
-          }).then(() => (window.location.href = "index.html"));
-        }
-      });
-    };
   </script>
 </body>
 

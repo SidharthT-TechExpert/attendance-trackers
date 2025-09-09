@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -14,9 +15,21 @@
 <body>
   <!-- Loader -->
   <div id="loader">
-    <div class="orbit orbit-outer"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-    <div class="orbit orbit-inner"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-    <div class="circle"><div class="twoQuarterBig"></div><div class="twoQuarterSmall"></div><div class="circleSmall"></div></div>
+    <div class="orbit orbit-outer">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="orbit orbit-inner">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="circle">
+      <div class="twoQuarterBig"></div>
+      <div class="twoQuarterSmall"></div>
+      <div class="circleSmall"></div>
+    </div>
     <div class="loading-text">Loading<span class="percent">0%</span></div>
   </div>
 
@@ -28,10 +41,12 @@
         <div class="col">
           <h1>Report Manager</h1>
           <div class="mt-2 text-center text-white">
-            <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='index.html'">← Back</button>
+            <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='index.html'">←
+              Back</button>
             <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn" style="display:none"
               onclick="window.location.href='settings.html'">⚙️ Settings</button>
-            <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch Manager</button>
+            <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch
+              Manager</button>
             <button class="btn btn-outline-danger btn-sm" onclick="logout()">🚪 Logout</button>
           </div>
         </div>
@@ -62,7 +77,8 @@
         <div class="reports-panel p-3 p-md-4">
           <!-- Filters -->
           <div class="filters-row row g-2 align-items-center mb-4">
-            <div class="col"><input id="reportSearch" class="form-control form-control-sm" placeholder="Search reports..."></div>
+            <div class="col"><input id="reportSearch" class="form-control form-control-sm"
+                placeholder="Search reports..."></div>
             <div class="col-auto">
               <select id="groupFilter" class="form-select form-select-sm">
                 <option value="all">All Groups</option>
@@ -81,7 +97,9 @@
 
           <!-- Reports Header -->
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <div><strong>Reports</strong><div class="text-muted small" id="reportsCount">0 reports</div></div>
+            <div><strong>Reports</strong>
+              <div class="text-muted small" id="reportsCount">0 reports</div>
+            </div>
             <div class="text-muted small" id="selectedBatchTag">All batches</div>
           </div>
 
@@ -99,9 +117,12 @@
         <div class="modal-header border-0">
           <h5 class="modal-title fw-bold">📑 Session Report</h5>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-success btn-sm" id="pmCopyBtn"><i class="bi bi-clipboard"></i> Copy</button>
-            <button type="button" class="btn btn-primary btn-sm" id="pmDownloadBtn"><i class="bi bi-download"></i> Download</button>
-            <button type="button" class="btn btn-warning btn-sm" id="pmPrintBtn"><i class="bi bi-printer"></i> Print</button>
+            <button type="button" class="btn btn-success btn-sm" id="pmCopyBtn"><i class="bi bi-clipboard"></i>
+              Copy</button>
+            <button type="button" class="btn btn-primary btn-sm" id="pmDownloadBtn"><i class="bi bi-download"></i>
+              Download</button>
+            <button type="button" class="btn btn-warning btn-sm" id="pmPrintBtn"><i class="bi bi-printer"></i>
+              Print</button>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
         </div>
@@ -127,34 +148,23 @@
   <script type="module" src="src/reports.js"></script>
 
   <!-- Loader -->
-  <script>
-    const loader = document.getElementById("loader");
-    const main = document.getElementById("mainContent");
-    const percentEl = document.querySelector(".percent");
-    let p = 0;
-    const interval = setInterval(() => {
-      p += Math.random() * 8;
-      if (p >= 100) {
-        clearInterval(interval);
-        p = 100;
-        loader.classList.add("fade-out");
-        setTimeout(() => { loader.style.display = "none"; main.style.display = "block"; }, 900);
-      }
-      percentEl.textContent = Math.floor(p) + "%";
-    }, 120);
-  </script>
+  <script src="src/loader.js"></script>
+  <script src="src/logout.js"></script>
 
   <!-- Session-first logic + Firestore sessionVersion watch -->
   <script type="module">
     import { db } from "./src/firebase.js";
     import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
-    const currentUserEl = document.getElementById("currentUser");
-    const roleBadgeEl = document.getElementById("userRole");
-    const settingsBtn = document.getElementById("settingsBtn");
-    const exportBtn = document.getElementById("btnExport");
+    //Helper to get element by ID
+    const $ = (id) => document.getElementById(id);
+    
+    const currentUserEl = $("currentUser");
+    const roleBadgeEl = $("userRole");
+    const settingsBtn = $("settingsBtn");
+    const exportBtn = $("btnExport");
 
-    const allowedRoles = ["admin","admins"];
+    const allowedRoles = ["admin", "admins"];
 
     // read sessionStorage first
     let currentUser = null;
@@ -172,7 +182,7 @@
         icon: "warning",
         title: "🔒 Access Denied",
         text: "Please login first!"
-      }).then(()=> window.location.href = "index.html"); 
+      }).then(() => window.location.href = "index.html");
     } else {
       // render UI immediately from session
       const role = (currentUser.role || "").toLowerCase();
@@ -201,8 +211,8 @@
           if (!snapshot.exists()) {
             console.warn("Admin doc not found for id:", adminDocId);
             sessionStorage.removeItem("currentUser");
-            Swal.fire({ icon:"warning", title:"Access revoked", text:"Account not found. Please login again." })
-              .then(()=> window.location.href = "index.html");
+            Swal.fire({ icon: "warning", title: "Access revoked", text: "Account not found. Please login again." })
+              .then(() => window.location.href = "index.html");
             return;
           }
 
@@ -211,8 +221,8 @@
             if (!snap.exists()) {
               // doc deleted -> force logout
               sessionStorage.removeItem("currentUser");
-              Swal.fire({ icon:"info", title:"Session Expired", text:"Account removed. Please login again." })
-                .then(()=> window.location.href = "index.html");
+              Swal.fire({ icon: "info", title: "Session Expired", text: "Account removed. Please login again." })
+                .then(() => window.location.href = "index.html");
               return;
             }
             const data = snap.data();
@@ -231,34 +241,19 @@
             if (storedVersion !== localVersion) {
               // session invalidated server-side
               sessionStorage.removeItem("currentUser");
-              Swal.fire({ icon:"info", title:"Session Expired", text:"Your session was invalidated. Please login again." })
-                .then(()=> window.location.href = "index.html");
+              Swal.fire({ icon: "info", title: "Session Expired", text: "Your session was invalidated. Please login again." })
+                .then(() => window.location.href = "index.html");
             }
           });
         } catch (err) {
           console.error("Error validating admin doc:", err);
           // On error we don't forcibly logout immediately — show a message
-          Swal.fire({ icon:"error", title:"Error", text:"Could not validate session (network or DB error). Try again later." });
+          Swal.fire({ icon: "error", title: "Error", text: "Could not validate session (network or DB error). Try again later." });
         }
       })();
     }
 
-    // logout: clear local session and redirect
-    window.logout = function () {
-      Swal.fire({
-        title: "🚪 Logout",
-        text: "Are you sure?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Yes, logout"
-      }).then((result) => {
-        if (result.isConfirmed) {
-          sessionStorage.removeItem("currentUser");
-          Swal.fire({ icon:"success", title:"👋 Logged Out", timer:1200, showConfirmButton:false })
-            .then(()=> window.location.href = "index.html");
-        }
-      });
-    };
   </script>
 </body>
+
 </html>
