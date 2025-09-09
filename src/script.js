@@ -4,13 +4,10 @@ import {
   doc,
   getDoc,
   setDoc,
-  deleteDoc,
   Timestamp,
   collection,
   getDocs,
-  where,
   serverTimestamp,
-  query,
   addDoc,
 } from "firebase/firestore";
 
@@ -762,7 +759,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const spaceBelow = window.innerHeight - rect.bottom;
 
     if (menu && spaceBelow < menu.offsetHeight) {
-      dropdown.classList.add("dropup");   // open upward
+      dropdown.classList.add("dropup"); // open upward
     } else {
       dropdown.classList.remove("dropup"); // open downward
     }

@@ -1,4 +1,3 @@
-
 // ====================== FIRESTORE IMPORTS ======================
 import { db } from "./firebase.js";
 import {
@@ -152,22 +151,19 @@ export async function addTrainer() {
     return;
   }
 
-  let Batch = $("selectedBatchTitle")
-    .textContent.replace("Details", "")
-    .trim();
+  let Batch = $("selectedBatchTitle").textContent.replace("Details", "").trim();
 
   if (Trainer !== batches[Batch]?.Trainer) {
     batches[Batch].Trainer = Trainer;
     await saveBatches();
-    return
+    return;
   }
 
   Swal.fire({
-      icon: "warning",
-      title: "Oops...",
-      text: `"${batches[Batch]?.Trainer}" is already saved as the trainer name!`,
-    });
-    
+    icon: "warning",
+    title: "Oops...",
+    text: `"${batches[Batch]?.Trainer}" is already saved as the trainer name!`,
+  });
 }
 
 export async function toggleGroup2() {
@@ -185,7 +181,7 @@ export async function toggleGroup2() {
 export async function deleteBatch() {
   if (!selectedBatch) return;
   const batchName = selectedBatch;
-  const userIsAdmin = ["admin","admins"].includes(window.currentUser?.role);
+  const userIsAdmin = ["admin", "admins"].includes(window.currentUser?.role);
   if (!userIsAdmin) {
     Swal.fire({
       icon: "error",
@@ -327,8 +323,7 @@ function renderBatchList() {
   const batchList = $("batchList");
   if (!batchList) return;
 
-  const searchQuery =
-    $("batchSearch")?.value.toLowerCase() || "";
+  const searchQuery = $("batchSearch")?.value.toLowerCase() || "";
   batchList.innerHTML = "";
 
   Object.keys(batches)
@@ -378,20 +373,16 @@ function renderBatchDetails() {
   if (!selectedBatch || !batches[selectedBatch]) return;
   const batch = batches[selectedBatch];
 
-  $(
-    "selectedBatchTitle"
-  ).textContent = `${selectedBatch} Details`;
+  $("selectedBatchTitle").textContent = `${selectedBatch} Details`;
   $("hasGroup2").checked = !!batch.hasGroup2;
-  $("group2Section").style.display = batch.hasGroup2
-    ? "block"
-    : "none";
+  $("group2Section").style.display = batch.hasGroup2 ? "block" : "none";
   $("TrainerName").value = batch?.Trainer || "";
   $("TimeB").innerHTML = batch?.Time || "⏰ Select Time";
 
   $("newParticipant1").value = null;
   $("newParticipant2").value = null;
 
- $("Trainer").innerHTML = batch?.Trainer ? "Reset !" : "Set !";
+  $("Trainer").innerHTML = batch?.Trainer ? "Reset !" : "Set !";
 
   renderParticipantList("Group_1", batch.groups?.Group_1 ?? []);
 
@@ -475,7 +466,9 @@ function renderParticipantList(groupName, participants) {
               ${buttonText}
             </button>
             ${
-              ["admin", "manager","admins","coordinator"].includes(window.currentUser?.role)
+              ["admin", "manager", "admins", "coordinator"].includes(
+                window.currentUser?.role
+              )
                 ? `<button class="btn btn-outline-danger btn-sm" onclick="removeParticipant('${groupName}', -1, '${cleanName}')">🗑️</button>`
                 : ""
             }
@@ -928,7 +921,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const spaceBelow = window.innerHeight - rect.bottom;
 
     if (menu && spaceBelow < menu.offsetHeight) {
-      dropdown.classList.add("dropup");   // open upward
+      dropdown.classList.add("dropup"); // open upward
     } else {
       dropdown.classList.remove("dropup"); // open downward
     }
@@ -966,4 +959,3 @@ document.addEventListener("DOMContentLoaded", function () {
   btn.innerHTML = `⏰ ${escapeHTML(defaultTime)} <span class="arrow">⌄</span>`;
   if (hiddenInput && !hiddenInput.value) hiddenInput.value = defaultTime;
 });
-

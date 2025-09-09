@@ -3,7 +3,7 @@ import { db } from "./firebase.js";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 
 //Helper to get element by ID
- const $ = (id) => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
 // ====================== STATE ======================
 let batches = [];
@@ -225,21 +225,12 @@ window.previewReport = function (id) {
   }
   console.log(lastRenderedReports);
   // Title + chips
-  $("previewModalLabel").textContent =
-    r.title || "Session Report";
-  $("pmBatch").textContent = `Batch: ${
-    r.batch || r.batchId || "-"
-  }`;
-  $("pmDate").textContent = formatDisplayDate(
-    r.date || ""
-  );
-  $("pmAttendees").textContent = `${
-    r.attendees || 0
-  } attendees`;
+  $("previewModalLabel").textContent = r.title || "Session Report";
+  $("pmBatch").textContent = `Batch: ${r.batch || r.batchId || "-"}`;
+  $("pmDate").textContent = formatDisplayDate(r.date || "");
+  $("pmAttendees").textContent = `${r.attendees || 0} attendees`;
   $("pmId").textContent = r.id ? `ID: ${r.id}` : "";
-  $("Trainer").textContent = r.trainer
-    ? `Trainer : ${r.trainer}`
-    : "";
+  $("Trainer").textContent = r.trainer ? `Trainer : ${r.trainer}` : "";
   $("coordinator").textContent = r.coordinators
     ? `Coordinators : ${r.coordinators}`
     : "";
@@ -255,8 +246,7 @@ window.previewReport = function (id) {
   else pmGroup.classList.add("text-bg-secondary");
 
   // Report text (high-contrast, scrollable)
-  $("pmReportText").textContent =
-    r.report || "(No report text)";
+  $("pmReportText").textContent = r.report || "(No report text)";
 
   // Hook footer buttons
   const copyBtn = $("pmCopyBtn");

@@ -17,7 +17,6 @@ import {
 // Helper to get element by ID
 const $ = (id) => document.getElementById(id);
 
-
 /* ====================== DEFAULT SETTINGS ====================== */
 let settings = {
   autoBackup: true,
