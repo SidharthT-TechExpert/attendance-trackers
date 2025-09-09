@@ -232,18 +232,40 @@
 
 
   <!-- JavaScript files -->
-  <script  src="src/loader.js"></script>
   <script type="module" src="src/logout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script type="module" src="src/firebase.js"></script>
   <script type="module" src="src/batch-manager.js"></script>
   <script type="module" src="src/auth.js"></script>
 
+  <script>
+
+    // Helper function to get element by ID
+    const $ = (id) => document.getElementById(id);
+
+    // Loader Animation
+    const loader = $("loader");
+    const main = $("mainContent");
+    const percentEl = document.querySelector(".percent");
+    let p = 0;
+
+    const interval = setInterval(() => {
+      p += Math.random() * 8;
+      if (p >= 100) {
+        p = 100;
+        clearInterval(interval);
+        loader.classList.add("fade-out");
+        setTimeout(() => {
+          loader.style.display = "none";
+          main.style.display = "block";
+        }, 900);
+      }
+      percentEl.textContent = Math.floor(p) + "%";
+    }, 120);
+  </script>
   <script type="module">
     import { db } from "./src/firebase.js";
     import { doc, getDoc, onSnapshot } from "firebase/firestore";
-    
-    const $ = (id) => document.getElementById(id);
 
     const authStatusEl = $("authStatus");
     const currentUserEl = $("currentUser");
@@ -304,18 +326,18 @@
         if (allowed.includes(role)) {
           $("settingsBtn").style.display = "inline-block";
           $("ReportBtn").style.display = "inline-block";
-          
+
           if (role === 'admins') {
             $("AdminBtn").style.display = "inline-block";
             authStatusEl.className = "alert alert-success mb-4";
             roleBadgeEl.className = "badge bg-danger ms-2";
-          }else{
+          } else {
             roleBadgeEl.className = "badge bg-primary ms-2";
           }
         } else if (['manager'].includes(role)) {
           $("ReportBtn").style.display = "inline-block";
           roleBadgeEl.className = "badge bg-warning ms-2";
-        }else if(role === 'coordinator'){
+        } else if (role === 'coordinator') {
           roleBadgeEl.className = "badge bg-secondary ms-2";
         } else {
           authStatusEl.className = "alert alert-danger mb-4";
