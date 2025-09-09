@@ -197,7 +197,7 @@
       currentUser = null;
     }
 
-    if (!currentUser) {
+    if (!currentUser || !allowedRoles.includes((currentUser.role || "").toLowerCase())) {
       // no local session — block access
       Swal.fire({
         icon: "warning",
