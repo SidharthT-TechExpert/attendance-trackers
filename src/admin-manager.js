@@ -43,7 +43,7 @@ async function loadAdmins() {
     }
 
     ADMINS = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    console.log("✅ Loaded admins:", ADMINS);
+    console.log("✅ Loaded admins");
     renderAdmins();
   } catch (err) {
     console.error("❌ Error loading admins:", err);
