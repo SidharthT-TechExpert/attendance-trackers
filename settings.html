@@ -282,14 +282,36 @@
   <script type="module" src="/src/settings.js"></script>
   <script type="module" src="/src/auth.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="src/loader.js"></script>
   <script src="src/logout.js"></script>
 
+  <script>
 
+    // Helper function to get element by ID
+    const $ = (id) => document.getElementById(id);
+
+    // Loader Animation
+    const loader = $("loader");
+    const main = $("mainContent");
+    const percentEl = document.querySelector(".percent");
+    let p = 0;
+
+    const interval = setInterval(() => {
+      p += Math.random() * 8;
+      if (p >= 100) {
+        p = 100;
+        clearInterval(interval);
+        loader.classList.add("fade-out");
+        setTimeout(() => {
+          loader.style.display = "none";
+          main.style.display = "block";
+        }, 900);
+      }
+      percentEl.textContent = Math.floor(p) + "%";
+    }, 120);
+  </script>
   <!-- Session Validation -->
   <script type="module">
-    //Helper to get element by ID
-    const $ = (id) => document.getElementById(id);
+
     import { db } from "./src/firebase.js";
     import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
