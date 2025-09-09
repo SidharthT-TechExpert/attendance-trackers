@@ -339,12 +339,12 @@ async function generateOutput() {
   let Duck = "";
 
   if (Group === "Combined") {
-    Duck = "🔷".repeat(27);
+    Duck = "🔷".repeat(17);
   } else {
     try {
       Duck = "🔷".repeat(Coordinators.length / 2 + 6);
     } catch (error) {
-      Duck = "🔷".repeat(27);
+      Duck = "🔷".repeat(17);
     }
   }
 
