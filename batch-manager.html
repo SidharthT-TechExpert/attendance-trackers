@@ -317,18 +317,39 @@
 
         // ✅ UI setup
         const role = currentUser.role?.toLowerCase().trim();
-        authStatusEl.className = "alert alert-success mb-4";
         currentUserEl.textContent = currentUser.name?.toUpperCase() || currentUser.email;
         roleBadgeEl.textContent = role.toUpperCase();
-        roleBadgeEl.className = "badge bg-danger ms-2";
 
         const allowed = ["admin", "admins"];
+
         if (allowed.includes(role)) {
           $("settingsBtn").style.display = "inline-block";
           $("ReportBtn").style.display = "inline-block";
-          $("AdminBtn").style.display = "inline-block";
-        }else if(['manager'].includes(role)){
+          
+          if (role === 'admins') {
+            $("AdminBtn").style.display = "inline-block";
+            authStatusEl.className = "alert alert-success mb-4";
+            roleBadgeEl.className = "badge bg-danger ms-2";
+          }else{
+            roleBadgeEl.className = "badge bg-primary ms-2";
+          }
+        } else if (['manager'].includes(role)) {
           $("ReportBtn").style.display = "inline-block";
+          roleBadgeEl.className = "badge bg-warning ms-2";
+        }else if(role === 'coordinator'){
+          roleBadgeEl.className = "badge bg-secondary ms-2";
+        } else {
+          authStatusEl.className = "alert alert-danger mb-4";
+          currentUserEl.textContent = "Insufficient permissions";
+          roleBadgeEl.textContent = "";
+          await Swal.fire({
+            icon: "warning",
+            title: "🔒 Access Denied",
+            text: "You do not have permission to access this page.",
+            confirmButtonText: "Go Back",
+          });
+          window.location.href = "./index.html";
+          return;
         }
 
 
