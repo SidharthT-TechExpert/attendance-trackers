@@ -232,20 +232,21 @@
 
 
   <!-- JavaScript files -->
+  <!-- JavaScript files -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script type="module" src="src/firebase.js"></script>
   <script type="module" src="src/batch-manager.js"></script>
-  <script type="module" src="src/auth.js"></script>
+  <script type="module" src="src/auth.js"></script> -->
 
   <script>
-    // Helper to get element by ID
+    // Helper
     const $ = (id) => document.getElementById(id);
 
+    // Loader animation
     const loader = $("loader");
     const main = $("mainContent");
     const percentEl = document.querySelector(".percent");
     let p = 0;
-
     const interval = setInterval(() => {
       p += Math.random() * 8;
       if (p >= 100) {
@@ -263,13 +264,11 @@
 
   <script type="module">
     import { db } from "./src/firebase.js";
-    import { doc, getDoc } from "firebase/firestore";
+    import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
     const authStatusEl = $("authStatus");
     const currentUserEl = $("currentUser");
     const roleBadgeEl = $("userRole");
-
-    // ✅ Safely load session user
 
     let currentUser = null;
     try {
@@ -279,54 +278,87 @@
       console.error("Failed to parse session user:", e);
     }
 
-    if(!currentUser) {
-      // ❌ Not logged in
-      Swal.fire({
-        icon: "warning",
-        title: "🔒 Access Denied",
-        text: "Please login first!",
-        confirmButtonText: "Go Back",
-      }).then(() => {
-        window.location.href = "./index.html";
-      });
-    } else {
-      const role = currentUser.role.toLowerCase().trim(); // normalize
-      console.log("Current User Role:", role);
-
-      if (role === "admins") {
-        // ✅ Allow admins
-        $("authStatus").className = "alert alert-success mb-4";
-        $("currentUser").textContent = currentUser.name.toUpperCase() || currentUser.email;
-        $("userRole").textContent = role.toUpperCase();
-        $("userRole").className = "badge bg-danger ms-2";
-        $("settingsBtn").style.display = "inline-block";
-        $("ReportBtn").style.display = "inline-block";
-        $('AdminBtn').style.display = "inline-block";
-
-        window.currentUser = currentUser;
-      }else if(role == 'admin' || role == "coordinator" || role == "manager") {
-       // ✅ Allow admins
-        $("authStatus").className = "alert alert-success mb-4";
-        $("currentUser").textContent = currentUser.name.toUpperCase() || currentUser.email;
-        $("userRole").textContent = role.toUpperCase();
-        $("userRole").className = "badge bg-danger ms-2";
-        window.currentUser = currentUser;
-      } else {
-        // ❌ Not admin
-        Swal.fire({
+    async function validateSession() {
+      if (!currentUser) {
+        await Swal.fire({
           icon: "warning",
           title: "🔒 Access Denied",
-          text: "You do not have permission to access this page.",
+          text: "Please login first!",
           confirmButtonText: "Go Back",
-        }).then(() => {
-          window.location.href = "./index.html";
         });
+        window.location.href = "./index.html";
+        return;
+      }
+
+      try {
+        // 🔎 Fetch latest user doc
+        const ref = doc(db, "admins", currentUser.id); // ✅ use doc id, not email
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          sessionStorage.removeItem("currentUser");
+          window.location.href = "./index.html";
+          return;
+        }
+
+        const data = snap.data();
+
+        // 🚨 Check sessionVersion
+        if ((data.sessionVersion || 1) !== (currentUser.sessionVersion || 1)) {
+          sessionStorage.removeItem("currentUser");
+          await Swal.fire({
+            icon: "info",
+            title: "🔄 Session Expired",
+            text: "Your account was updated. Please log in again.",
+            confirmButtonText: "OK",
+          });
+          window.location.href = "./index.html";
+          return;
+        }
+
+        // ✅ UI setup
+        const role = currentUser.role?.toLowerCase().trim();
+        authStatusEl.className = "alert alert-success mb-4";
+        currentUserEl.textContent = currentUser.name?.toUpperCase() || currentUser.email;
+        roleBadgeEl.textContent = role.toUpperCase();
+        roleBadgeEl.className = "badge bg-danger ms-2";
+
+        const allowed = ["admin", "admins", "manager", "coordinator"];
+        if (allowed.includes(role)) {
+          $("settingsBtn").style.display = "inline-block";
+          $("ReportBtn").style.display = "inline-block";
+          $("AdminBtn").style.display = "inline-block";
+        }
+
+
+        window.currentUser = currentUser;
+
+        // 🔴 Realtime session listener
+        onSnapshot(ref, (snap) => {
+          if (!snap.exists()) return;
+          const live = snap.data();
+          if ((live.sessionVersion || 1) !== (currentUser.sessionVersion || 1)) {
+            sessionStorage.removeItem("currentUser");
+            Swal.fire({
+              icon: "info",
+              title: "🔄 Session Expired",
+              text: "Your session was invalidated. Please log in again.",
+            }).then(() => {
+              window.location.href = "./index.html";
+            });
+          }
+        });
+
+      } catch (err) {
+        console.error("Session validation error:", err);
+        sessionStorage.removeItem("currentUser");
+        window.location.href = "./index.html";
       }
     }
 
+    window.addEventListener("DOMContentLoaded", validateSession);
 
     // ====================== LOGOUT ======================
-    window.logout = async function () {
+    window.logout = function () {
       Swal.fire({
         title: "🚪 Logout",
         text: "Are you sure you want to logout?",

@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -9,117 +8,61 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles/report-manager.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
 </head>
 
 <body>
-
   <!-- Loader -->
   <div id="loader">
-    <div class="orbit orbit-outer">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-    </div>
-    <div class="orbit orbit-inner">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-    </div>
-    <div class="circle">
-      <div class="twoQuarterBig"></div>
-      <div class="twoQuarterSmall"></div>
-      <div class="circleSmall"></div>
-    </div>
+    <div class="orbit orbit-outer"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="orbit orbit-inner"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="circle"><div class="twoQuarterBig"></div><div class="twoQuarterSmall"></div><div class="circleSmall"></div></div>
     <div class="loading-text">Loading<span class="percent">0%</span></div>
   </div>
 
-  <div class="container-fluid px-3 px-md-4">
+  <!-- Main Content -->
+  <div id="mainContent" class="container-fluid px-3 px-md-4" style="display:none;">
     <!-- Header -->
     <header class="header-section">
       <div class="row align-items-center">
-        <div class="col ">
+        <div class="col">
           <h1>Report Manager</h1>
           <div class="mt-2 text-center text-white">
-
-            <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='index.html'">← Back to
-              Attendance</button>
-            <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn"
+            <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='index.html'">← Back</button>
+            <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn" style="display:none"
               onclick="window.location.href='settings.html'">⚙️ Settings</button>
-            <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch
-              Manager</button>
+            <button class="btn btn-outline-light btn-sm" onclick="window.location.href='batch-manager.html'">📚 Batch Manager</button>
             <button class="btn btn-outline-danger btn-sm" onclick="logout()">🚪 Logout</button>
           </div>
         </div>
-        <br>
         <hr>
         <div id="authStatus">
-          <!-- Authentication Status Display -->
           <strong>🔓 Authenticated:</strong> <span id="currentUser">Loading...</span>
           <span id="userRole" class="badge bg-primary ms-2"></span>
         </div>
       </div>
     </header>
 
-    <!-- Main Panel -->
+    <!-- Main Panels (Batches + Reports) -->
     <div class="row g-3 g-lg-4">
-      <!-- LEFT: Batches Panel -->
+      <!-- LEFT: Batches -->
       <div class="col-12 col-lg-4 col-xl-3">
         <div class="batches-panel p-3">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <strong>Batches</strong>
             <span class="text-muted small" id="totalBatches">0</span>
           </div>
-
-          <div class="batch-search mb-3">
-            <div class="row g-2">
-              <div class="col">
-                <input id="batchSearch" class="form-control form-control-sm" placeholder="Search batches..."
-                  aria-label="Search batches" />
-              </div>
-            </div>
-          </div>
-
-          <div class="batches-list" id="batchesList">
-            <!-- Batch items will be injected here -->
-          </div>
+          <input id="batchSearch" class="form-control form-control-sm mb-3" placeholder="Search batches...">
+          <div id="batchesList" class="batches-list"></div>
         </div>
       </div>
 
-      <!-- RIGHT: Reports Panel -->
+      <!-- RIGHT: Reports -->
       <div class="col-12 col-lg-8 col-xl-9">
         <div class="reports-panel p-3 p-md-4">
           <!-- Filters -->
-          <div class="filters-row row g-2 align-items-center mb-4" role="region" aria-label="Report filters">
-            <!-- <div class="col-auto">
-              <div class="date-wrapper d-flex align-items-center px-2 py-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="me-2">
-                  <path d="M7 10h5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <input type="date" id="startDate" class="form-control-sm" aria-label="Start date"
-                  style="border:none; background:transparent;" />
-                <button class="date-clear" title="Clear start" data-target="startDate">✕</button>
-              </div>
-            </div> -->
-
-            <!-- <div class="col-auto">
-              <div class="date-wrapper d-flex align-items-center px-2 py-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="me-2">
-                  <path d="M7 10h5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <input type="date" id="endDate" class="form-control-sm" aria-label="End date"
-                  style="border:none; background:transparent;" />
-                <button class="date-clear" title="Clear end" data-target="endDate">✕</button>
-              </div>
-            </div> -->
-
-            <div class="col">
-              <input id="reportSearch" class="form-control form-control-sm"
-                placeholder="Search reports (title, notes)..." />
-            </div>
-
+          <div class="filters-row row g-2 align-items-center mb-4">
+            <div class="col"><input id="reportSearch" class="form-control form-control-sm" placeholder="Search reports..."></div>
             <div class="col-auto">
               <select id="groupFilter" class="form-select form-select-sm">
                 <option value="all">All Groups</option>
@@ -128,10 +71,9 @@
                 <option value="combined">Combined</option>
               </select>
             </div>
-
             <div class="col-auto">
-              <div class="btn-group" role="group">
-                <button id="btnExport" class="btn btn-export btn-sm">Export CSV</button>
+              <div class="btn-group">
+                <button id="btnExport" class="btn btn-export btn-sm" style="display:none">Export CSV</button>
                 <button id="btnRefresh" class="btn btn-ghost btn-sm">Refresh</button>
               </div>
             </div>
@@ -139,231 +81,185 @@
 
           <!-- Reports Header -->
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-              <strong>Reports</strong>
-              <div class="text-muted small" id="reportsCount">0 reports</div>
-            </div>
+            <div><strong>Reports</strong><div class="text-muted small" id="reportsCount">0 reports</div></div>
             <div class="text-muted small" id="selectedBatchTag">All batches</div>
           </div>
 
           <!-- Reports Grid -->
-          <div class="row g-3" id="reportsList">
-            <!-- Report cards will be injected here -->
-          </div>
+          <div id="reportsList" class="row g-3"></div>
         </div>
       </div>
     </div>
   </div>
 
-
   <!-- Preview Modal -->
-  <div class="modal fade report-modal" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel"
-    aria-hidden="true">
+  <div class="modal fade report-modal" id="previewModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content bg-dark text-light shadow-lg rounded-4">
-
-        <!-- Header -->
-        <div class="modal-header border-0 d-flex justify-content-between align-items-center">
-          <div>
-            <h5 class="modal-title fw-bold text-white mb-1" id="previewModalLabel">📑 Session Report</h5>
-            <div class="d-flex gap-2">
-              <span class="badge rounded-pill text-bg-primary" id="pmBatch">Batch: -</span>
-              <span class="badge rounded-pill text-bg-secondary" id="pmGroup">Group: -</span>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
+        <div class="modal-header border-0">
+          <h5 class="modal-title fw-bold">📑 Session Report</h5>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-1" id="pmCopyBtn">
-              <i class="bi bi-clipboard"></i> Copy
-            </button>
-            <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="pmDownloadBtn">
-              <i class="bi bi-download"></i> Download
-            </button>
-            <button type="button" class="btn btn-warning btn-sm d-flex align-items-center gap-1" id="pmPrintBtn">
-              <i class="bi bi-printer"></i> Print
-            </button>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn btn-success btn-sm" id="pmCopyBtn"><i class="bi bi-clipboard"></i> Copy</button>
+            <button type="button" class="btn btn-primary btn-sm" id="pmDownloadBtn"><i class="bi bi-download"></i> Download</button>
+            <button type="button" class="btn btn-warning btn-sm" id="pmPrintBtn"><i class="bi bi-printer"></i> Print</button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
         </div>
-
-        <!-- Body -->
         <div class="modal-body">
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <div class="meta-line"><i class="bi bi-calendar3 me-2"></i><span id="pmDate">--</span></div>
-            </div>
-            <div class="col-md-4">
-              <div class="meta-line"><i class="bi bi-people me-2"></i><span id="pmAttendees">-- attendees</span></div>
-            </div>
-            <div class="col-md-4 text-md-end small text-muted">
-              <i class="bi bi-hash me-2"></i><span id="pmId"></span>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <p><i class="bi bi-person-badge me-2"></i><strong>Trainer:</strong> <span id="Trainer">-</span></p>
-            <p><i class="bi bi-people-fill me-2"></i><strong>Coordinators:</strong> <span id="coordinator">-</span>
-            </p>
-          </div>
-
+          <p><i class="bi bi-calendar3 me-2"></i><span id="pmDate">--</span></p>
+          <p><i class="bi bi-person-badge me-2"></i><strong>Trainer:</strong> <span id="Trainer">-</span></p>
+          <p><i class="bi bi-people-fill me-2"></i><strong>Coordinators:</strong> <span id="coordinator">-</span></p>
           <div class="report-box">
             <h6 class="fw-bold text-secondary mb-2"><i class="bi bi-journal-text me-2"></i> Session Notes</h6>
             <pre id="pmReportText" class="report-text"></pre>
           </div>
         </div>
-
-        <!-- Footer -->
-        <div class="modal-footer border-0 justify-content-end">
-          <button type="button" class="btn btn-danger d-flex align-items-center gap-1" data-bs-dismiss="modal">
-            <i class="bi bi-x-circle"></i> Cancel
-          </button>
-        </div>
       </div>
     </div>
   </div>
 
-
-
-
-  <!-- Bootstrap JS -->
-  <!-- Scripts -->
+  <!-- JS libs -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-  <!-- Firebase first -->
+
+  <!-- Your firebase wrapper (must expose `db`) -->
   <script type="module" src="src/firebase.js"></script>
-  <script type="module" src="src/auth.js"></script>
   <script type="module" src="src/reports.js"></script>
 
+  <!-- Loader -->
   <script>
-    // Helper to get elements
-    const $ = (id) => document.getElementById(id);
-    // Simple loader animation
-    const loader = $("loader");
-    const main = $("mainContent");
+    const loader = document.getElementById("loader");
+    const main = document.getElementById("mainContent");
     const percentEl = document.querySelector(".percent");
     let p = 0;
-
     const interval = setInterval(() => {
       p += Math.random() * 8;
       if (p >= 100) {
-        p = 100;
         clearInterval(interval);
+        p = 100;
         loader.classList.add("fade-out");
-        setTimeout(() => {
-          loader.style.display = "none";
-          main.style.display = "block";
-        }, 900);
+        setTimeout(() => { loader.style.display = "none"; main.style.display = "block"; }, 900);
       }
       percentEl.textContent = Math.floor(p) + "%";
     }, 120);
   </script>
 
+  <!-- Session-first logic + Firestore sessionVersion watch -->
   <script type="module">
-    import { auth, db } from "./src/firebase.js";
-    import { onAuthStateChanged, signOut } from "firebase/auth";
-    import { doc, getDoc } from "firebase/firestore";
+    import { db } from "./src/firebase.js";
+    import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
-    const authStatusEl = $("authStatus");
-    const currentUserEl = $("currentUser");
-    const roleBadgeEl = $("userRole");
+    const currentUserEl = document.getElementById("currentUser");
+    const roleBadgeEl = document.getElementById("userRole");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const exportBtn = document.getElementById("btnExport");
 
-    // 🔥 Listen for login/logout
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        authStatusEl.className = "alert alert-danger mb-4";
-        currentUserEl.textContent = "Not logged in";
-        roleBadgeEl.textContent = "";
-        Swal.fire({
-          icon: "warning",
-          title: "🔒 Access Denied",
-          text: "Please login first!",
-          confirmButtonText: "Go Back",
-        }).then(() => {
-          window.location.href = "./index.html";
-        });
+    const allowedRoles = ["admin","admins"];
+
+    // read sessionStorage first
+    let currentUser = null;
+    try {
+      const raw = sessionStorage.getItem("currentUser");
+      currentUser = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.error("Failed to parse sessionStorage.currentUser", e);
+      currentUser = null;
+    }
+
+    if (!currentUser) {
+      // no local session — block access
+      Swal.fire({
+        icon: "warning",
+        title: "🔒 Access Denied",
+        text: "Please login first!"
+      }).then(()=> window.location.href = "index.html");
+    } else {
+      // render UI immediately from session
+      const role = (currentUser.role || "").toLowerCase();
+      currentUserEl.textContent = currentUser.email || currentUser.name || "User";
+      roleBadgeEl.textContent = (role || "N/A").toUpperCase();
+      roleBadgeEl.className = allowedRoles.includes(role) ? "badge bg-danger ms-2" : "badge bg-primary ms-2";
+
+      if (allowedRoles.includes(role)) {
+        settingsBtn.style.display = "inline-block";
+        exportBtn.style.display = "inline-block";
+      }
+
+      // determine the admin doc id you're using in Firestore
+      // Prefer currentUser.id (docSnap.id saved at login). Fall back to uid or email if that's how you stored it.
+      const adminDocId = currentUser.id || currentUser.uid || currentUser.email;
+      if (!adminDocId) {
+        console.warn("No admin doc id found in session. Cannot validate sessionVersion.");
+        // still let user continue, but don't attach watcher
         return;
       }
 
-      // ✅ Show email
-      authStatusEl.className = "";
-      currentUserEl.textContent = user.email;
+      // initial check: does the admin doc exist?
+      (async () => {
+        try {
+          const ref = doc(db, "admins", adminDocId);
+          const snapshot = await getDoc(ref);
+          if (!snapshot.exists()) {
+            console.warn("Admin doc not found for id:", adminDocId);
+            sessionStorage.removeItem("currentUser");
+            Swal.fire({ icon:"warning", title:"Access revoked", text:"Account not found. Please login again." })
+              .then(()=> window.location.href = "index.html");
+            return;
+          }
 
-      // ✅ Fetch role from Firestore
-      let role = "coordinator"; // default
-      try {
-        const snap = await getDoc(doc(db, "roles", user.uid));
-        if (snap.exists() && snap.data().role) {
-          role = snap.data().role;
+          // attach live watcher to sessionVersion (so admin can invalidate sessions)
+          onSnapshot(ref, (snap) => {
+            if (!snap.exists()) {
+              // doc deleted -> force logout
+              sessionStorage.removeItem("currentUser");
+              Swal.fire({ icon:"info", title:"Session Expired", text:"Account removed. Please login again." })
+                .then(()=> window.location.href = "index.html");
+              return;
+            }
+            const data = snap.data();
+            const storedVersion = data.sessionVersion || 1;
+
+            // always re-read sessionStorage to compare freshest local version
+            let localVersion = 1;
+            try {
+              const s = sessionStorage.getItem("currentUser");
+              const local = s ? JSON.parse(s) : null;
+              localVersion = local?.sessionVersion || 1;
+            } catch (e) {
+              console.error("Failed to re-read sessionStorage for version", e);
+            }
+
+            if (storedVersion !== localVersion) {
+              // session invalidated server-side
+              sessionStorage.removeItem("currentUser");
+              Swal.fire({ icon:"info", title:"Session Expired", text:"Your session was invalidated. Please login again." })
+                .then(()=> window.location.href = "index.html");
+            }
+          });
+        } catch (err) {
+          console.error("Error validating admin doc:", err);
+          // On error we don't forcibly logout immediately — show a message
+          Swal.fire({ icon:"error", title:"Error", text:"Could not validate session (network or DB error). Try again later." });
         }
-      } catch (err) {
-        console.error("Error fetching role:", err);
-      }
+      })();
+    }
 
-      if (role != 'admins') {
-        authStatusEl.className = "alert alert-danger mb-4";
-        currentUserEl.textContent = "Not authorized";
-        roleBadgeEl.textContent = "";
-        Swal.fire({
-          icon: "warning",
-          title: "🔒 Access Denied",
-          text: "You are not authorized to access this page!",
-          confirmButtonText: "Go Back",
-        }).then(() => {
-          window.location.href = "./index.html";
-        });
-        return;
-      }
-
-      // ✅ Update badge & show/hide buttons
-      roleBadgeEl.textContent = role.toUpperCase();
-      switch (role) {
-        case "admins":
-          roleBadgeEl.className = "badge bg-danger ms-2";
-          $("settingsBtn").style.display = "inline-block";
-          $("btnExport").style.display = "inline-block";
-          break;
-        case "manager":
-          roleBadgeEl.className = "badge bg-warning ms-2";
-          break;
-        case "coordinator":
-          roleBadgeEl.className = "badge bg-info ms-2";
-          break;
-        default:
-          roleBadgeEl.className = "badge bg-secondary ms-2";
-      }
-
-      // ✅ Make globally accessible
-      window.currentUser = { email: user.email, role };
-    });
-
-    // ====================== LOGOUT ======================
-    window.logout = async function () {
+    // logout: clear local session and redirect
+    window.logout = function () {
       Swal.fire({
         title: "🚪 Logout",
-        text: "Are you sure you want to logout?",
+        text: "Are you sure?",
         icon: "question",
         showCancelButton: true,
-        confirmButtonText: "Yes, logout",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#004d61",
-      }).then(async (result) => {
+        confirmButtonText: "Yes, logout"
+      }).then((result) => {
         if (result.isConfirmed) {
-          await signOut(auth);
-          Swal.fire({
-            icon: "success",
-            title: "👋 Logged Out",
-            text: "You have been logged out successfully",
-            showConfirmButton: false,
-            timer: 1500,
-          }).then(() => {
-            window.location.href = "index.html";
-          });
+          sessionStorage.removeItem("currentUser");
+          Swal.fire({ icon:"success", title:"👋 Logged Out", timer:1200, showConfirmButton:false })
+            .then(()=> window.location.href = "index.html");
         }
       });
     };
   </script>
-
 </body>
-
 </html>

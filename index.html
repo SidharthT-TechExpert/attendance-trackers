@@ -196,8 +196,10 @@
   </div>
 
   <script>
-      $ = (id) => document.getElementById(id);
-    
+    // Helper function to get element by ID
+    const $ = (id) => document.getElementById(id);
+
+    // Loader Animation
     const loader = $("loader");
     const main = $("mainContent");
     const percentEl = document.querySelector(".percent");
@@ -228,7 +230,6 @@
   <!-- Button that opens the protected manager area -->
   <script type="module">
     import { authenticateAndRedirect } from "./src/auth.js";
-    const $ = (id) => document.getElementById(id);
     const btn = $("manageBtn");
     if (btn) btn.addEventListener("click", authenticateAndRedirect);
 

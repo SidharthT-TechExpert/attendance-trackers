@@ -63,7 +63,6 @@
                 <option value="coordinator">Coordinator</option>
               </select>
 
-
               <!-- Add button -->
               <button class="btn btn-success btn-sm ms-2" id="addAdminBtn">➕ Add Admin</button>
             </div>
@@ -86,106 +85,112 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script type="module" src="src/firebase.js"></script>
   <script type="module" src="src/admin-manager.js"></script>
+  <script type="module" src="src/auth.js"></script>
 
+  <!-- Inline Auth/Session Logic -->
+  <script type="module">
+    import { db } from "./src/firebase.js";
+    import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
-<script type="module">
-  import { db } from "./src/firebase.js";
+    // Helper
+    const $ = (id) => document.getElementById(id);
 
-  // Helper
-  const $ = (id) => document.getElementById(id);
+    const authStatusEl = $("authStatus");
+    const currentUserEl = $("currentUser");
+    const roleBadgeEl = $("userRole");
 
-  const authStatusEl = $("authStatus");
-  const currentUserEl = $("currentUser");
-  const roleBadgeEl = $("userRole");
+    let currentUser = null;
+    try {
+      const storedUser = sessionStorage.getItem("currentUser");
+      currentUser = storedUser ? JSON.parse(storedUser) : null;
+    } catch (err) {
+      console.error("❌ Error parsing currentUser:", err);
+      currentUser = null;
+    }
 
-  let currentUser = null;
-  try {
-    const storedUser = sessionStorage.getItem("currentUser");
-    console.log("Raw session value:", storedUser);
-
-    currentUser = storedUser ? JSON.parse(storedUser) : null;
-  } catch (err) {
-    console.error("❌ Error parsing currentUser:", err);
-    currentUser = null;
-  }
-
-  console.log("Parsed currentUser:", currentUser);
-  console.log("Type of currentUser:", typeof currentUser);
-  console.log("Keys of currentUser:", currentUser ? Object.keys(currentUser) : null);
-  console.log("Boolean of currentUser:", Boolean(currentUser));
-
-  if (!currentUser) {
-    // ❌ Not logged in
-    console.log("User not logged in or session expired.")
-    Swal.fire({
-      icon: "warning",
-      title: "🔒 Access Denied",
-      text: "Please login first!",
-      confirmButtonText: "Go Back",
-    }).then(() => {
-      window.location.href = "./index.html";
-    });
-  } else {
-    // Normalize role
-    const role = (currentUser.role || "coordinator").toLowerCase();
-    console.log("Current User Role:", role);
-
-    if ( role === "admins") {
-      // ✅ Admin UI
-      authStatusEl.className = "alert alert-success mb-4";
-      currentUserEl.textContent = currentUser.name || currentUser.email;
-
-      roleBadgeEl.textContent = role.toUpperCase();
-      roleBadgeEl.className = "badge bg-danger ms-2";
-
-      $("settingsBtn").style.display = "inline-block";
-      $("ReportBtn").style.display = "inline-block";
-
-      window.currentUser = currentUser; // make global
-    } else {
-      // ❌ Non-admin
-      authStatusEl.className = "alert alert-danger mb-4";
-      currentUserEl.textContent = "Insufficient permissions";
-      roleBadgeEl.textContent = "";
-
+    if (!currentUser) {
+      // ❌ Not logged in
       Swal.fire({
         icon: "warning",
         title: "🔒 Access Denied",
-        text: "You do not have permission to access this page.",
+        text: "Please login first!",
         confirmButtonText: "Go Back",
-      }).then(() => {
-        window.location.href = "./index.html";
-      });
-    }
-  }
+      }).then(() => (window.location.href = "./index.html"));
+    } else {
+      // Normalize role
+      const role = (currentUser.role || "coordinator").toLowerCase();
 
-  // ====================== LOGOUT ======================
-  window.logout = async function () {
-    Swal.fire({
-      title: "🚪 Logout",
-      text: "Are you sure you want to logout?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Yes, logout",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: "#004d61",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        sessionStorage.removeItem("currentUser");
-        Swal.fire({
-          icon: "success",
-          title: "👋 Logged Out",
-          text: "You have been logged out successfully",
-          showConfirmButton: false,
-          timer: 1500,
-        }).then(() => {
-          window.location.href = "index.html";
+      if (role === "admins") {
+        // ✅ Admin UI
+        authStatusEl.className = "alert alert-success mb-4";
+        currentUserEl.textContent = currentUser.name || currentUser.email;
+        roleBadgeEl.textContent = role.toUpperCase();
+        roleBadgeEl.className = "badge bg-danger ms-2";
+        $("settingsBtn").style.display = "inline-block";
+        $("ReportBtn").style.display = "inline-block";
+
+        window.currentUser = currentUser;
+
+        // ====================== SESSION VERSION VALIDATION ======================
+        const ref = doc(db, "admins", currentUser.id); // ✅ use doc id, not email
+        const localVersion = currentUser.sessionVersion || 1;
+
+        // Realtime listener
+        onSnapshot(ref, (snap) => {
+          if (!snap.exists()) return;
+          const data = snap.data();
+          const storedVersion = data.sessionVersion || 1;
+
+          if (storedVersion !== localVersion) {
+            sessionStorage.removeItem("currentUser");
+            Swal.fire({
+              icon: "info",
+              title: "Session Expired",
+              text: "Please log in again",
+              confirmButtonColor: "#004d61",
+            }).then(() => (window.location.href = "./index.html"));
+          }
         });
-      }
-    });
-  };
-</script>
 
+      } else {
+        // ❌ Non-admin
+        authStatusEl.className = "alert alert-danger mb-4";
+        currentUserEl.textContent = "Insufficient permissions";
+        roleBadgeEl.textContent = "";
+
+        Swal.fire({
+          icon: "warning",
+          title: "🔒 Access Denied",
+          text: "You do not have permission to access this page.",
+          confirmButtonText: "Go Back",
+        }).then(() => (window.location.href = "./index.html"));
+      }
+    }
+
+    // ====================== LOGOUT ======================
+    window.logout = async function () {
+      Swal.fire({
+        title: "🚪 Logout",
+        text: "Are you sure you want to logout?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes, logout",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#004d61",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          sessionStorage.removeItem("currentUser");
+          Swal.fire({
+            icon: "success",
+            title: "👋 Logged Out",
+            text: "You have been logged out successfully",
+            showConfirmButton: false,
+            timer: 1500,
+          }).then(() => (window.location.href = "index.html"));
+        }
+      });
+    };
+  </script>
 </body>
 
 </html>

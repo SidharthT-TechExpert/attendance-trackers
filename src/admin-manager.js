@@ -38,8 +38,7 @@ async function loadAdmins() {
 
     if (snap.empty) {
       console.warn("⚠️ No admins found in Firestore");
-      adminsGrid.innerHTML =
-        `<div class="col-12 text-muted text-center py-3">No admins found.</div>`;
+      adminsGrid.innerHTML = `<div class="col-12 text-muted text-center py-3">No admins found.</div>`;
       return;
     }
 
@@ -48,8 +47,7 @@ async function loadAdmins() {
     renderAdmins();
   } catch (err) {
     console.error("❌ Error loading admins:", err);
-    adminsGrid.innerHTML =
-      `<div class="col-12 text-danger">Error loading admins: ${err.message}</div>`;
+    adminsGrid.innerHTML = `<div class="col-12 text-danger">Error loading admins: ${err.message}</div>`;
   }
 }
 
@@ -85,8 +83,12 @@ function renderAdmins() {
           ${roleBadge(a.role)}
         </div>
         <div class="card-actions mt-3">
-          <button class="btn btn-sm btn-outline-primary" data-action="edit" data-id="${a.id}">✏️ Edit</button>
-          <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${a.id}">🗑️ Delete</button>
+          <button class="btn btn-sm btn-outline-primary" data-action="edit" data-id="${
+            a.id
+          }">✏️ Edit</button>
+          <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${
+            a.id
+          }">🗑️ Delete</button>
         </div>
       </div>
     </div>`
@@ -136,17 +138,31 @@ async function openAdminDialog(item = null) {
   const { value: data } = await Swal.fire({
     title: isEdit ? "Edit Admin" : "Add Admin",
     html: `
-      <input id="ad-name" class="form-control mb-2" placeholder="Name" value="${item ? escapeHTML(item.name) : ""}">
-      <input id="ad-email" class="form-control mb-2" type="email" placeholder="Email" value="${item ? escapeHTML(item.email) : ""}">
+      <input id="ad-name" class="form-control mb-2" placeholder="Name" value="${
+        item ? escapeHTML(item.name) : ""
+      }">
+      <input id="ad-email" class="form-control mb-2" type="email" placeholder="Email" value="${
+        item ? escapeHTML(item.email) : ""
+      }"${isEdit ? "readonly" : ""}>
       <div class="input-group mb-2">
-        <input id="ad-password" class="form-control" type="password" placeholder="${isEdit ? "Leave blank to keep current password" : "Password"}">
+        <input id="ad-password" class="form-control" type="password" placeholder="${
+          isEdit ? "Leave blank to keep current password" : "Password"
+        }">
         <span id="togglePass" class="input-group-text" style="cursor:pointer">${eyeSVG}</span>
       </div>
       <select id="ad-role" class="form-select">
-        <option value="admins" ${item?.role === "admins" ? "selected" : ""}>Admins</option>
-        <option value="admin" ${item?.role === "admin" ? "selected" : ""}>Admin</option>
-        <option value="manager" ${item?.role === "manager" ? "selected" : ""}>Manager</option>
-        <option value="coordinator" ${item?.role === "coordinator" ? "selected" : ""}>Coordinator</option>
+        <option value="admins" ${
+          item?.role === "admins" ? "selected" : ""
+        }>Admins</option>
+        <option value="admin" ${
+          item?.role === "admin" ? "selected" : ""
+        }>Admin</option>
+        <option value="manager" ${
+          item?.role === "manager" ? "selected" : ""
+        }>Manager</option>
+        <option value="coordinator" ${
+          item?.role === "coordinator" ? "selected" : ""
+        }>Coordinator</option>
       </select>
     `,
     focusConfirm: false,
@@ -161,19 +177,26 @@ async function openAdminDialog(item = null) {
         passInput.type = visible ? "text" : "password";
         toggleBtn.innerHTML = visible ? eyeOffSVG : eyeSVG;
       });
-
-     
     },
     preConfirm: async () => {
       const name = Swal.getPopup().querySelector("#ad-name").value.trim();
-      const email = Swal.getPopup().querySelector("#ad-email").value.trim().toLowerCase();
+      const email = Swal.getPopup()
+        .querySelector("#ad-email")
+        .value.trim()
+        .toLowerCase();
       const pass = Swal.getPopup().querySelector("#ad-password").value.trim();
       const role = Swal.getPopup().querySelector("#ad-role").value;
 
-      if (!name || !email) return Swal.showValidationMessage("Name and Email are required");
+      if (!name || !email)
+        return Swal.showValidationMessage("Name and Email are required");
 
-      const exists = ADMINS.some(a => a.email.toLowerCase() === email && a.id !== item?.id);
-      if (exists) return Swal.showValidationMessage("⚠️ Admin with this email already exists!");
+      const exists = ADMINS.some(
+        (a) => a.email.toLowerCase() === email && a.id !== item?.id
+      );
+      if (exists)
+        return Swal.showValidationMessage(
+          "⚠️ Admin with this email already exists!"
+        );
 
       return { name, email, pass, role };
     },
@@ -183,8 +206,17 @@ async function openAdminDialog(item = null) {
 
   try {
     if (isEdit) {
-      const upd = { name: data.name, email: data.email, role: data.role };
-      if (data.pass) upd.password = await hashPassword(data.pass);
+      const upd = { name: data.name, role: data.role };
+
+      if (data.pass) {
+        upd.password = await hashPassword(data.pass);
+      }
+
+      // If role or password changed → bump sessionVersion
+      if (data.pass || data.role !== item.role) {
+        upd.sessionVersion = (item.sessionVersion || 1) + 1;
+      }
+
       await updateDoc(doc(db, "admins", item.id), upd);
       Swal.fire("✅ Updated", "Admin updated successfully", "success");
     } else {
@@ -193,6 +225,7 @@ async function openAdminDialog(item = null) {
         email: data.email,
         role: data.role,
         password: await hashPassword(data.pass),
+        sessionVersion: 1, // start with 1
       });
       Swal.fire("✅ Added", "Admin added successfully", "success");
     }
@@ -237,7 +270,9 @@ function escapeHTML(s = "") {
   return s.replace(
     /[&<>"']/g,
     (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[
+        c
+      ])
   );
 }
 

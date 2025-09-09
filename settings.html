@@ -65,8 +65,7 @@
       style="display:none; width:280px; max-height:350px; overflow-y:auto; z-index:1100;">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span>Notifications</span>
-        <button class="btn-close btn-close-white btn-sm"
-          onclick="$('notifDropdown').style.display='none';"></button>
+        <button class="btn-close btn-close-white btn-sm" onclick="$('notifDropdown').style.display='none';"></button>
       </div>
       <ul id="notificationList" class="list-group list-group-flush"></ul>
     </div>
@@ -278,48 +277,39 @@
   <!-- Hidden file input for restore -->
   <input type="file" id="restoreFile" accept=".json" style="display: none;" onchange="handleRestoreFile(event)">
 
-  <!-- Main JavaScript file -->
+  <!-- Scripts -->
   <script type="module" src="/src/firebase.js"></script>
   <script type="module" src="/src/settings.js"></script>
   <script type="module" src="/src/auth.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Simple toggle JS -->
+  <!-- Loader animation -->
   <script>
-    // Helper to get elements
     const $ = (id) => document.getElementById(id);
-
     const loader = $("loader");
     const percentEl = document.querySelector(".percent");
     let p = 0;
-
     const interval = setInterval(() => {
       p += Math.random() * 8;
       if (p >= 100) {
         p = 100;
         clearInterval(interval);
         loader.classList.add("fade-out");
-        setTimeout(() => {
-          loader.style.display = "none";
-        }, 900);
+        setTimeout(() => loader.style.display = "none", 900);
       }
       percentEl.textContent = Math.floor(p) + "%";
     }, 120);
-  </script>
-
-  <script>
 
     $("notifBell").addEventListener("click", () => {
       const dropdown = $("notifDropdown");
       dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
     });
   </script>
+
+  <!-- Session Validation -->
   <script type="module">
     import { db } from "./src/firebase.js";
-    import { doc, getDoc } from "firebase/firestore";
-
-
-    // ✅ Safely load session user
+    import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
     let currentUser = null;
     try {
@@ -329,51 +319,68 @@
       console.error("Failed to parse session user:", e);
     }
 
-    console.log("Session Current User:", currentUser);
-    console.log("Type of currentUser:", typeof currentUser);
-    console.log("Keys of currentUser:", currentUser ? Object.keys(currentUser) : null);
-
-    if (!currentUser) {
-      // ❌ Not logged in
-      Swal.fire({
-        icon: "warning",
-        title: "🔒 Access Denied",
-        text: "Please login first!",
-        confirmButtonText: "Go Back",
-      }).then(() => {
+    async function validateSession() {
+      if (!currentUser) {
+        await Swal.fire({ icon: "warning", title: "🔒 Access Denied", text: "Please login first!" });
         window.location.href = "./index.html";
-      });
-    } else {
-      const role = currentUser.role.toLowerCase().trim(); // normalize
-      console.log("Current User Role:", role);
+        return;
+      }
 
-      if (role === "admins") {
-        // ✅ Allow admins
-        $("settingsBtn").style.display = "inline-block";
-        $("ReportBtn").style.display = "inline-block";
-        $('AdminBtn').style.display = "inline-block";
-
-        window.currentUser = currentUser;
-      } else if (role == 'admin' || role == "coordinator" || role == "manager") {
-        console.log("Non-admin role, but allowed:", role);
-        
-
-      } else {
-        // ❌ Not admin
-        Swal.fire({
-          icon: "warning",
-          title: "🔒 Access Denied",
-          text: "You do not have permission to access this page.",
-          confirmButtonText: "Go Back",
-        }).then(() => {
+      try {
+        const ref = doc(db, "admins", currentUser.id); // ✅ use doc id, not email
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          sessionStorage.removeItem("currentUser");
           window.location.href = "./index.html";
+          return;
+        }
+
+        const data = snap.data();
+
+        // 🚨 Check sessionVersion
+        if ((data.sessionVersion || 1) !== (currentUser.sessionVersion || 1)) {
+          sessionStorage.removeItem("currentUser");
+          await Swal.fire({ icon: "info", title: "🔄 Session Expired", text: "Please log in again." });
+          window.location.href = "./index.html";
+          return;
+        }
+
+        // ✅ Role-based access
+        const role = currentUser.role?.toLowerCase().trim();
+
+        if (['admins', 'admin'].includes(role)) {
+          $("settingsBtn").style.display = "inline-block";
+          $("ReportBtn").style.display = "inline-block";
+          $("AdminBtn").style.display = "inline-block";
+        } else if (["admin", "coordinator", "manager"].includes(role)) {
+          console.log("Non-admin role, allowed:", role);
+        } else {
+          await Swal.fire({ icon: "warning", title: "🔒 Access Denied", text: "You do not have permission." });
+          window.location.href = "./index.html";
+        }
+
+        // 🔴 Real-time session invalidation
+        onSnapshot(ref, (snap) => {
+          if (!snap.exists()) return;
+          const live = snap.data();
+          if ((live.sessionVersion || 1) !== (currentUser.sessionVersion || 1)) {
+            sessionStorage.removeItem("currentUser");
+            Swal.fire({ icon: "info", title: "🔄 Session Expired", text: "Your session was invalidated." })
+              .then(() => window.location.href = "./index.html");
+          }
         });
+
+      } catch (err) {
+        console.error("Session validation error:", err);
+        sessionStorage.removeItem("currentUser");
+        window.location.href = "./index.html";
       }
     }
 
+    window.addEventListener("DOMContentLoaded", validateSession);
 
     // ====================== LOGOUT ======================
-    window.logout = async function () {
+    window.logout = function () {
       Swal.fire({
         title: "🚪 Logout",
         text: "Are you sure you want to logout?",
@@ -391,9 +398,7 @@
             text: "You have been logged out successfully",
             showConfirmButton: false,
             timer: 1500,
-          }).then(() => {
-            window.location.href = "index.html";
-          });
+          }).then(() => window.location.href = "index.html");
         }
       });
     };
