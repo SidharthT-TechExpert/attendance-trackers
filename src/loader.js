@@ -7,7 +7,7 @@ const main = $("mainContent");
 const percentEl = document.querySelector(".percent");
 let p = 0;
 
-export const interval = setInterval(() => {
+ const interval = setInterval(() => {
   p += Math.random() * 8;
   if (p >= 100) {
     p = 100;
@@ -21,5 +21,5 @@ export const interval = setInterval(() => {
   percentEl.textContent = Math.floor(p) + "%";
 }, 120);
 
-window.interval = interval;
+
 
