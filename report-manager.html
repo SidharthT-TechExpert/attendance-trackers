@@ -194,7 +194,7 @@
       currentUser = raw ? JSON.parse(raw) : null;
     } catch (e) {
       console.error("Failed to parse sessionStorage.currentUser", e);
-      currentUser = null;
+      currentUser = null; 
     }
  
     if (!currentUser || !allowedRoles.includes((currentUser.role || "").toLowerCase())) {
