@@ -196,7 +196,7 @@
       console.error("Failed to parse sessionStorage.currentUser", e);
       currentUser = null;
     }
-
+ 
     if (!currentUser || !allowedRoles.includes((currentUser.role || "").toLowerCase())) {
       // no local session — block access
       Swal.fire({
