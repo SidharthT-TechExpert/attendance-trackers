@@ -1,17 +1,25 @@
 {
-  "name": "attendance-trackers",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+  "name": "attendify",
+  "version": "1.0.0",
+  "description": "An report making making web application for brototype students",
+  "homepage": "https://github.com/SidharthT-TechExpert/attendance-trackers#readme",
+  "bugs": {
+    "url": "https://github.com/SidharthT-TechExpert/attendance-trackers/issues"
   },
-  "devDependencies": {
-    "vite": "^7.1.2"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SidharthT-TechExpert/attendance-trackers.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "start"
   },
   "dependencies": {
-    "firebase": "^12.2.1"
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "path": "^0.12.7"
   }
 }
