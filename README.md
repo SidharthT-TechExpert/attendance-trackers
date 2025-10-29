@@ -113,4 +113,3 @@ Feel free to use and modify it for your own projects.
 
 👉 [View Hosted App on Vercel](https://attendance-trackers.vercel.app/)
 
-```
