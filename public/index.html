@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance Session Report</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+  <main>
+    <header>
+      <div>
+        <p class="eyebrow">Session report maker</p>
+        <h1>Generate attendance reports in seconds</h1>
+        <p>Create a session overview, toggle who attended, and get a clean, shareable report instantly.</p>
+      </div>
+      <a href="/admin/login" class="secondary">Admin login</a>
+    </header>
+
+    <section class="card">
+      <form id="session-form" class="stack">
+        <fieldset>
+          <legend>Session meta</legend>
+          <label>Select batch
+            <select name="batch" required>
+              <option value="" disabled selected>Select your batch</option>
+              <option value="Batch A">Batch A</option>
+              <option value="Batch B">Batch B</option>
+              <option value="Batch C">Batch C</option>
+            </select>
+          </label>
+          <label>Trainer name
+            <input type="text" name="trainerName" placeholder="Trainer / facilitator name" />
+          </label>
+          <label>TLDV meeting link
+            <input type="url" name="tldvLink" placeholder="https://app.tldv.io/..." />
+          </label>
+          <label>Meeting CSV (Google Meet export)
+            <input type="file" name="meetingCsv" accept=".csv" />
+          </label>
+          <div class="grid-2">
+            <label class="field-clickable">Date
+              <input type="date" name="date" required />
+            </label>
+            <label class="field-clickable">Start time
+              <input type="time" name="startTime" />
+            </label>
+            <label class="field-clickable">End time
+              <input type="time" name="endTime" />
+            </label>
+          </div>
+          <label>Session overview
+            <textarea name="overview" rows="3" placeholder="Notes, agenda, highlights"></textarea>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Attendance</legend>
+          <p class="hint">Students are pulled from the admin-managed list. Tick who attended.</p>
+          <div id="student-list" class="student-list"></div>
+        </fieldset>
+
+        <button type="submit" id="submit-btn">Create report</button>
+        <p id="form-status" class="hint"></p>
+      </form>
+    </section>
+
+    <section class="card" id="result-card" hidden>
+      <h2>Report ready!</h2>
+      <p>Share or bookmark the link below.</p>
+      <a id="report-link" href="#" target="_blank"></a>
+      <div class="actions">
+        <button id="create-new" class="secondary">Create another</button>
+        <a id="view-report" class="secondary" target="_blank">Open report</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js" defer></script>
+</body>
+
+</html>
+
