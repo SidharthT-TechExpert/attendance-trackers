@@ -13,10 +13,8 @@ export default defineConfig({
         batch: resolve(__dirname, 'views/batch-manager.html'),
         settings: resolve(__dirname, 'views/settings.html'),
         admins: resolve(__dirname, 'views/admin-manager.html'),
-        reports: resolve(__dirname, 'views/report-manager.html') // stays at root
+        reports: resolve(__dirname, 'views/report-manager.html')
       },
     },
   },
 });
-
-
