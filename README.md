@@ -34,7 +34,7 @@ npm run dev
 Visit:
 
 - `http://localhost:4000` – public session form
-- `http://localhost:4000/admin/login` – admin portal
+- `http://localhost:4000/batch-manager.html` – admin portal
 
 ### Production
 
